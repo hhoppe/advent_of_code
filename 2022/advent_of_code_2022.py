@@ -1,7 +1,4 @@
 # %% [markdown]
-# <a href="https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-
-# %% [markdown]
 # # Advent of code 2022
 #
 # [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb)
@@ -34,7 +31,7 @@
 # </p>
 # <p>
 # <a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day22.gif" width="160">&emsp;
-# <a href="#day23">day23</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day23.gif" width="151">&emsp;
+# <a href="#day23">day23</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day23.gif" width="156">&emsp;
 # <a href="#day24">day24</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day24a.gif" width="30">&nbsp;
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day24c.gif" width="306">
 # </p>

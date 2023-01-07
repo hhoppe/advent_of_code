@@ -1,8 +1,8 @@
 # Advent of code 2022
 
-<a href="https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb" target="_blank">[<b>Open the notebook in Colab</b>]</a>
+[[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb)
 
-Jupyter <a href="https://github.com/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb" target="_blank">notebook</a> by <a href="http://hhoppe.com/" target="_blank">Hugues Hoppe</a> with Python solutions to the <a href="https://adventofcode.com/2022" target="_blank">2022 Advent of Code puzzles</a>,
+Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb) by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to the [2022 Advent of Code puzzles](https://adventofcode.com/2022),
 completed in December 2022.
 
 We explore both "compact" and "fast" code versions, along with data visualizations.
@@ -26,6 +26,6 @@ Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`
 <a href="#day21">day21</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day21b.png" width="300">
 <br/><br/>
 <a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day22.gif" width="160">&emsp;
-<a href="#day23">day23</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day23.gif" width="151">&emsp;
+<a href="#day23">day23</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day23.gif" width="156">&emsp;
 <a href="#day24">day24</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day24a.gif" width="30">&nbsp;
 <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day24c.gif" width="306">

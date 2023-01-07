@@ -23,7 +23,7 @@ Open each notebook in GitHub:
 [[**2017**]](https://github.com/hhoppe/advent_of_code/blob/main/2017/advent_of_code_2017.ipynb)
 
 Here are recent visualization results from
-[**2022**](https://github.com/hhoppe/advent_of_code/blob/main/2017/advent_of_code_2022.ipynb)
+[**2022**](https://github.com/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb):
 
 <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day08e.gif" width="240">&emsp;
 <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day09b.gif" width="160">&emsp;
@@ -36,5 +36,5 @@ Here are recent visualization results from
 <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day18c.gif" width="100">&emsp;
 <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day21b.png" width="300">&emsp;
 <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day22.gif" width="160">&emsp;
-<img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day23.gif" width="151">&emsp;
+<img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day23.gif" width="156">&emsp;
 <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day24c.gif" width="306">
