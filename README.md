@@ -6,23 +6,24 @@ Jupyter notebooks by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to
 We explore both "compact" and "fast" code versions, along with data visualizations.
 
 Open each notebook in Colab:
-<a href="https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb" target="_blank">[**2022**]</a>
-<a href="https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2021/advent_of_code_2021.ipynb" target="_blank">[**2021**]</a>
-<a href="https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2020/advent_of_code_2020.ipynb" target="_blank">[**2020**]</a>
-<a href="https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2019/advent_of_code_2019.ipynb" target="_blank">[**2019**]</a>
-<a href="https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2018/advent_of_code_2018.ipynb" target="_blank">[**2018**]</a>
-<a href="https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2017/advent_of_code_2017.ipynb" target="_blank">[**2017**]</a>
+[[**2022**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb)
+[[**2022**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb)
+[[**2021**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2021/advent_of_code_2021.ipynb)
+[[**2020**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2020/advent_of_code_2020.ipynb)
+[[**2019**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2019/advent_of_code_2019.ipynb)
+[[**2018**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2018/advent_of_code_2018.ipynb)
+[[**2017**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2017/advent_of_code_2017.ipynb)
 
 Open each notebook in GitHub:
-<a href="https://github.com/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb" target="_blank">[**2022**]</a>
-<a href="https://github.com/hhoppe/advent_of_code/blob/main/2021/advent_of_code_2021.ipynb" target="_blank">[**2021**]</a>
-<a href="https://github.com/hhoppe/advent_of_code/blob/main/2020/advent_of_code_2020.ipynb" target="_blank">[**2020**]</a>
-<a href="https://github.com/hhoppe/advent_of_code/blob/main/2019/advent_of_code_2019.ipynb" target="_blank">[**2019**]</a>
-<a href="https://github.com/hhoppe/advent_of_code/blob/main/2018/advent_of_code_2018.ipynb" target="_blank">[**2018**]</a>
-<a href="https://github.com/hhoppe/advent_of_code/blob/main/2017/advent_of_code_2017.ipynb" target="_blank">[**2017**]</a>
+[[**2022**]](https://github.com/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb)
+[[**2021**]](https://github.com/hhoppe/advent_of_code/blob/main/2021/advent_of_code_2021.ipynb)
+[[**2020**]](https://github.com/hhoppe/advent_of_code/blob/main/2020/advent_of_code_2020.ipynb)
+[[**2019**]](https://github.com/hhoppe/advent_of_code/blob/main/2019/advent_of_code_2019.ipynb)
+[[**2018**]](https://github.com/hhoppe/advent_of_code/blob/main/2018/advent_of_code_2018.ipynb)
+[[**2017**]](https://github.com/hhoppe/advent_of_code/blob/main/2017/advent_of_code_2017.ipynb)
 
 Here are recent visualization results from
-<a href="https://github.com/hhoppe/advent_of_code/blob/main/2017/advent_of_code_2022.ipynb" target="_blank">**2022**</a>:
+[**2022**](https://github.com/hhoppe/advent_of_code/blob/main/2017/advent_of_code_2022.ipynb)
 
 <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day08e.gif" width="240">&emsp;
 <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day09b.gif" width="160">&emsp;
