@@ -92,7 +92,7 @@ hh.start_timing_notebook_cells()
 
 # %%
 YEAR = 2022
-SHOW_BIG_MEDIA = os.environ.get('SHOW_BIG_MEDIA', False)
+SHOW_BIG_MEDIA = False
 if pathlib.Path('results').is_dir():
   media.set_show_save_dir('results')
 
@@ -125,6 +125,7 @@ except ModuleNotFoundError:
 using_numba = hasattr(numba, 'jit')
 
 # %%
+SHOW_BIG_MEDIA = os.environ.get('SHOW_BIG_MEDIA', SHOW_BIG_MEDIA)
 advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)
 
 # %%
@@ -967,17 +968,18 @@ def day7v(s):  # Visualization
     else:
       parent = ''.join(curr)
       child = parent + fields[1]
-      graph.add_node(child, label=fields[1], node_color='#D0D0D0', size=int(fields[0]))
-      graph.add_edge(child, parent)
+      if 0:  # Adding files to the graph makes it overly busy.
+        graph.add_node(child, label=fields[1], node_color='#D0D0D0', size=int(fields[0]))
+        graph.add_edge(child, parent)
       for p in itertools.accumulate(curr):
         dirs[p] += int(fields[0])
 
   pos = graph_layout(graph, prog='neato')
-  fig, ax = plt.subplots(figsize=(20, 10), dpi=66)
+  fig, ax = plt.subplots(figsize=(12, 12), dpi=60)
   ax.axes.set_aspect('equal')
   # labels = nx.get_node_attributes(graph, 'label')
   node_color = [attr for _, attr in graph.nodes(data='node_color')]
-  nx.draw(graph, pos, node_size=100, node_color=node_color, width=0.7)
+  nx.draw(graph, pos, node_size=150, node_color=node_color, width=0.7)
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(image_from_plt(fig), (255, 255, 255), margin=5)
   media.show_image(image, title='day07', border=True)
@@ -1193,6 +1195,10 @@ def day8w(s):  # Use plotly to create 3D visualization.
 day8w(puzzle.input)
 
 
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day08e.gif"/>
+
 # %%
 # Adapted from https://www.reddit.com/r/adventofcode/comments/zfpnka/comment/izd90g1/
 # Sped up by using lazy generator, but still slow.
@@ -1339,9 +1345,11 @@ def day9b(s, *, part2=False, visualize=False, pad=1, pad0=12, background=(245,) 
   class Frame(NamedTuple):
     visited: set[tuple[int, int]]
     nodes: np.ndarray
+    step_index: int
   frames: list[Frame] = []
   countdown = 1
   partial_visited = {(0, 0)}
+  step_index = 0
 
   for line in s.splitlines():
     delta_yx = {'D': (1, 0), 'U': (-1, 0), 'R': (0, 1), 'L': (0, -1)}[line[0]]
@@ -1354,14 +1362,15 @@ def day9b(s, *, part2=False, visualize=False, pad=1, pad0=12, background=(245,) 
       visited.add(tuple(nodes[-1]))  # type: ignore[arg-type]
       if visualize:
         partial_visited.add(tuple(nodes[-1]))  # type: ignore[arg-type]
+        step_index += 1
         countdown -= 1
         if countdown == 0:
           countdown = np.clip((len(frames) - 120) // 6, 1, 50)
-          frames.append(Frame(partial_visited, nodes.copy()))
+          frames.append(Frame(partial_visited, nodes.copy(), step_index))
           partial_visited = set()
 
   if visualize:
-    frames.append(Frame(partial_visited, nodes.copy()))
+    frames.append(Frame(partial_visited, nodes.copy(), step_index))
     images = []
     pos = [node for frame in frames for node in frame.nodes] + list(visited)
     yx1_min, yx1_max = np.min(pos, axis=0) - pad, np.max(pos, axis=0) + pad  # Final window.
@@ -1369,7 +1378,7 @@ def day9b(s, *, part2=False, visualize=False, pad=1, pad0=12, background=(245,) 
     image = np.full(shape, background, np.uint8)
     final_shape = shape[0] * 2, shape[1] * 2
     yx0_min, yx0_max = np.maximum(-pad0, yx1_min), np.minimum(pad0, yx1_max)  # Initial window.
-    for partial_visited, nodes in frames:
+    for partial_visited, nodes, step_index in frames:
       image[tuple((list(partial_visited) - yx1_min).T)] = 180
       image2 = image.copy()
       image2[tuple((nodes[1:-1] - yx1_min).T)] = 0, 0, 0
@@ -1384,6 +1393,8 @@ def day9b(s, *, part2=False, visualize=False, pad=1, pad0=12, background=(245,) 
       resized = resampler.uniform_resize(
           cropped, final_shape, filter='trapezoid', boundary='border',
           gamma='identity', cval=np.array(background) / 255)
+      hh.overlay_text(resized, (4, 4), f'Step {step_index:5}',
+                      fontsize=20, shape=(21, 110), background=background)
       images.append(resized)
     images = [images[0]] * 5 + images + [images[-1]] * 50
     return images
@@ -1406,6 +1417,10 @@ if SHOW_BIG_MEDIA:
   # ~1 MB GIF (or 444 MB h264).
   media.show_video(day9b_part2(puzzle.input, visualize=True), title='day09b', codec='gif', fps=50)
 
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day09b.gif"/>
 
 # %%
 def day9(s, *, part2=False):  # Faster solution with explicit coordinates and no numpy.
@@ -1853,11 +1868,11 @@ def day12v(s, *, n=3):  # Visualize as GIF image.
   images.append(image)
   images = [np.pad(image, ((1, 1), (1, 1), (0, 0))) for image in images]
   images = [image.repeat(n, axis=0).repeat(n, axis=1) for image in images]
-  media.show_video(images, title='day12a', codec='gif', fps=1)
+  return images
 
 
-# day12v(s1, n=20)
-day12v(puzzle.input)
+# media.show_video(day12v(s1, n=20), codec='gif', fps=1)
+media.show_video(day12v(puzzle.input), title='day12a', codec='gif', fps=1)
 
 
 # %%
@@ -2209,14 +2224,16 @@ def day14(s, *, part2=False, visualize=False, period=2, acceleration=1000, magni
   color, part2_color = (0, 255, 0), (180, 210, 255)
   images = []
 
-  def record_image():
-    images.append(image[:, 140:-140].repeat(magnify, axis=0).repeat(magnify, axis=1))
+  def record_image(index):
+    image2 = image[:, 140:-140].repeat(magnify, axis=0).repeat(magnify, axis=1)
+    hh.overlay_text(image2, (8, 170), f'{index:5}', fontsize=18, shape=(18, 50), background=255)
+    images.append(image2)
 
   countdown1, countdown2 = 1, 1
   for index in itertools.count():
     if visualize and not (countdown1 := countdown1 - 1):
       countdown1 = period
-      record_image()
+      record_image(index)
       if not (countdown2 := countdown2 - 1):
         countdown2 = acceleration
         period = int(period * 1.5)
@@ -2229,9 +2246,9 @@ def day14(s, *, part2=False, visualize=False, period=2, acceleration=1000, magni
       image[y, x] = color
 
   if visualize:
-    record_image()  # Add final frame.
+    record_image(index)  # Add final frame.
     images = [images[0]] * 25 + images + [images[-1]] * 50
-    media.show_video(images, title='day14', codec='gif', fps=50)
+    return images
 
   return index
 
@@ -2243,7 +2260,8 @@ check_eq(day14_part2(s1), 93)
 puzzle.verify(2, day14_part2)
 
 # %%
-_ = day14_part2(puzzle.input, visualize=True, period=2, acceleration=18)
+media.show_video(day14_part2(puzzle.input, visualize=True, period=2, acceleration=18),
+                 title='day14', codec='gif', fps=50)
 
 # %% [markdown]
 # <a name="day15"></a>
@@ -2474,6 +2492,10 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
 day15v(puzzle.input)
 
 
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day15b.gif"/>
+
 # %%
 # Compact and fast; Part 1 assumes contiguous line covering; Part 2 works in any dimension.
 def day15(s, *, part2=False, y_part1=2_000_000, side_part2=4_000_000):
@@ -2651,7 +2673,7 @@ check_eq(day16b_part2(s1), 1707)
 
 # %%
 # Adapted for visualization.
-def day16c(s, *, part2=False, visualize=False, start='AA'):
+def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'):
   rate, dsts = {}, {}
   for line in s.splitlines():
     node, s_rate, *dsts[node] = re.findall(r'([A-Z][A-Z]|[0-9]+)', line)
@@ -2715,7 +2737,7 @@ def day16c(s, *, part2=False, visualize=False, start='AA'):
             '#F0F0F0' if node == start else 'white')
 
   for time_index in range(time):
-    if visualize and (part2 or time_index == time - 1):
+    if visualize and (not only_last_frame or time_index == time - 1):
       ax.clear()
       labels = nx.get_node_attributes(graph, 'label')
       node_size = [2400 if rate[node] else 1500 for node in graph]
@@ -2728,6 +2750,8 @@ def day16c(s, *, part2=False, visualize=False, start='AA'):
               font_size=14, width=0.8, ax=ax)
       fig.tight_layout(pad=0)
       image = hh.bounding_crop(image_from_plt(fig), (255, 255, 255), margin=5)
+      hh.overlay_text(image, (5, 400), f'Time {time_index + 1:2}',
+                      fontsize=20, shape=(18, 110), background=255)
       images.append(image)
 
     total_flow += sum(rate[valve] for valve in enabled_valves)
@@ -2746,11 +2770,8 @@ def day16c(s, *, part2=False, visualize=False, start='AA'):
 
   if visualize:
     plt.close(fig)
-    if part2:
-      images = [images[0]] * 4 + images + [images[-1]] * 8
-      media.show_video(images, codec='gif', fps=2, title='day16b', border=True)
-    else:
-      media.show_image(images[0], title='day16a', border=True)
+    images = [images[0]] * 4 + images + [images[-1]] * 8
+    return images
 
   return total_flow
 
@@ -2763,12 +2784,18 @@ check_eq(day16c_part2(s1), 1707)
 # puzzle.verify(2, day16c_part2)  # ~16 s.
 
 # %%
-_ = day16c(puzzle.input, visualize=True)
+media.show_image(day16c(puzzle.input, visualize=True, only_last_frame=True)[0],
+                 title='day16a', border=True)
 
 # %%
 if SHOW_BIG_MEDIA:  # Slow due to search().
-  _ = day16c_part2(puzzle.input, visualize=True)  # ~16 s
+  media.show_video(day16c_part2(puzzle.input, visualize=True),
+                   codec='gif', fps=2, title='day16b', border=True)  # ~16 s
 
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day16b.gif"/>
 
 # %%
 def day16d(s, *, part2=False):  # Heuristically order edges and add branch-and-bound pruning.
@@ -3155,10 +3182,10 @@ def day17_visualize(s, *, num_cols=4, num_rows=20, size=6):
         break
 
   images = [images[0] * 1] + images + [images[-1]] * 50
-  media.show_video(images, title='day17', codec='gif', fps=50)
+  return images
 
 
-day17_visualize(s1)
+media.show_video(day17_visualize(s1), title='day17', codec='gif', fps=50)
 
 # %% [markdown]
 # <a name="day18"></a>
@@ -3305,7 +3332,7 @@ def day18b(s, *, part2=False, visualize=False, magnify=8):
     video: Any = np.where(grid[..., None], black, np.where(outside[..., None], blue, background))
     video = video.repeat(magnify, axis=1).repeat(magnify, axis=2)
     video = list(video) + [video[-1]] * 1
-    media.show_video(video, title='day18a', codec='gif', fps=5)
+    return video
 
   neighbors = np.array([np.roll(outside, dp, range(grid.ndim)) for dp in dps])
   return (grid & neighbors).sum()
@@ -3319,7 +3346,7 @@ check_eq(day18b_part2(s1), 58)
 puzzle.verify(2, day18b_part2)
 
 # %%
-_ = day18b_part2(puzzle.input, visualize=True)
+media.show_video(day18b_part2(puzzle.input, visualize=True), title='day18a', codec='gif', fps=5)
 
 
 # %%
@@ -3375,9 +3402,8 @@ def day18v(s):  # Visualize Part 1 using plotly 3D rendering.
   image = image_from_plotly(fig)
   media.show_image(image, title='day18b', border=True)
 
-  if 1:
-    video = wobble_video(fig)
-    media.show_video(video, title='day18c', codec='gif', fps=10)
+  video = wobble_video(fig)
+  media.show_video(video, title='day18c', codec='gif', fps=10)
 
   media.set_max_output_height(5000)
 
@@ -4221,6 +4247,11 @@ else:
                      height=800, downsample=False)
   media.set_max_output_height(5000)
 
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day21b.png"/><br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day21c.png"/>
+
 # %%
 # See also https://github.com/mjpieters/adventofcode/blob/master/2022/Day%2021.ipynb for a
 # polished visualization which bypasses `networkx` and directly creates a `graphviz.Digraph`.
@@ -4306,7 +4337,7 @@ def day22_wrap_on_cube(shape, y, x, dy, dx):
 
 
 # %%
-def day22(s, *, part2=False, visualize=False):
+def day22(s, *, part2=False, visualize=False, background=(252,) * 3):
   *lines, _, instructions = s.splitlines()
   shape = len(lines), max(len(line) for line in lines)
   grid = np.full(shape, ' ')
@@ -4342,13 +4373,16 @@ def day22(s, *, part2=False, visualize=False):
           # if math.log(num_steps, 1.018) >= len(images):
           if 25 * num_steps**0.33 >= len(images):
             grid2 = np.pad(grid, 4, constant_values=' ')
-            cmap = {' ': (252,) * 3, '.': (244,) * 3, '#': (20, 20, 20), '@': (100, 130, 255)}
+            cmap = {' ': background, '.': (244,) * 3, '#': (20, 20, 20), '@': (100, 130, 255)}
             image = np.array([cmap[ch] for ch in grid2.flat], np.uint8).reshape(*grid2.shape, 3)
-            images.append(image.repeat(2, axis=0).repeat(2, axis=1))
+            image = image.repeat(2, axis=0).repeat(2, axis=1)
+            hh.overlay_text(image, (350, 190), f'Step {num_steps:5}',
+                            fontsize=18, shape=(21, 120), background=background)
+            images.append(image)
 
   if visualize:
     images = [images[0]] * 30 + images + [images[-1]] * 50
-    media.show_video(images, title='day22', codec='gif', fps=50)
+    return images
 
   return (y + 1) * 1000 + (x + 1) * 4 + [(0, 1), (1, 0), (0, -1), (-1, 0)].index((dy, dx))
 
@@ -4361,7 +4395,7 @@ check_eq(day22_part2(s1), 5031)
 puzzle.verify(2, day22_part2)
 
 # %%
-_ = day22_part2(puzzle.input, visualize=True)
+media.show_video(day22_part2(puzzle.input, visualize=True), title='day22', codec='gif', fps=50)
 
 # %% [markdown]
 # <a name="day23"></a>
@@ -4415,7 +4449,7 @@ if 0:
 
 
 # %%
-def day23a(s, *, part2=False, visualize=False, pad=60):
+def day23a(s, *, part2=False, visualize=False, pad=60, background=250):
   grid = np.array([list(line) for line in s.splitlines()])
   current = set((y, x) for y, x in np.argwhere(grid == '#'))
   offsets8 = set(itertools.product((-1, 0, 1), repeat=2)) - {(0, 0)}
@@ -4424,10 +4458,13 @@ def day23a(s, *, part2=False, visualize=False, pad=60):
 
   for round_index in range(10**8 if part2 else 10):
     if visualize and (round_index < 200 or round_index % 10 == 0 or round_index > 750):
-      image = np.full(((grid.shape[0] + 2 * pad,) * 2) + (3,), 250, np.uint8)
+      image = np.full(((grid.shape[0] + 2 * pad,) * 2) + (3,), background, np.uint8)
       yxs = np.array(list(current))
       image[tuple((yxs + (pad, pad)).T)] = 0, 0, 180
-      images.append(image[35:, 35:].repeat(2, axis=0).repeat(2, axis=1))
+      image = image[30:, 35:].repeat(2, axis=0).repeat(2, axis=1)
+      hh.overlay_text(image, (0, 0), f'Round {round_index:4}',
+                      fontsize=20, shape=(18, 110), background=background)
+      images.append(image)
 
     proposed = {}
     for y, x in current:
@@ -4442,8 +4479,8 @@ def day23a(s, *, part2=False, visualize=False, pad=60):
     counter = collections.Counter(proposed.values())
     if part2 and 1 not in counter.values():
       if visualize:
-        images = [images[0]] * 40 + images + [images[-1]] * 50
-        media.show_video(images, title='day23', codec='gif', fps=50)
+        images = [images[0]] * 60 + images + [images[-1]] * 60
+        return images
       return round_index + 1
 
     for yx in current.copy():
@@ -4463,7 +4500,11 @@ check_eq(day23a_part2(s1), 20)
 
 # %%
 if SHOW_BIG_MEDIA:  # Slow simulation.
-  _ = day23a_part2(puzzle.input, visualize=True)
+  media.show_video(day23a_part2(puzzle.input, visualize=True), title='day23', codec='gif', fps=50)
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day23.gif"/>
 
 # %%
 # Fast numba version.  2D index (y, x) encoded as 1D index yx.
@@ -4673,6 +4714,10 @@ media.show_image(day24a_part2(puzzle.input, visualize=True)[-1], title='day24b')
 if SHOW_BIG_MEDIA:
   media.show_video(day24a_part2(puzzle.input, visualize=True), title='day24c', codec='gif', fps=50)
 
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day24c.gif"/>
 
 # %%
 # Numba; use `active` set for each time step; use max_time.
