@@ -29,10 +29,11 @@
 #  <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day18c.gif" width="100">&emsp;
 # <a href="#day21">day21</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day21b.png" width="300">
 # <br/><br/>
-# <a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day22.gif" width="160">&emsp;
-# <a href="#day23">day23</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day23.gif" width="151">&emsp;
+# <a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day22.gif" width="150">&nbsp;
+# <a href="#day23">day23</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day23.gif" width="151">&nbsp;
 # <a href="#day24">day24</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day24a.gif" width="30">&nbsp;
 #  <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day24c.gif" width="306">
+# <br/>
 
 # %% [markdown]
 # <a name="preamble"></a>
@@ -4591,7 +4592,7 @@ s1 = """\
 
 # %%
 # Single queue; `previous` dict; find shortest path.
-def day24a(s, *, part2=False, visualize=False, repeat=4):
+def day24a(s, *, part2=False, visualize=False, repeat=3):
   grid0 = np.array([list(line) for line in s.splitlines()])
   grid = grid0[1:-1, 1:-1]  # Remove walls to simplify modulo addressing.
   shape = grid.shape  # (4, 6) or (35, 100)  (lcm = 700 is not much smaller than solution)
