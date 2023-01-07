@@ -4376,7 +4376,7 @@ def day22(s, *, part2=False, visualize=False, background=(252,) * 3):
             cmap = {' ': background, '.': (244,) * 3, '#': (20, 20, 20), '@': (100, 130, 255)}
             image = np.array([cmap[ch] for ch in grid2.flat], np.uint8).reshape(*grid2.shape, 3)
             image = image.repeat(2, axis=0).repeat(2, axis=1)
-            hh.overlay_text(image, (350, 190), f'Step {num_steps:5}',
+            hh.overlay_text(image, (383, 140), f'Step {num_steps:5}',
                             fontsize=18, shape=(21, 120), background=background)
             images.append(image)
 
