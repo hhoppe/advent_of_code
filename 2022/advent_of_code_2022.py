@@ -4688,7 +4688,11 @@ def day24a(s, *, part2=False, visualize=False, repeat=3):
       colors = 1.0 - blizzards * (0.1, 0.1, 0.1)
       image[1:-1, 1:-1] = colors.prod(2) * 255.999
       image[y + 1, x + 1] = 255, 0, 0
-      images.append(image.repeat(repeat, axis=0).repeat(repeat, axis=1))
+      image = image.repeat(repeat, axis=0).repeat(repeat, axis=1)
+      if image.shape[1] > 200:
+        hh.overlay_text(image, (8, 235), f'Time {time:3}',
+                        fontsize=14, shape=(12, 60), background=empty, margin=2)
+      images.append(image)
     fps = {4: 5, 35: 50}[grid.shape[0]]
     hold = int(fps * 1.5)
     images = [images[0]] * hold + images + [images[-1]] * hold
