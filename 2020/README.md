@@ -3,7 +3,10 @@
 
 [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2020/advent_of_code_2020.ipynb)
 
-IPython/Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2020/advent_of_code_2020.ipynb) by [Hugues Hoppe](http://hhoppe.com/); December 2020.
+Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2020/advent_of_code_2020.ipynb)
+by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to the
+[2020 Advent of Code puzzles](https://adventofcode.com/2020),
+completed in December 2020.
 
 I participated in the 25-day [Advent of Code](https://adventofcode.com/) for the first time this year, thanks to encouragement from colleagues, especially [Sascha Häberling](https://github.com/shaeberling).  It was great fun and provided a nice opportunity to learn more advanced Python.
 
@@ -29,9 +32,12 @@ Some **conclusions**:
 
 Here are some visualization results:
 
+<p>
 <a href="#day11">day11</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day11a.gif" height="150">
 <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day11b.gif" height="150">
 <a href="#day20">day20</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day20a.png" height="150">
 <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day20b.png" height="150">
-<br/>
+</p>
+<p>
 <a href="#day24">day24</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day24.gif" height="150">
+</p>

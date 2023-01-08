@@ -1,9 +1,12 @@
 # %% [markdown]
 # # Advent of code 2022
-#
+
+# %% [markdown]
 # [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb)
 #
-# Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb) by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to the [2022 Advent of Code puzzles](https://adventofcode.com/2022),
+# Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb)
+# by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to the
+# [2022 Advent of Code puzzles](https://adventofcode.com/2022),
 # completed in December 2022.
 #
 # We explore both "compact" and "fast" code versions, along with data visualizations.
@@ -130,7 +133,6 @@ advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url
 
 # %%
 hh.adjust_jupyterlab_markdown_width()
-
 
 # %% [markdown]
 # ### Helper functions
@@ -3402,8 +3404,9 @@ def day18v(s):  # Visualize Part 1 using plotly 3D rendering.
   image = image_from_plotly(fig)
   media.show_image(image, title='day18b', border=True)
 
-  video = wobble_video(fig)
-  media.show_video(video, title='day18c', codec='gif', fps=10)
+  if SHOW_BIG_MEDIA:
+    video = wobble_video(fig)
+    media.show_video(video, title='day18c', codec='gif', fps=10)
 
   media.set_max_output_height(5000)
 
