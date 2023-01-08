@@ -3423,7 +3423,8 @@ def day18w(s, *, part2=False, visualize=False):
   if visualize:
     ax = plt.figure().add_subplot(projection='3d')
     _ = ax.voxels(grid, facecolors='#B0B0B0')
-    ax.set_box_aspect(grid.shape)  # https://stackoverflow.com/a/64453375
+    if hasattr(ax, 'set_box_aspect'):
+      ax.set_box_aspect(grid.shape)  # https://stackoverflow.com/a/64453375
 
   if part2:
     grid = scipy.ndimage.binary_fill_holes(grid)
