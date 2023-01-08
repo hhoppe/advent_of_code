@@ -125,7 +125,7 @@ except ModuleNotFoundError:
 using_numba = hasattr(numba, 'jit')
 
 # %%
-SHOW_BIG_MEDIA = os.environ.get('SHOW_BIG_MEDIA', SHOW_BIG_MEDIA)
+SHOW_BIG_MEDIA = os.environ.get('SHOW_BIG_MEDIA', str(SHOW_BIG_MEDIA)).lower() in ['true', '1']
 advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)
 
 # %%
@@ -232,7 +232,7 @@ def wobble_video(fig: plotly.graph_objs._figure.Figure, /, *,
   from_center = eye - center
   planar_from_center = from_center - up * np.dot(up, from_center)
   unit_planar_from_center = hh.normalize(planar_from_center)
-  orthogonal = np.cross(up, unit_planar_from_center)
+  orthogonal: Any = np.cross(up, unit_planar_from_center)
 
   image_for_rotation = {}
   for rotation_fraction in set(rotation_fractions):
