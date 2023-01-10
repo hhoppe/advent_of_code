@@ -280,7 +280,7 @@ def tilt_video(fig: plotly.graph_objs._figure.Figure) -> list[np.ndarray]:
 
 
 # %%
-def graph_layout(graph, *, prog: str) -> dict[Any, tuple[float, float]]:
+def graph_layout(graph: Any, *, prog: str) -> dict[Any, tuple[float, float]]:
   """Return dictionary of 2D coordinates for layout of graph nodes."""
   import networkx as nx
   try:
