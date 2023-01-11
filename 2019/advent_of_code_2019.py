@@ -115,6 +115,7 @@ except ModuleNotFoundError:
 using_numba = hasattr(numba, 'jit')
 
 # %%
+SHOW_BIG_MEDIA = os.environ.get('SHOW_BIG_MEDIA', str(SHOW_BIG_MEDIA)).lower() in ['true', '1']
 advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)
 
 # %%
@@ -3394,6 +3395,11 @@ puzzle.verify(2, day24_part2)  # ~36 ms.
 # %%
 if SHOW_BIG_MEDIA:
   _ = day24_part2(puzzle.input, visualize=True)  # ~3 s.
+
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2019/results/day24.gif"/>
 
 # %% [markdown]
 # <a name="day25"></a>

@@ -5201,6 +5201,10 @@ if SHOW_BIG_MEDIA:
   _ = day25c(puzzle.input, visualize=True)  # Slow; ~14 s.
 
 
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day25.gif"/>
+
 # %%
 # Fastest: active sets and numba.
 @numba.njit

@@ -2537,12 +2537,12 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
   fig.layout.xaxis.visible = fig.layout.yaxis.visible = False  # For smooth scroll-zooming.
 
   if SHOW_BIG_MEDIA:
+    hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
     config = dict(
         scrollZoom=True,
         displaylogo=False,
         modeBarButtonsToRemove='select lasso2d'.split(),
     )
-    hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
     fig.show(config=config)
 
   if 1:
@@ -4430,6 +4430,7 @@ else:
     )
   media.set_max_output_height(5000)
 
+
 # %% [markdown]
 # Cached result:<br/>
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day21b.png"/><br/>
@@ -4684,6 +4685,7 @@ check_eq(day23a_part2(s1), 20)
 # %%
 if SHOW_BIG_MEDIA:  # Slow simulation.
   media.show_video(day23a_part2(puzzle.input, visualize=True), title='day23', codec='gif', fps=50)
+
 
 # %% [markdown]
 # Cached result:<br/>
