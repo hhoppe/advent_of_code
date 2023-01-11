@@ -82,6 +82,7 @@ import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/_
 import more_itertools
 import numpy as np
 import plotly
+import plotly.graph_objects as go
 import resampler  # https://github.com/hhoppe/resampler/blob/main/resampler/__init__.py
 import scipy.ndimage
 import scipy.signal
@@ -105,8 +106,10 @@ PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
 TAR_URL = f'https://github.com/hhoppe/advent_of_code_{YEAR}/raw/main/data/{PROFILE}.tar.gz'
 if 1:
-  hh.run(f"if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&"
-         f" wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi")
+  hh.run(
+      f'if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&'
+      f' wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi'
+  )
 INPUT_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}_input.txt'
 ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
 
@@ -138,14 +141,20 @@ hh.adjust_jupyterlab_markdown_width()
 # ### Helper functions
 
 # %%
+check_eq = hh.check_eq
+
+
+# %%
 def from_xyz(d: dict[str, float], /) -> np.ndarray:
   """Return an [x, y, z] array from a dict(x=x, y=y, z=z)."""
   return np.array([d['x'], d['y'], d['z']], float)
+
 
 def to_xyz(a: Any) -> dict[str, float]:
   """Return a dict(x=x, y=y, z=z) from an [x, y, z] array."""
   x, y, z = np.asarray(a)
   return dict(x=x, y=y, z=z)
+
 
 assert np.all(from_xyz(to_xyz([0.5, 1, 2])) == [0.5, 1, 2])
 
@@ -156,7 +165,15 @@ def hex_color(r: float, g: float, b: float) -> str:
   assert all(0.0 <= c <= 1.0 for c in (r, g, b))
   return '#' + ''.join(format(round(c * 255.0), '02x') for c in (r, g, b))
 
-assert hex_color(0.0, 0.5, 1.0) == '#0080ff'
+
+def color_from_hex(s: str) -> tuple[float, float, float]:
+  """Return an RGB tuple in [0.0, 1.0]^3 from a hex color, e.g. '#FF4080'."""
+  assert len(s) == 7 and s[0] == '#', s
+  return tuple(int(s2, 16) / 255 for s2 in more_itertools.sliced(s[1:], 2))  # type: ignore
+
+
+check_eq(hex_color(0.0, 0.5, 1.0), '#0080ff')
+check_eq(color_from_hex('#0000ff'), (0.0, 0.0, 1.0))
 
 
 # %%
@@ -166,7 +183,8 @@ def image_from_plt(fig: matplotlib.figure.Figure, supersample: int = 1) -> np.nd
     # savefig(bbox_inches='tight', pad_inches=0.0) changes dims, so would require format='png'.
     fig.savefig(io_buf, format='raw', dpi=fig.dpi * supersample)
     image = np.frombuffer(io_buf.getvalue(), np.uint8).reshape(
-        int(fig.bbox.bounds[3]) * supersample, int(fig.bbox.bounds[2]) * supersample, -1)[..., :3]
+        int(fig.bbox.bounds[3]) * supersample, int(fig.bbox.bounds[2]) * supersample, -1
+    )[..., :3]
     shape = np.array(image.shape[:2]) // supersample
     return resampler.resize(image, shape, filter='cubic')
 
@@ -184,24 +202,27 @@ def mesh3d_from_height(grid, /, *, facecolor=None, color=None, **kwargs):
   It is crucial to set lighting=dict(facenormalsepsilon=1e-15) to handle degenerate triangles.
   """
   assert not (color is not None and facecolor is None)
-  import plotly.graph_objects as go
   yy, xx = np.arange(grid.shape[0] + 1).repeat(2), np.arange(grid.shape[1] + 1).repeat(2)
   y, x = yy.repeat(len(xx)), np.tile(xx, len(yy))
   z = np.pad(grid.repeat(2, axis=0).repeat(2, axis=1), 1, constant_values=0.0).ravel()
-  i, j, k = ([y2 * len(xx) + x2 for y1, x1 in np.ndindex((len(yy) - 1, len(xx) - 1))
-              for y2, x2 in ((y1 + c0, x1 + c1), (y1 + c2, x1 + c3))]
-             for c0, c1, c2, c3 in [(0, 0, 1, 1), (0, 1, 1, 0), (1, 1, 0, 0)])
+  i, j, k = (
+      [
+          y2 * len(xx) + x2
+          for y1, x1 in np.ndindex((len(yy) - 1, len(xx) - 1))
+          for y2, x2 in ((y1 + c0, x1 + c1), (y1 + c2, x1 + c3))
+      ]
+      for c0, c1, c2, c3 in [(0, 0, 1, 1), (0, 1, 1, 0), (1, 1, 0, 0)]
+  )
 
   if facecolor is not None:
     facecolor2 = np.full(((grid.shape[0] * 2 + 1) * (grid.shape[1] * 2 + 1) * 2, 3), color)
     for y0, x0 in np.ndindex(facecolor.shape[:2]):
       index = ((y0 * 2 + 1) * (grid.shape[1] * 2 + 1) + x0 * 2 + 1) * 2
-      facecolor2[index:index + 2] = facecolor[y0, x0]
+      facecolor2[index : index + 2] = facecolor[y0, x0]
     facecolor = facecolor2
 
   intensity = z if facecolor is None else None
-  return go.Mesh3d(x=x, y=y, z=z, i=i, j=j, k=k,
-                   intensity=intensity, facecolor=facecolor, **kwargs)
+  return go.Mesh3d(x=x, y=y, z=z, i=i, j=j, k=k, intensity=intensity, facecolor=facecolor, **kwargs)
 
 
 # %%
@@ -211,19 +232,21 @@ def vector_slerp(a, b, t):
   angle = max(math.acos(np.dot(a, b)), 1e-10)
   return (math.sin((1.0 - t) * angle) * a + math.sin(t * angle) * b) / math.sin(angle)
 
+
 assert np.allclose(vector_slerp([0, 1], [1, 0], 1 / 3), [0.5, math.cos(math.radians(30))])
 
 
 # %%
-def wobble_video(fig: plotly.graph_objs._figure.Figure, /, *,
-                 amplitude: float = 1.0) -> list[np.ndarray]:
+def wobble_video(
+    fig: plotly.graph_objs._figure.Figure, /, *, amplitude: float = 1.0
+) -> list[np.ndarray]:
   """Return a looping video from a 3D plotly figure by orbitting the eye position left/right.
 
   Args:
     fig: A `plotly` figure containing a 3D scene.
     amplitude: Magnitude of the angle displacement, in degrees, by which the eye is rotated.
   """
-  rotation_fractions = [0, 2/3, 1, 1, 1, 2/3, 0, -2/3, -1, -1, -1, -2/3]
+  rotation_fractions = [0, 2 / 3, 1, 1, 1, 2 / 3, 0, -2 / 3, -1, -1, -1, -2 / 3]
   camera = fig['layout']['scene']['camera']
   if isinstance(camera, plotly.graph_objs.layout.scene.Camera):
     camera = camera.to_plotly_json()
@@ -255,7 +278,7 @@ def wobble_video(fig: plotly.graph_objs._figure.Figure, /, *,
 # %%
 def tilt_video(fig: plotly.graph_objs._figure.Figure) -> list[np.ndarray]:
   """Return a looping video from a 3D plotly figure by displacing the eye towards `camera.up`."""
-  rotation_fractions = [0, 0, 0, 1/6, 1/2, 5/6, 0.999, 0.999, 0.999, 5/6, 1/2, 1/6]
+  rotation_fractions = [0, 0, 0, 1 / 6, 1 / 2, 5 / 6, 0.999, 0.999, 0.999, 5 / 6, 1 / 2, 1 / 6]
   camera = fig['layout']['scene']['camera']
   if isinstance(camera, plotly.graph_objs.layout.scene.Camera):
     camera = camera.to_plotly_json()
@@ -283,8 +306,10 @@ def tilt_video(fig: plotly.graph_objs._figure.Figure) -> list[np.ndarray]:
 def graph_layout(graph: Any, *, prog: str) -> dict[Any, tuple[float, float]]:
   """Return dictionary of 2D coordinates for layout of graph nodes."""
   import networkx as nx
+
   try:
-    return nx.nx_agraph.graphviz_layout(graph, prog=prog)  # Requires package pygraphviz.
+    args = '-Gstart=1'  # Deterministically seed the graphviz random number generator.
+    return nx.nx_agraph.graphviz_layout(graph, prog=prog, args=args)  # Requires package pygraphviz.
   except ImportError:
     pass
   try:
@@ -296,7 +321,6 @@ def graph_layout(graph: Any, *, prog: str) -> dict[Any, tuple[float, float]]:
 
 
 # %%
-check_eq = hh.check_eq
 _ORIGINAL_GLOBALS = list(globals())
 
 # %% [markdown]
@@ -340,6 +364,7 @@ def day1a(s, *, part2=False):
   sums = [sum(int(s2) for s2 in group.splitlines()) for group in groups]
   return sum(sorted(sums)[-3:]) if part2 else max(sums)
 
+
 check_eq(day1a(s1), 24_000)
 puzzle.verify(1, day1a)
 
@@ -354,6 +379,7 @@ def day1(s, *, part2=False):
   groups = s.split('\n\n')
   sums = [sum(int(s2) for s2 in group.splitlines()) for group in groups]
   return sum(heapq.nlargest(3, sums)) if part2 else max(sums)
+
 
 check_eq(day1(s1), 24_000)
 puzzle.verify(1, day1)
@@ -394,16 +420,17 @@ def day2a(s, *, part2=False):  # Initial code, using dicts.
   for line in s.splitlines():
     ch1, ch2 = line.split()
     if not part2:
-      outcome = {'AX': 3, 'AY': 6, 'AZ': 0,
-                 'BX': 0, 'BY': 3, 'BZ': 6,
-                 'CX': 6, 'CY': 0, 'CZ': 3}[ch1 + ch2]
+      outcome = {'AX': 3, 'AY': 6, 'AZ': 0, 'BX': 0, 'BY': 3, 'BZ': 6, 'CX': 6, 'CY': 0, 'CZ': 3}[
+          ch1 + ch2
+      ]
       score = {'X': 1, 'Y': 2, 'Z': 3}[ch2]
     else:
       outcome = {'X': 0, 'Y': 3, 'Z': 6}[ch2]
-      score = {'X': {'A': 3, 'B': 1, 'C': 2},  # lose
-               'Y': {'A': 1, 'B': 2, 'C': 3},  # draw
-               'Z': {'A': 2, 'B': 3, 'C': 1},  # win
-               }[ch2][ch1]
+      score = {
+          'X': {'A': 3, 'B': 1, 'C': 2},  # lose
+          'Y': {'A': 1, 'B': 2, 'C': 3},  # draw
+          'Z': {'A': 2, 'B': 3, 'C': 1},  # win
+      }[ch2][ch1]
     total += outcome + score
 
   return total
@@ -421,8 +448,7 @@ def day2(s, *, part2=False):  # Using modulo arithmetic.
   total = 0
   for line in s.splitlines():
     i, j = ord(line[0]) - ord('A'), ord(line[2]) - ord('X')
-    total += (j * 3 + (i + j + 2) % 3 + 1 if part2 else
-              (j - i + 1) % 3 * 3 + j + 1)
+    total += j * 3 + (i + j + 2) % 3 + 1 if part2 else (j - i + 1) % 3 * 3 + j + 1
   return total
 
 
@@ -466,13 +492,14 @@ def day3a(s, *, part2=False):  # Initial code, containing some redundancy.
   if not part2:
     for line in s.splitlines():
       n = len(line) // 2
-      ch, = set(line[:n]) & set(line[n:])
+      (ch,) = set(line[:n]) & set(line[n:])
       total += ord(ch) - (ord('a') - 1 if ch.islower() else ord('A') - 27)
   else:
     for line0, line1, line2 in more_itertools.chunked(s.splitlines(), 3):
-      ch, = set(line0) & set(line1) & set(line2)
+      (ch,) = set(line0) & set(line1) & set(line2)
       total += ord(ch) - (ord('a') - 1 if ch.islower() else ord('A') - 27)
   return total
+
 
 check_eq(day3a(s1), 157)
 puzzle.verify(1, day3a)
@@ -493,9 +520,10 @@ def day3b(s, *, part2=False):  # Using a generator.
 
   total = 0
   for groups in get_groups(s.splitlines()):
-    ch, = set.intersection(*map(set, groups))
+    (ch,) = set.intersection(*map(set, groups))
     total += ord(ch) - (ord('a') - 1 if ch.islower() else ord('A') - 27)  # type: ignore
   return total
+
 
 check_eq(day3b(s1), 157)
 puzzle.verify(1, day3b)
@@ -507,14 +535,13 @@ puzzle.verify(2, day3b_part2)
 
 # %%
 def day3(s, *, part2=False):  # Prettiest code.
-
   def score(*groups):
-    ch, = set.intersection(*map(set, groups))
+    (ch,) = set.intersection(*map(set, groups))
     return string.ascii_letters.index(ch) + 1  # type: ignore[arg-type]
 
   lines = s.splitlines()
   if not part2:
-    return sum(score(line[:len(line) // 2], line[len(line) // 2:]) for line in lines)
+    return sum(score(line[: len(line) // 2], line[len(line) // 2 :]) for line in lines)
   return sum(score(*lines3) for lines3 in more_itertools.chunked(lines, 3))
 
 
@@ -565,11 +592,12 @@ s1 = """\
 def day4a(s, *, part2=False):  # Using sets.
   count = 0
   for line in s.splitlines():
-    a, b = (set(range(i, j + 1))
-            for pair in line.split(',')
-            for i, j in (map(int, pair.split('-')),))
+    a, b = (
+        set(range(i, j + 1)) for pair in line.split(',') for i, j in (map(int, pair.split('-')),)
+    )
     count += bool(a & b) if part2 else a <= b or a >= b
   return count
+
 
 check_eq(day4a(s1), 2)
 puzzle.verify(1, day4a)
@@ -581,11 +609,18 @@ puzzle.verify(2, day4a_part2)
 
 # %%
 def day4b(s, *, part2=False):  # Using sets, with only comprehensions.
-  return sum(bool(a & b) if part2 else a <= b or a >= b
-             for line in s.splitlines()
-             for a, b in ((set(range(i, j + 1))
-                           for pair in line.split(',')
-                           for i, j in (map(int, pair.split('-')),)),))
+  return sum(
+      bool(a & b) if part2 else a <= b or a >= b
+      for line in s.splitlines()
+      for a, b in (
+          (
+              set(range(i, j + 1))
+              for pair in line.split(',')
+              for i, j in (map(int, pair.split('-')),)
+          ),
+      )
+  )
+
 
 check_eq(day4b(s1), 2)
 puzzle.verify(1, day4b)
@@ -598,19 +633,23 @@ puzzle.verify(2, day4b_part2)
 # %%
 def _run_in_shell(command: str, s: str) -> str:
   command = textwrap.dedent(command.strip())
-  return subprocess.run(command, shell=True, check=True, encoding='utf-8',
-                        input=s, capture_output=True).stdout
+  return subprocess.run(
+      command, shell=True, check=True, encoding='utf-8', input=s, capture_output=True
+  ).stdout
 
 
 # %%
 def day4c(s, *, part2=False):  # Using Perl.
-  command = (r"""
+  part1_command = r"""
     perl -F'\D' -lane '$n += $F[0] <= $F[2] && $F[1] >= $F[3] ||
         $F[2] <= $F[0] && $F[3] >= $F[1]; END {print $n}'
-             """ if not part2 else r"""
+  """
+  part2_command = r"""
     perl -F'\D' -lane '$n += $F[1] >= $F[2] && $F[3] >= $F[0]; END {print $n}'
-             """)
+  """
+  command = part2_command if part2 else part1_command
   return int(_run_in_shell(command, s))
+
 
 check_eq(day4c(s1), 2)
 puzzle.verify(1, day4c)
@@ -629,6 +668,7 @@ def day4(s, *, part2=False):  # Straightforward and fast.
     contained = (a[0] <= b[0] and a[1] >= b[1]) or (b[0] <= a[0] and b[1] >= a[1])
     count += overlaps if part2 else contained
   return count
+
 
 check_eq(day4(s1), 2)
 puzzle.verify(1, day4)
@@ -670,7 +710,9 @@ move 1 from 2 to 1
 move 3 from 1 to 3
 move 2 from 2 to 1
 move 1 from 1 to 2
-""".replace('@', '')
+""".replace(
+    '@', ''
+)
 
 
 # %%
@@ -706,13 +748,15 @@ puzzle.verify(2, day5a_part2)
 # %%
 def day5(s, *, part2=False):  # More compact.
   lines1, lines2 = (t.splitlines() for t in s.split('\n\n'))
-  stacks = [[ch for line in lines1 if (ch := line[i * 4 + 1]).isalpha()]
-            for i in range(len(lines1[0][1::4]))]
+  stacks = [
+      [ch for line in lines1 if (ch := line[i * 4 + 1]).isalpha()]
+      for i in range(len(lines1[0][1::4]))
+  ]
 
   for line in lines2:
     words = line.split()
     count, src, dst = int(words[1]), int(words[3]) - 1, int(words[5]) - 1
-    stacks[src][:count], stacks[dst][0:0] = [], stacks[src][:count][::1 if part2 else -1]
+    stacks[src][:count], stacks[dst][0:0] = [], stacks[src][:count][:: 1 if part2 else -1]
 
   return ''.join(stack[0] for stack in stacks)
 
@@ -755,6 +799,7 @@ def day6_part1_tests(solver):
   check_eq(solver('nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg'), 10)
   check_eq(solver('zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw'), 11)
 
+
 def day6_part2_tests(solver):
   check_eq(solver('mjqjpqmgbljsphdztnvjfqwrcgsmlb'), 19)
   check_eq(solver('bvwbjplbgvbhsrlpgdmjqwftvncz'), 23)
@@ -779,6 +824,7 @@ def day6a(s, *, part2=False):  # Theoretically fast for large subsequences, but 
     counts[ord(ch) - ord('a')] += 1
     queue.append(ch)
 
+
 day6_part1_tests(day6a)
 puzzle.verify(1, day6a)
 
@@ -802,6 +848,7 @@ def day6b(s, *, part2=False):  # Also theoretically fast but slower here.
     if len(counts) == n:
       return n + i
 
+
 day6_part1_tests(day6b)
 puzzle.verify(1, day6b)
 
@@ -815,8 +862,9 @@ def day6(s, *, part2=False):  # Fastest and most compact
   s = s.strip()
   n = 14 if part2 else 4
   for i in range(len(s)):
-    if len(set(s[i:i + n])) == n:
+    if len(set(s[i : i + n])) == n:
       return i + n
+
 
 day6_part1_tests(day6)
 puzzle.verify(1, day6)
@@ -881,7 +929,7 @@ def day7a(s, *, part2=False):  # Overly general solution.
     if command == 'cd /':
       path = '/'
     elif command == 'cd ..':
-      path = path[:path.rindex('/')]
+      path = path[: path.rindex('/')]
     elif command.startswith('cd '):
       path += '/' + command[3:]
     elif command.startswith('ls'):
@@ -921,7 +969,8 @@ puzzle.verify(2, day7a_part2)
 # %%
 if sys.version_info >= (3, 10):  # Using match/case.
   # pylint: disable-next=exec-used
-  exec("""
+  exec(
+      """
 # From https://www.reddit.com/r/adventofcode/comments/zesk40/comment/iz8fww6/
 def day7b(s, *, part2=False):
   dirs: collections.defaultdict[str, int] = collections.defaultdict(int)
@@ -944,12 +993,14 @@ puzzle.verify(1, day7b)
 day7b_part2 = functools.partial(day7b, part2=True)
 check_eq(day7b_part2(s1), 24933642)
 puzzle.verify(2, day7b_part2)
-  """)
+  """
+  )
 
 
 # %%
 def day7v(s):  # Visualization
   import networkx as nx
+
   graph = nx.DiGraph()
   graph.add_node('/', label='/', node_color='red', size=0)
   dirs: collections.defaultdict[str, int] = collections.defaultdict(int)
@@ -1004,8 +1055,12 @@ def day7(s, *, part2=False):  # Solution assuming depth-first traversal.
     elif line[0].isdigit():
       stack[-1] += int(line.split()[0])
   sizes.extend(itertools.accumulate(stack[::-1]))
-  return (sum(n for n in sizes if n <= 100_000) if not part2 else
-          min(n for n in sizes if n >= max(sizes) - 40_000_000))
+  return (
+      sum(n for n in sizes if n <= 100_000)
+      if not part2
+      else min(n for n in sizes if n >= max(sizes) - 40_000_000)
+  )
+
 
 check_eq(day7(s1), 95437)
 puzzle.verify(1, day7)
@@ -1066,6 +1121,7 @@ def day8a_part1(s):  # Slow.
     grid, visible = map(np.rot90, [grid, visible])
   return visible.sum()
 
+
 check_eq(day8a_part1(s1), 21)
 puzzle.verify(1, day8a_part1)
 
@@ -1084,6 +1140,7 @@ def day8a_part2(s):  # Slow.
     grid, product = map(np.rot90, [grid, product])
   return product.max()
 
+
 check_eq(day8a_part2(s1), 8)
 puzzle.verify(2, day8a_part2)
 
@@ -1097,7 +1154,7 @@ def day8v(s, *, part2=False, visualize=False):
   matrix2 = np.ones_like(grid, int)
   for _ in range(4):
     for y, x in np.ndindex(grid.shape):
-      lower = [t < grid[y, x] for t in grid[y, x + 1:]]
+      lower = [t < grid[y, x] for t in grid[y, x + 1 :]]
       matrix1[y, x] |= all(lower)
       matrix2[y, x] *= next((i + 1 for i, t in enumerate(lower) if ~t), len(lower))
     grid, matrix1, matrix2 = map(np.rot90, [grid, matrix1, matrix2])
@@ -1115,11 +1172,14 @@ def day8v(s, *, part2=False, visualize=False):
           break
         image2[y, x2] = 1.0, 0.0, 0.0
       grid, image2, matrix2 = map(np.rot90, [grid, image2, matrix2])
-    videos = {'day08a': np.array([image0, image1]).repeat(2, axis=1).repeat(2, axis=2),
-              'day08b': np.array([image0, image2]).repeat(2, axis=1).repeat(2, axis=2)}
+    videos = {
+        'day08a': np.array([image0, image1]).repeat(2, axis=1).repeat(2, axis=2),
+        'day08b': np.array([image0, image2]).repeat(2, axis=1).repeat(2, axis=2),
+    }
     media.show_videos(videos, codec='gif', fps=1)
 
   return matrix2.max() if part2 else matrix1.sum()
+
 
 check_eq(day8v(s1), 21)
 puzzle.verify(1, day8v)
@@ -1138,16 +1198,13 @@ def day8w(s):  # Use plotly to create 3D visualization.
   matrix2 = np.full_like(grid, 1)
   for _ in range(4):
     for y, x in np.ndindex(grid.shape):
-      lower = [t < grid[y, x] for t in grid[y, x + 1:]]
+      lower = [t < grid[y, x] for t in grid[y, x + 1 :]]
       matrix1[y, x] |= all(lower)
       matrix2[y, x] *= next((i + 1 for i, t in enumerate(lower) if ~t), len(lower))
     grid, matrix1, matrix2 = map(np.rot90, [grid, matrix1, matrix2])
 
-  import plotly.graph_objects as go
-  lighting = dict(
-      ambient=0.5, diffuse=0.5, fresnel=0.1, specular=0.1, roughness=0.05,
-      facenormalsepsilon=1e-15,  # Crucial given the degenerate triangles.
-  )
+  lighting = dict(ambient=0.5, diffuse=0.5, fresnel=0.1, specular=0.1, roughness=0.05)
+  lighting.update(facenormalsepsilon=1e-15)  # Crucial given the degenerate triangles.
   facecolor = np.full((*grid.shape[:2], 3), (0.94,) * 3)
   facecolor[matrix1 != 0] = 0.0, 0.0, 0.8
   matrix2.flat[matrix2.argmax()] = 10**8  # Select a unique Part 2 maximum.
@@ -1162,18 +1219,21 @@ def day8w(s):  # Use plotly to create 3D visualization.
 
   surface = mesh3d_from_height(
       grid,
-      facecolor=facecolor, color=(0.94,) * 3,
-      flatshading=True, lighting=lighting, lightposition=dict(x=-20, y=-100, z=50),
+      facecolor=facecolor,
+      color=(0.94,) * 3,
+      flatshading=True,
+      lighting=lighting,
+      lightposition=dict(x=-20, y=-100, z=50),
   )
   fig = go.Figure(data=[surface])
 
   def set_fig_layout(*, for_tilt):
     a = 0.1  # Downscale dimensions to avoid clipping eye coordinates to max ~100.
+    aspectratio = dict(x=grid.shape[1] * a, y=grid.shape[0] * a, z=10 * a)
     eye = dict(x=0, y=-100 * a, z=80 * a) if for_tilt else dict(x=0, y=-75 * a, z=60 * a)
-    scene = dict(
-        aspectratio=dict(x=grid.shape[1] * a, y=grid.shape[0] * a, z=10 * a),
-        xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False),
-        camera=dict(center=dict(x=0, y=0, z=-20 * a), eye=eye))
+    camera = dict(center=dict(x=0, y=0, z=-20 * a), eye=eye)
+    no_axes = dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False))
+    scene = dict(aspectratio=aspectratio, camera=camera, **no_axes)
     fig.update_layout(width=700, height=350, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
 
   set_fig_layout(for_tilt=False)
@@ -1209,13 +1269,14 @@ def day8z(s, *, part2=False):
   matrix = np.full_like(grid, 1 if part2 else 0)
   for _ in range(4):
     for y, x in np.ndindex(grid.shape):
-      lower = (t < grid[y, x] for t in grid[y, x + 1:])
+      lower = (t < grid[y, x] for t in grid[y, x + 1 :])
       if part2:
-        matrix[y, x] *= next((i + 1 for i, t in enumerate(lower) if ~t), len(grid[y, x + 1:]))
+        matrix[y, x] *= next((i + 1 for i, t in enumerate(lower) if ~t), len(grid[y, x + 1 :]))
       else:
         matrix[y, x] |= all(lower)
     grid, matrix = map(np.rot90, [grid, matrix])
   return matrix.max() if part2 else matrix.sum()
+
 
 check_eq(day8z(s1), 21)
 puzzle.verify(1, day8z)
@@ -1234,6 +1295,7 @@ def day8_part1(s):  # Fast using np.maximum.accumulate().
     visible[:, 1:] |= grid[:, 1:] > np.maximum.accumulate(grid, 1)[:, :-1]
     grid, visible = map(np.rot90, [grid, visible])
   return visible.sum()
+
 
 check_eq(day8_part1(s1), 21)
 puzzle.verify(1, day8_part1)
@@ -1348,6 +1410,7 @@ def day9b(s, *, part2=False, visualize=False, pad=1, pad0=12, background=(245,) 
     visited: set[tuple[int, int]]
     nodes: np.ndarray
     step_index: int
+
   frames: list[Frame] = []
   countdown = 1
   partial_visited = {(0, 0)}
@@ -1389,14 +1452,14 @@ def day9b(s, *, part2=False, visualize=False, pad=1, pad0=12, background=(245,) 
       pos = list(nodes) + list(partial_visited)
       yx0_min = np.min([yx0_min] + pos, axis=0)
       yx0_max = np.max([yx0_max] + pos, axis=0)
-      slices = tuple(slice(yx0_min[c] - pad - yx1_min[c],
-                           yx0_max[c] + pad + 1 - yx1_min[c]) for c in range(2))
+      slices = tuple(
+          slice(yx0_min[c] - pad - yx1_min[c], yx0_max[c] + pad + 1 - yx1_min[c]) for c in range(2)
+      )
       cropped = image2[slices]
-      resized = resampler.uniform_resize(
-          cropped, final_shape, filter='trapezoid', boundary='border',
-          gamma='identity', cval=np.array(background) / 255)
-      hh.overlay_text(resized, (4, 4), f'Step {step_index:5}',
-                      fontsize=20, shape=(21, 110), background=background)
+      options: Any = dict(boundary='border', gamma='identity', cval=np.array(background) / 255)
+      resized = resampler.uniform_resize(cropped, final_shape, filter='trapezoid', **options)
+      text = f'Step {step_index:5}'
+      hh.overlay_text(resized, (4, 4), text, fontsize=20, shape=(21, 110), background=background)
       images.append(resized)
     images = [images[0]] * 5 + images + [images[-1]] * 50
     return images
@@ -1503,7 +1566,6 @@ s2 = """\
 
 # %%
 def day10a(s, *, part2=False, return_multiline=False, visualize=False):
-
   def xvalues():
     x = 1
     for word in (it := iter(s.split())):
@@ -1513,8 +1575,7 @@ def day10a(s, *, part2=False, return_multiline=False, visualize=False):
         x += int(next(it, None))  # type: ignore[arg-type]
 
   if not part2:
-    return sum(cycle * x for cycle, x in enumerate(xvalues(), 1)
-               if cycle % 40 == 20)
+    return sum(cycle * x for cycle, x in enumerate(xvalues(), 1) if cycle % 40 == 20)
 
   a = np.array(['.#'[abs(x - v) < 2] for (y, x), v in zip(np.ndindex(6, 40), xvalues())])
   s2 = '\n'.join(''.join(row) for row in a.reshape(6, 40))
@@ -1545,7 +1606,6 @@ _ = day10a_part2(puzzle.input, visualize=True)
 
 # %%
 def day10(s, *, part2=False, w=40):  # Most compact, with OCR.
-
   def xs():
     x = 1
     for word in (it := iter(s.split())):
@@ -1626,7 +1686,6 @@ Monkey 3:
 
 # %%
 def day11a(s, *, part2=False):  # Using dataclass.
-
   @dataclasses.dataclass
   class Monkey:
     items: list[int]
@@ -1639,9 +1698,13 @@ def day11a(s, *, part2=False):  # Using dataclass.
   for lines in (s2.splitlines() for s2 in s.split('\n\n')):
     items = list(map(int, lines[1].split(':')[1].split(',')))
     op, arg = lines[2][23], lines[2][25:]
-    operation = ((lambda x: x * x) if arg == 'old' else
-                 (lambda c: lambda x: x * c)(int(arg)) if op == '*' else
-                 (lambda c: lambda x: x + c)(int(arg)))
+    operation = (
+        (lambda x: x * x)
+        if arg == 'old'
+        else (lambda c: lambda x: x * c)(int(arg))
+        if op == '*'
+        else (lambda c: lambda x: x + c)(int(arg))
+    )
     divisible_by = int(lines[3][21:])
     throws = [int(line.split()[-1]) for line in lines[4:6]]
     monkeys.append(Monkey(items, operation, divisible_by, throws))
@@ -1678,9 +1741,13 @@ def day11b(s, *, part2=False):  # Using collections.namedtuple.
   for lines in (s2.splitlines() for s2 in s.split('\n\n')):
     items = list(map(int, lines[1].split(':')[1].split(',')))
     op, arg = lines[2][23], lines[2][25:]
-    operation = ((lambda x: x * x) if arg == 'old' else
-                 (lambda c: lambda x: x * c)(int(arg)) if op == '*' else
-                 (lambda c: lambda x: x + c)(int(arg)))
+    operation = (
+        (lambda x: x * x)
+        if arg == 'old'
+        else (lambda c: lambda x: x * c)(int(arg))
+        if op == '*'
+        else (lambda c: lambda x: x + c)(int(arg))
+    )
     divisible_by = int(lines[3][21:])
     throws = [int(line.split()[-1]) for line in lines[4:6]]
     monkeys.append(Monkey(items, operation, divisible_by, throws))
@@ -1712,14 +1779,14 @@ puzzle.verify(2, day11b_part2)
 
 # %%
 # Fast using numba, but ugly because numba function parameters cannot be lists.
-
 @numba.njit
 def day11_process(itemss1, ops, args, divisible_bys, throwss, activities, part2, mod):
   # Convert "ragged" 2d array to list of lists.
   itemss = [[item for item in items if item >= 0] for items in itemss1]
   for _ in range(10_000 if part2 else 20):
     for i, (items, op, arg, divisible_by, throws) in enumerate(
-        zip(itemss, ops, args, divisible_bys, throwss)):
+        zip(itemss, ops, args, divisible_bys, throwss)
+    ):
       activities[i] += len(items)
       for item in items:
         item = item * (arg if arg >= 0 else item) if op == '*' else item + arg
@@ -1750,7 +1817,7 @@ def day11(s, *, part2=False):  # Using collections.namedtuple.
   max_items = max(len(items) for items in itemss)
   itemss1 = np.full((len(ss), max_items), -1)
   for i, items in enumerate(itemss):
-    itemss1[i, :len(items)] = items
+    itemss1[i, : len(items)] = items
   mod = math.prod(divisible_bys)
   day11_process(itemss1, ops, args, divisible_bys, throwss, activities, part2, mod)
   return math.prod(sorted(activities)[-2:])
@@ -1811,8 +1878,7 @@ def day12a(s, *, part2=False):  # Using `set` for seen nodes.
   grid = np.array([list(line) for line in s.splitlines()])
   start_yx, end_yx = (tuple(np.argwhere(grid == c)[0]) for c in 'SE')
   grid[start_yx], grid[end_yx] = 'a', 'z'
-  seen = set([start_yx] if not part2 else
-             map(tuple, np.argwhere(grid == 'a')))
+  seen = set([start_yx] if not part2 else map(tuple, np.argwhere(grid == 'a')))
   queue = collections.deque([(yx, 0) for yx in seen])
 
   while True:
@@ -1821,8 +1887,8 @@ def day12a(s, *, part2=False):  # Using `set` for seen nodes.
       return distance
     for dy, dx in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
       yx2 = y2, x2 = yx[0] + dy, yx[1] + dx
-      if (0 <= y2 < grid.shape[0] and 0 <= x2 < grid.shape[1] and
-          yx2 not in seen and ord(grid[yx2]) <= ord(grid[yx]) + 1):
+      inbounds = 0 <= y2 < grid.shape[0] and 0 <= x2 < grid.shape[1]
+      if inbounds and yx2 not in seen and ord(grid[yx2]) <= ord(grid[yx]) + 1:
         seen.add(yx2)
         queue.append((yx2, distance + 1))
 
@@ -1857,8 +1923,8 @@ def day12v(s, *, n=3):  # Visualize as GIF image.
     while (yx := queue.popleft()) != end_yx:
       for dy, dx in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
         yx2 = y2, x2 = yx[0] + dy, yx[1] + dx
-        if (0 <= y2 < grid.shape[0] and 0 <= x2 < grid.shape[1] and
-            yx2 not in prev and grid[yx2] <= grid[yx] + 1):
+        inbounds = 0 <= y2 < grid.shape[0] and 0 <= x2 < grid.shape[1]
+        if inbounds and yx2 not in prev and grid[yx2] <= grid[yx] + 1:
           prev[yx2] = yx
           queue.append(yx2)
 
@@ -1892,8 +1958,8 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
     while (yx := queue.popleft()) != end_yx:
       for dy, dx in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
         yx2 = y2, x2 = yx[0] + dy, yx[1] + dx
-        if (0 <= y2 < grid.shape[0] and 0 <= x2 < grid.shape[1] and
-            yx2 not in prev and grid[yx2] <= grid[yx] + 1):
+        inbounds = 0 <= y2 < grid.shape[0] and 0 <= x2 < grid.shape[1]
+        if inbounds and yx2 not in prev and grid[yx2] <= grid[yx] + 1:
           prev[yx2] = yx
           queue.append(yx2)
 
@@ -1902,45 +1968,66 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
     path_points.append((*yx, grid[yx]))
     yx = prev[yx]
 
-  import plotly.graph_objects as go
-  lighting = dict(
-      ambient=0.5, diffuse=0.5, fresnel=0.1, specular=0.1, roughness=0.05,
-      facenormalsepsilon=1e-15,  # Crucial given the degenerate triangles.
-  )
+  lighting = dict(ambient=0.5, diffuse=0.5, fresnel=0.1, specular=0.1, roughness=0.05)
+  lighting.update(facenormalsepsilon=1e-15)  # Crucial given the degenerate triangles.
   surface = mesh3d_from_height(
-      grid, colorscale=[(0.0, 'rgb(90, 90, 90)'), (1.0, 'rgb(220, 220, 220)')],
-      cmin=-10, showscale=False,
-      flatshading=True, lighting=lighting, lightposition=dict(x=-20, y=-100, z=50))
+      grid,
+      colorscale=[(0.0, 'rgb(90, 90, 90)'), (1.0, 'rgb(220, 220, 220)')],
+      cmin=-10,
+      showscale=False,
+      flatshading=True,
+      lighting=lighting,
+      lightposition=dict(x=-20, y=-100, z=50),
+  )
 
   path_array = (np.array(path_points) + (0.5, 0.5, 0.52)).T
   path_data = go.Scatter3d(
-      x=path_array[1], y=path_array[0], z=path_array[2], mode='lines+markers',
-      line=dict(color='orange', width=3), marker=dict(size=2, color='orange'))
+      x=path_array[1],
+      y=path_array[0],
+      z=path_array[2],
+      mode='lines+markers',
+      line=dict(color='orange', width=3),
+      marker=dict(size=2, color='orange'),
+  )
   path_endpoints = go.Scatter3d(
-      x=path_array[1, [0, -1]], y=path_array[0, [0, -1]], z=path_array[2, [0, -1]],
-      mode='markers', marker=dict(size=4, color='red'))
+      x=path_array[1, [0, -1]],
+      y=path_array[0, [0, -1]],
+      z=path_array[2, [0, -1]],
+      mode='markers',
+      marker=dict(size=4, color='red'),
+  )
 
   fig = go.Figure(data=[surface, path_data, path_endpoints])
   a = 0.1  # To prevent clipping of eye coordinates and allow zoom out.
-  camera = (dict(center=dict(x=0, y=0, z=0), eye=dict(x=0, y=-92 * a, z=58 * a)) if use_tilt else
-            dict(center=dict(x=8 * a, y=0, z=0), eye=dict(x=25 * a, y=-84 * a, z=59 * a)))
-  scene = dict(
-      aspectratio=dict(x=grid.shape[1] * a, y=grid.shape[0] * a, z=20 * a), camera=camera,
-      xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False))
-  fig.update_layout(width=700, height=350, margin=dict(l=0, r=0, b=0, t=0),
-                    scene=scene, showlegend=False)
+  aspectratio = dict(x=grid.shape[1] * a, y=grid.shape[0] * a, z=20 * a)
+  camera = (
+      dict(center=dict(x=0, y=0, z=0), eye=dict(x=0, y=-92 * a, z=58 * a))
+      if use_tilt
+      else dict(center=dict(x=8 * a, y=0, z=0), eye=dict(x=25 * a, y=-84 * a, z=59 * a))
+  )
+  no_axes = dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False))
+  scene = dict(aspectratio=aspectratio, camera=camera, **no_axes)
+  fig.update_layout(
+      width=700, height=350, margin=dict(l=0, r=0, b=0, t=0), scene=scene, showlegend=False
+  )
 
   if SHOW_BIG_MEDIA:
     hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
     fig.show()
 
-  image = (image_from_plotly(fig)[110:-70, 20:-20] if use_tilt else
-           image_from_plotly(fig)[110:-25, 0:-20])
+  image = (
+      image_from_plotly(fig)[110:-70, 20:-20]
+      if use_tilt
+      else image_from_plotly(fig)[110:-25, 0:-20]
+  )
   media.show_image(image, title='day12b', border=True)
 
   if 1:
-    video = (np.asarray(tilt_video(fig))[:, 95:-80, 20:-20] if use_tilt else
-             np.asarray(wobble_video(fig, amplitude=2.0))[:, 110:-25, 0:-20])
+    video = (
+        np.asarray(tilt_video(fig))[:, 95:-80, 20:-20]
+        if use_tilt
+        else np.asarray(wobble_video(fig, amplitude=2.0))[:, 110:-25, 0:-20]
+    )
     fps = 3 if use_tilt else 10
     media.show_video(video, title='day12c', codec='gif', fps=fps, border=True)
 
@@ -1964,8 +2051,8 @@ def day12b(s, *, part2=False):  # Using `array` for seen nodes.
       return distance
     for dy, dx in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
       yx2 = y2, x2 = yx[0] + dy, yx[1] + dx
-      if (0 <= y2 < grid.shape[0] and 0 <= x2 < grid.shape[1] and
-          not visited[yx2] and ord(grid[yx2]) <= ord(grid[yx]) + 1):
+      inbounds = 0 <= y2 < grid.shape[0] and 0 <= x2 < grid.shape[1]
+      if inbounds and not visited[yx2] and ord(grid[yx2]) <= ord(grid[yx]) + 1:
         visited[yx2] = True
         queue.append((yx2, distance + 1))
 
@@ -2089,7 +2176,6 @@ s1 = """\
 
 # %%
 def day13a(s, *, part2=False):  # Initial code.
-
   def compare(expr0, expr1) -> int:
     is_list0, is_list1 = isinstance(expr0, list), isinstance(expr1, list)
     if not is_list0 and not is_list1:
@@ -2135,7 +2221,6 @@ puzzle.verify(2, day13a_part2)
 # https://www.reddit.com/r/adventofcode/comments/zkmyh4/2022_day_13_solutions/j00osdl/ and
 # https://www.reddit.com/r/adventofcode/comments/zkmyh4/2022_day_13_solutions/j00n934/ .
 def day13(s, *, part2=False):
-
   def compare(a, b) -> int:
     if isinstance(a, int) and isinstance(b, int):
       return (a > b) - (a < b)
@@ -2254,6 +2339,7 @@ def day14(s, *, part2=False, visualize=False, period=2, acceleration=1000, magni
 
   return index
 
+
 check_eq(day14(s1), 24)
 puzzle.verify(1, day14)
 
@@ -2262,8 +2348,12 @@ check_eq(day14_part2(s1), 93)
 puzzle.verify(2, day14_part2)
 
 # %%
-media.show_video(day14_part2(puzzle.input, visualize=True, period=2, acceleration=18),
-                 title='day14', codec='gif', fps=50)
+media.show_video(
+    day14_part2(puzzle.input, visualize=True, period=2, acceleration=18),
+    title='day14',
+    codec='gif',
+    fps=50,
+)
 
 # %% [markdown]
 # <a name="day15"></a>
@@ -2324,7 +2414,7 @@ def day15a(s, *, part2=False, y_part1=2_000_000, side_part2=4_000_000):
     for i, (x, y) in enumerate(sensor):
       radius = beacon_dist[i] - abs(y_part1 - y)
       if radius >= 0:
-        grid[x - radius + offset:x + radius + offset + 1] = True
+        grid[x - radius + offset : x + radius + offset + 1] = True
 
     for bx, by in beacon:
       if by == y_part1:
@@ -2341,11 +2431,10 @@ def day15a(s, *, part2=False, y_part1=2_000_000, side_part2=4_000_000):
       return xl[0] * 4_000_000 + xl[1]
     xm = (xl + xh) // 2  # Partition into up to 4 quadtree child cells.
     for child_min_max in itertools.product(
-        *(((l, m), (m + 1, h)) if m < h else ((l, h),)
-          for l, m, h in zip(xl, xm, xh))):
+        *(((l, m), (m + 1, h)) if m < h else ((l, h),) for l, m, h in zip(xl, xm, xh))
+    ):
       xl, xh = np.array(child_min_max).T
-      dist = (np.maximum(xh - sensor, 0) +
-              np.maximum(sensor - xl, 0)).sum(1)
+      dist = (np.maximum(xh - sensor, 0) + np.maximum(sensor - xl, 0)).sum(1)
       if not np.any(dist <= beacon_dist):
         stack.append((xl, xh))
 
@@ -2372,7 +2461,7 @@ def day15b(s, *, part2=False, y_part1=2_000_000, side_part2=4_000_000):
     for i, (x, y) in enumerate(sensor):
       radius = beacon_dist[i] - abs(y_part1 - y)
       if radius >= 0:
-        grid[x - radius + offset:x + radius + offset + 1] = True
+        grid[x - radius + offset : x + radius + offset + 1] = True
     num_row_beacons = len(set(x for x, y in beacon if y == y_part1))
     return np.count_nonzero(grid) - num_row_beacons
 
@@ -2383,8 +2472,8 @@ def day15b(s, *, part2=False, y_part1=2_000_000, side_part2=4_000_000):
       return low[0] * 4_000_000 + low[1]
     mid = (low + high) // 2  # Partition into child cells.
     for child_low_high in itertools.product(
-        *(((l, m), (m + 1, h)) if m < h else ((l, h),)
-          for l, m, h in zip(low, mid, high))):
+        *(((l, m), (m + 1, h)) if m < h else ((l, h),) for l, m, h in zip(low, mid, high))
+    ):
       low, high = np.array(child_low_high).T
       # Manhattan distance from [low, high] box to sensor.
       dist = (np.maximum(high - sensor, 0) + np.maximum(sensor - low, 0)).sum(1)
@@ -2420,8 +2509,8 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
       break
     mid = (low + high) // 2
     for child_low_high in itertools.product(
-        *(((l, m), (m + 1, h)) if m < h else ((l, h),)
-          for l, m, h in zip(low, mid, high))):
+        *(((l, m), (m + 1, h)) if m < h else ((l, h),) for l, m, h in zip(low, mid, high))
+    ):
       low, high = np.array(child_low_high).T
       dist = (np.maximum(high - sensor, 0) + np.maximum(sensor - low, 0)).sum(1)
       if all(dist > beacon_dist):
@@ -2429,30 +2518,35 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
 
   pp = low  # Solution point for Part 2.
 
-  import plotly.graph_objects as go
   colors = itertools.cycle(plotly.colors.qualitative.Plotly)
   fig = go.Figure()
   for sensor1, beacon1, r, color in zip(sensor, beacon, beacon_dist, colors):
-    x, y = np.array([sensor1 + (dy * r, dx * r)
-                     for dy, dx in [(-1, 0), (0, -1), (1, 0), (0, 1), (-1, 0)]]).T
+    x, y = np.array(
+        [sensor1 + (dy * r, dx * r) for dy, dx in [(-1, 0), (0, -1), (1, 0), (0, 1), (-1, 0)]]
+    ).T
     fig.add_trace(go.Scatter(x=x, y=y, mode='none', fill='toself', opacity=0.5, fillcolor=color))
-    color2 = hex_color(*(int(s2, 16) / 255 * 0.8  # type: ignore[call-overload]
-                         for s2 in more_itertools.sliced(color[1:], 2)))
-    fig.add_trace(go.Scatter(x=[sensor1[0]], y=[sensor1[1]], mode='markers',
-                             marker=dict(color=color2, size=2, opacity=1.0)))
-    fig.add_trace(go.Scatter(x=[beacon1[0]], y=[beacon1[1]], mode='markers',
-                             marker=dict(color='orange', size=6 if beacon1[0] == y_part1 else 3)))
+    color2 = hex_color(*(np.array(color_from_hex(color)) * 0.8))  # type: ignore[call-overload]
+    marker = dict(color=color2, size=2, opacity=1.0)
+    fig.add_trace(go.Scatter(x=[sensor1[0]], y=[sensor1[1]], mode='markers', marker=marker))
+    marker = dict(color='orange', size=6 if beacon1[0] == y_part1 else 3)
+    fig.add_trace(go.Scatter(x=[beacon1[0]], y=[beacon1[1]], mode='markers', marker=marker))
 
   fig.add_trace(go.Scatter(x=[pp[0]], y=[pp[1]], mode='markers', marker=dict(color='red')))
-  fig.add_shape(type='line', x0=vmin[0], y0=y_part1, x1=vmax[0], y1=y_part1,
-                line=dict(color='black', width=0.25, dash='dot'))
+  line = dict(color='black', width=0.25, dash='dot')
+  fig.add_shape(type='line', x0=vmin[0], y0=y_part1, x1=vmax[0], y1=y_part1, line=line)
 
-  fig.add_shape(type='rect', x0=pp[0] - 0.5, y0=pp[1] - 0.5, x1=pp[0] + 0.5, y1=pp[1] + 0.5,
-                line_width=0, fillcolor='red')  # Overrides marker at extreme close-up.
+  # Overrides marker at extreme close-up.
+  xys = dict(x0=pp[0] - 0.5, y0=pp[1] - 0.5, x1=pp[0] + 0.5, y1=pp[1] + 0.5)
+  fig.add_shape(type='rect', **xys, line_width=0, fillcolor='red')
 
   fig.update_layout(
-      width=500, height=500, margin=dict(l=0, r=0, b=0, t=0),
-      plot_bgcolor='white', showlegend=False, hovermode=False, dragmode='pan',
+      width=500,
+      height=500,
+      margin=dict(l=0, r=0, b=0, t=0),
+      plot_bgcolor='white',
+      showlegend=False,
+      hovermode=False,
+      dragmode='pan',
   )
   fig.update_yaxes(scaleanchor='x', scaleratio=1.0)  # Preserve aspect ratio!
   fig.layout.xaxis.visible = fig.layout.yaxis.visible = False  # For smooth scroll-zooming.
@@ -2501,8 +2595,7 @@ day15v(puzzle.input)
 # %%
 # Compact and fast; Part 1 assumes contiguous line covering; Part 2 works in any dimension.
 def day15(s, *, part2=False, y_part1=2_000_000, side_part2=4_000_000):
-  tmp = np.array([list(map(int, re.findall(r'([\d-]+)', line)))
-                  for line in s.splitlines()])
+  tmp = np.array([list(map(int, re.findall(r'([\d-]+)', line))) for line in s.splitlines()])
   sensor, beacon = np.split(tmp, 2, axis=1)
   beacon_dist = abs(sensor - beacon).sum(1)
 
@@ -2523,8 +2616,8 @@ def day15(s, *, part2=False, y_part1=2_000_000, side_part2=4_000_000):
       return low[0] * 4_000_000 + low[1]
     mid = (low + high) // 2  # Partition into child cells.
     for child_low_high in itertools.product(
-        *(((l, m), (m + 1, h)) if m < h else ((l, h),)
-          for l, m, h in zip(low, mid, high))):
+        *(((l, m), (m + 1, h)) if m < h else ((l, h),) for l, m, h in zip(low, mid, high))
+    ):
       low, high = np.array(child_low_high).T
       # Manhattan distance from [low, high] box to sensor.
       dist = (np.maximum(high - sensor, 0) + np.maximum(sensor - low, 0)).sum(1)
@@ -2623,10 +2716,11 @@ def day16a(s, *, part2=False):  # First solution; DFS; no pruning; very slow on 
       if dst not in enabled and time <= time_left:
         nodes2, time_left2, other_working2 = (
             ((nodes[1], dst), time_left - other_working, time - other_working)
-            if other_working < time else
-            ((dst, nodes[1]), time_left - time, other_working - time))
-        candidate = ((time_left - time) * rate[dst] +
-                     compute_benefit(time_left2, enabled | {dst}, nodes2, other_working2))
+            if other_working < time
+            else ((dst, nodes[1]), time_left - time, other_working - time)
+        )
+        remaining = compute_benefit(time_left2, enabled | {dst}, nodes2, other_working2)
+        candidate = (time_left - time) * rate[dst] + remaining
         benefit = max(benefit, candidate)
     if other_working < time_left:  # This branch is necessary only on some inputs.
       benefit = max(benefit, compute_benefit(time_left - other_working, enabled, nodes[::-1], 99))
@@ -2654,14 +2748,19 @@ def day16b(s, *, part2=False):
     for u in us.split(', '):
       D[u, v] = 1  # Distance.
 
-  for k, i, j in itertools.product(V, V, V):    # Floyd-Warshall.
+  for k, i, j in itertools.product(V, V, V):  # Floyd-Warshall.
     D[i, j] = min(D[i, j], D[i, k] + D[k, j])
 
   @functools.lru_cache(None)
   def search(t, u='AA', vs=frozenset(F), e=False):
-    return max([F[v] * (t - D[u, v] - 1) + search(t - D[u, v] - 1, v, vs - {v}, e)
-                for v in vs if D[u, v] < t] +
-               [search(26, vs=vs) if e else 0])
+    return max(
+        [
+            F[v] * (t - D[u, v] - 1) + search(t - D[u, v] - 1, v, vs - {v}, e)
+            for v in vs
+            if D[u, v] < t
+        ]
+        + [search(26, vs=vs) if e else 0]
+    )
 
   return search(26, e=True) if part2 else search(30)
 
@@ -2676,6 +2775,8 @@ check_eq(day16b_part2(s1), 1707)
 # %%
 # Adapted for visualization.
 def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'):
+  import networkx as nx
+
   rate, dsts = {}, {}
   for line in s.splitlines():
     node, s_rate, *dsts[node] = re.findall(r'([A-Z][A-Z]|[0-9]+)', line)
@@ -2700,15 +2801,19 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
 
   @functools.lru_cache(None)
   def search(t, u=start, vs=frozenset(valves), e=False):
-    return max([(rate[v] * (t - distance) + search(t - distance, v, vs - {v}, e)[0], v)
-                for v, distance in valve_distance(u).items() if distance < t and v in vs] +
-               [(search(26, vs=vs)[0], '') if e else (0, '')])
+    return max(
+        [
+            (rate[v] * (t - distance) + search(t - distance, v, vs - {v}, e)[0], v)
+            for v, distance in valve_distance(u).items()
+            if distance < t and v in vs
+        ]
+        + [(search(26, vs=vs)[0], '') if e else (0, '')]
+    )
 
   def get_path(path, t, u=start, vs=frozenset(valves), e=False):
     v = search(t, u, vs=vs, e=e)[1]
     return get_path(path + [v], t - valve_distance(u)[v], v, vs - {v}, e) if v else (path, vs)
 
-  import networkx as nx
   graph = nx.Graph()
   for node, dsts1 in dsts.items():
     rate1 = rate[node]
@@ -2735,8 +2840,17 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
 
   def get_color(node):
     there = [current.get(worker, '') == node for worker in range(2)]
-    return ('plum' if all(there) else 'lightblue' if there[0] else 'lightgreen' if there[1] else
-            '#F0F0F0' if node == start else 'white')
+    return (
+        'plum'
+        if all(there)
+        else 'lightblue'
+        if there[0]
+        else 'lightgreen'
+        if there[1]
+        else '#F0F0F0'
+        if node == start
+        else 'white'
+    )
 
   for time_index in range(time):
     if visualize and (not only_last_frame or time_index == time - 1):
@@ -2745,15 +2859,28 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
       node_size = [2400 if rate[node] else 1500 for node in graph]
       node_color = [get_color(node) for node in graph]
       linewidths = [6 if node in valves else 1 for node in graph]
-      edgecolors = ['tomato' if node in enabled_valves else 'gray' if node in valves else 'black'
-                    for node in graph]
-      nx.draw(graph, pos, node_size=node_size, node_color=node_color, linewidths=linewidths,
-              edgecolors=edgecolors, margins=0.07, labels=labels, font_family='sans-serif',
-              font_size=14, width=0.8, ax=ax)
+      edgecolors = [
+          'tomato' if node in enabled_valves else 'gray' if node in valves else 'black'
+          for node in graph
+      ]
+      nx.draw(
+          graph,
+          pos,
+          node_size=node_size,
+          node_color=node_color,
+          linewidths=linewidths,
+          edgecolors=edgecolors,
+          margins=0.07,
+          labels=labels,
+          font_family='sans-serif',
+          font_size=14,
+          width=0.8,
+          ax=ax,
+      )
       fig.tight_layout(pad=0)
       image = hh.bounding_crop(image_from_plt(fig), (255, 255, 255), margin=5)
-      hh.overlay_text(image, (5, 400), f'Time {time_index + 1:2}',
-                      fontsize=20, shape=(18, 110), background=255)
+      text = f'Time {time_index + 1:2}'
+      hh.overlay_text(image, (5, 400), text, fontsize=20, shape=(18, 110), background=255)
       images.append(image)
 
     total_flow += sum(rate[valve] for valve in enabled_valves)
@@ -2786,13 +2913,15 @@ check_eq(day16c_part2(s1), 1707)
 # puzzle.verify(2, day16c_part2)  # ~16 s.
 
 # %%
-media.show_image(day16c(puzzle.input, visualize=True, only_last_frame=True)[0],
-                 title='day16a', border=True)
+media.show_image(
+    day16c(puzzle.input, visualize=True, only_last_frame=True)[0], title='day16a', border=True
+)
 
 # %%
 if SHOW_BIG_MEDIA:  # Slow due to search().
-  media.show_video(day16c_part2(puzzle.input, visualize=True),
-                   codec='gif', fps=2, title='day16b', border=True)  # ~16 s
+  media.show_video(
+      day16c_part2(puzzle.input, visualize=True), codec='gif', fps=2, title='day16b', border=True
+  )  # ~16 s
 
 
 # %% [markdown]
@@ -2826,10 +2955,14 @@ def day16d(s, *, part2=False):  # Heuristically order edges and add branch-and-b
   # Adding "@functools.lru_cache(maxsize=100_000)" here increases solution time.
   def consider_benefit(cur_benefit, time_left, enabled, nodes, other_working):
     nonlocal best_benefit_found
-    rem = (sum((time_left - t) * rate[n] for n, t in possible_paths(nodes[0]) if t < time_left) +
-           sum((time_left - other_working - t) * rate[n] for n, t in possible_paths(nodes[0])
-               if t < time_left - other_working))
-    if cur_benefit + rem <= best_benefit_found:  # A*-like pruning.
+    remaining = sum(
+        (time_left - t) * rate[n] for n, t in possible_paths(nodes[0]) if t < time_left
+    ) + sum(
+        (time_left - other_working - t) * rate[n]
+        for n, t in possible_paths(nodes[0])
+        if t < time_left - other_working
+    )
+    if cur_benefit + remaining <= best_benefit_found:  # A*-like pruning.
       return
 
     for dst, time in possible_paths(nodes[0]):
@@ -2839,8 +2972,9 @@ def day16d(s, *, part2=False):  # Heuristically order edges and add branch-and-b
           best_benefit_found = cur_benefit2
         nodes2, time_left2, other_working2 = (
             ((nodes[1], dst), time_left - other_working, time - other_working)
-            if other_working < time else
-            ((dst, nodes[1]), time_left - time, other_working - time))
+            if other_working < time
+            else ((dst, nodes[1]), time_left - time, other_working - time)
+        )
         consider_benefit(cur_benefit2, time_left2, enabled | {dst}, nodes2, other_working2)
     if other_working < time_left:
       if cur_benefit + (time_left - other_working) * 30 > best_benefit_found:  # A*-like pruning.
@@ -2888,14 +3022,15 @@ def day16e(s, *, part2=False):  # Heuristically order edges and add heuristic pr
         cur_benefit2 = cur_benefit + (time_left - time) * rate[dst]
         if cur_benefit2 > best_benefit_found:
           best_benefit_found = cur_benefit2
-        optimistic_remaining = (time_left - time + max(time_left - other_working, 0) + 3) * (
-            45 if part2 else 55)  # For my puzzle inputs, min are (40, 51) and (44, 49).
+        per_time = 45 if part2 else 55  # For my puzzle inputs, min are (40, 51) and (44, 49).
+        optimistic_remaining = (time_left - time + max(time_left - other_working, 0) + 3) * per_time
         if cur_benefit2 + optimistic_remaining <= best_benefit_found:  # A*-like pruning.
           continue
         nodes2, time_left2, other_working2 = (
             ((nodes[1], dst), time_left - other_working, time - other_working)
-            if other_working < time else
-            ((dst, nodes[1]), time_left - time, other_working - time))
+            if other_working < time
+            else ((dst, nodes[1]), time_left - time, other_working - time)
+        )
         consider_benefit(cur_benefit2, time_left2, enabled | {dst}, nodes2, other_working2)
     if other_working < time_left:
       if cur_benefit + (time_left - other_working) * 30 > best_benefit_found:  # A*-like pruning.
@@ -3010,13 +3145,14 @@ s1 = '>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>'
 
 # %%
 def day17a(s, *, part2=False, num=10**12, rocks_in_part2=8_000):
-  rocks = [np.array(rock, bool)[::-1] for rock in [
-    [[1, 1, 1, 1]],
-    [[0, 1, 0], [1, 1, 1], [0, 1, 0]],
-    [[0, 0, 1], [0, 0, 1], [1, 1, 1]],
-    [[1], [1], [1], [1]],
-    [[1, 1], [1, 1]]
-  ]]
+  rocks0 = [
+      [[1, 1, 1, 1]],
+      [[0, 1, 0], [1, 1, 1], [0, 1, 0]],
+      [[0, 0, 1], [0, 0, 1], [1, 1, 1]],
+      [[1], [1], [1], [1]],
+      [[1, 1], [1, 1]],
+  ]
+  rocks = [np.array(rock, bool)[::-1] for rock in rocks0]
   num_rocks = rocks_in_part2 if part2 else 2022
   grid = np.full((num_rocks * 4, 7), False)  # (y=0 is at bottom.)
   heights = [0]
@@ -3027,13 +3163,16 @@ def day17a(s, *, part2=False, num=10**12, rocks_in_part2=8_000):
     y, x = heights[-1] + 3, 2
     while True:
       dx = {'<': -1, '>': 1}[next(jet_iterator)]
-      if (x + dx >= 0 and x + dx + rx <= 7 and
-          not (grid[y:y + ry, x + dx: x + dx + rx] & rock).any()):
+      if (
+          x + dx >= 0
+          and x + dx + rx <= 7
+          and not (grid[y : y + ry, x + dx : x + dx + rx] & rock).any()
+      ):
         x += dx
-      if y > 0 and not (grid[y - 1:y - 1 + ry, x:x + rx] & rock).any():
+      if y > 0 and not (grid[y - 1 : y - 1 + ry, x : x + rx] & rock).any():
         y -= 1
       else:
-        grid[y:y + ry, x:x + rx] |= rock
+        grid[y : y + ry, x : x + rx] |= rock
         heights.append(max(heights[-1], y + ry))
         break
 
@@ -3042,10 +3181,11 @@ def day17a(s, *, part2=False, num=10**12, rocks_in_part2=8_000):
 
   # Find a repeating sequence of height deltas, starting from the end.
   deltas = np.diff(heights)
-  tail = deltas[-rocks_in_part2 // 3:]
+  tail = deltas[-rocks_in_part2 // 3 :]
   # If the next line fails, increase `rocks_in_part2`.
-  i0, i1, *_ = [i for i in range(len(deltas) - len(tail) + 1)
-                if all(deltas[i:i + len(tail)] == tail)]
+  i0, i1, *_ = [
+      i for i in range(len(deltas) - len(tail) + 1) if all(deltas[i : i + len(tail)] == tail)
+  ]
   h0, h1 = heights[i0], heights[i1]
   # hh.show(i0, i1, h0, h1)  # i0 = 1823, i1 = 3578, h0 = 2817, h1 = 5564
   div, mod = divmod(num - i0, i1 - i0)
@@ -3061,32 +3201,35 @@ puzzle.verify(2, day17a_part2)
 
 
 # %%
-# Faster using numba (10x) and faster subsequence matching (2x).
-
+# Faster using numba (10x) and efficient subsequence matching (2x).
 @numba.njit
 def day17_drop(grid, rock, y, x, jet, jet_index):
   ry, rx = rock.shape
   while True:
     dx = jet[jet_index[0]]
     jet_index[0] = (jet_index[0] + 1) % len(jet)
-    if (x + dx >= 0 and x + dx + rx <= 7 and
-        not (grid[y:y + ry, x + dx: x + dx + rx] & rock).any()):
+    if (
+        x + dx >= 0
+        and x + dx + rx <= 7
+        and not (grid[y : y + ry, x + dx : x + dx + rx] & rock).any()
+    ):
       x += dx
-    if y > 0 and not (grid[y - 1:y - 1 + ry, x:x + rx] & rock).any():
+    if y > 0 and not (grid[y - 1 : y - 1 + ry, x : x + rx] & rock).any():
       y -= 1
     else:
-      grid[y:y + ry, x:x + rx] |= rock
+      grid[y : y + ry, x : x + rx] |= rock
       return y + ry
 
 
 def day17(s, *, part2=False, num=10**12, rocks_in_part2=8_000):
-  rocks = [np.array(rock, bool)[::-1] for rock in [
-    [[1, 1, 1, 1]],
-    [[0, 1, 0], [1, 1, 1], [0, 1, 0]],
-    [[0, 0, 1], [0, 0, 1], [1, 1, 1]],
-    [[1], [1], [1], [1]],
-    [[1, 1], [1, 1]]
-  ]]
+  rocks0 = [
+      [[1, 1, 1, 1]],
+      [[0, 1, 0], [1, 1, 1], [0, 1, 0]],
+      [[0, 0, 1], [0, 0, 1], [1, 1, 1]],
+      [[1], [1], [1], [1]],
+      [[1, 1], [1, 1]],
+  ]
+  rocks = [np.array(rock, bool)[::-1] for rock in rocks0]
   num_rocks = rocks_in_part2 if part2 else 2022
   grid = np.full((num_rocks * 4, 7), False)  # (y=0 is at bottom.)
   heights = [0]
@@ -3106,12 +3249,14 @@ def day17(s, *, part2=False, num=10**12, rocks_in_part2=8_000):
   seqn = rocks_in_part2 // 3
   # In the following methods, if the assignment to (i0, i1) fails, increase `rocks_in_part2`.
   if 0:
-    i0, i1, *_ = [i for i in range(len(deltas) - seqn + 1)
-                  if all(deltas[i:i + seqn] == deltas[-seqn:])]
+    i0, i1, *_ = [
+        i for i in range(len(deltas) - seqn + 1) if all(deltas[i : i + seqn] == deltas[-seqn:])
+    ]
   elif 0:
     a = np.lib.stride_tricks.as_strided(
-        deltas, shape=(len(deltas) - seqn + 1, seqn), strides=[deltas.strides[0]] * 2)
-    (i0, i1, *_), = np.nonzero((a == deltas[-seqn:]).all(1))
+        deltas, shape=(len(deltas) - seqn + 1, seqn), strides=[deltas.strides[0]] * 2
+    )
+    ((i0, i1, *_),) = np.nonzero((a == deltas[-seqn:]).all(1))
   elif 0:
     deltas2 = deltas - deltas.mean()
     corr = scipy.signal.correlate(deltas2, deltas2[-seqn:], mode='valid')
@@ -3136,13 +3281,14 @@ puzzle.verify(2, day17_part2)
 
 # %%
 def day17_visualize(s, *, num_cols=4, num_rows=20, size=6):
-  rocks = [np.array(rock, bool)[::-1] for rock in [
-    [[1, 1, 1, 1]],
-    [[0, 1, 0], [1, 1, 1], [0, 1, 0]],
-    [[0, 0, 1], [0, 0, 1], [1, 1, 1]],
-    [[1], [1], [1], [1]],
-    [[1, 1], [1, 1]]
-  ]]
+  rocks0 = [
+      [[1, 1, 1, 1]],
+      [[0, 1, 0], [1, 1, 1], [0, 1, 0]],
+      [[0, 0, 1], [0, 0, 1], [1, 1, 1]],
+      [[1], [1], [1], [1]],
+      [[1, 1], [1, 1]],
+  ]
+  rocks = [np.array(rock, bool)[::-1] for rock in rocks0]
   jet_iterator = itertools.cycle(s.strip())
   extra_height = 12
   grid_height = num_cols * num_rows - 1 + extra_height
@@ -3151,16 +3297,28 @@ def day17_visualize(s, *, num_cols=4, num_rows=20, size=6):
   images: Any = []
 
   def add_rock_and_append_image(grid, y, x, rock):
-    rock_index, = [i for i, r in enumerate(rocks) if r.shape == rock.shape and (r == rock).all()]
-    grid[y:y + rock.shape[0], x:x + rock.shape[1]][rock] = chr(ord('0') + rock_index)
+    (rock_index,) = [i for i, r in enumerate(rocks) if r.shape == rock.shape and (r == rock).all()]
+    grid[y : y + rock.shape[0], x : x + rock.shape[1]][rock] = chr(ord('0') + rock_index)
     grid = np.pad(grid[:-extra_height], 1, constant_values='W')[:-1]
     grid = np.pad(grid, ((0, 0), (2, 2)), constant_values=' ')
     grid = grid[::-1].reshape(num_cols, num_rows, -1).transpose(1, 0, 2).reshape(num_rows, -1)
-    cmap = {' ': (248,) * 3, '.': (235,) * 3, 'W': (50,) * 3,
-            '0': (79, 129, 189), '1': (192, 80, 77), '2': (155, 187, 89),
-            '3': (128, 100, 162), '4': (75, 172, 198), '5': (247, 150, 70)}
-    image = np.array([cmap[e] for e in grid.flat], np.uint8).reshape(
-        *grid.shape, 3).repeat(size, axis=0).repeat(size, axis=1)
+    cmap = {
+        ' ': (248,) * 3,
+        '.': (235,) * 3,
+        'W': (50,) * 3,
+        '0': (79, 129, 189),
+        '1': (192, 80, 77),
+        '2': (155, 187, 89),
+        '3': (128, 100, 162),
+        '4': (75, 172, 198),
+        '5': (247, 150, 70),
+    }
+    image = (
+        np.array([cmap[e] for e in grid.flat], np.uint8)
+        .reshape(*grid.shape, 3)
+        .repeat(size, axis=0)
+        .repeat(size, axis=1)
+    )
     images.append(image)
 
   for rock in itertools.cycle(rocks):
@@ -3171,11 +3329,14 @@ def day17_visualize(s, *, num_cols=4, num_rows=20, size=6):
     add_rock_and_append_image(grid.copy(), y, x, rock)
     while True:
       dx = {'<': -1, '>': 1}[next(jet_iterator)]
-      if (x + dx >= 0 and x + dx + rx <= 7 and
-          not (grid[y:y + ry, x + dx: x + dx + rx][rock] != '.').any()):
+      if (
+          x + dx >= 0
+          and x + dx + rx <= 7
+          and not (grid[y : y + ry, x + dx : x + dx + rx][rock] != '.').any()
+      ):
         x += dx
         add_rock_and_append_image(grid.copy(), y, x, rock)
-      if y > 0 and not (grid[y - 1:y - 1 + ry, x:x + rx][rock] != '.').any():
+      if y > 0 and not (grid[y - 1 : y - 1 + ry, x : x + rx][rock] != '.').any():
         y -= 1
         add_rock_and_append_image(grid.copy(), y, x, rock)
       else:
@@ -3366,7 +3527,7 @@ def day18v(s):  # Visualize Part 1 using plotly 3D rendering.
       p2 = tuple(p + dp)
       if not grid[tuple(p2)]:
         pmax = np.maximum(p, p2)
-        (axis,), = dp.nonzero()
+        ((axis,),) = dp.nonzero()
         i0 = len(vertices)
         for d in ((0, 0, 0), (0, 0, 1), (0, 1, 0), (0, 1, 1)):
           d2 = np.roll(d, axis)
@@ -3376,25 +3537,16 @@ def day18v(s):  # Visualize Part 1 using plotly 3D rendering.
         faces.append([i0, i0 + 1, i0 + 3][::step])
         faces.append([i0, i0 + 3, i0 + 2][::step])
 
-  import plotly.graph_objects as go
   x, y, z = np.array(vertices).T
   i, j, k = np.array(faces).T
   lighting = dict(ambient=0.15, diffuse=0.80, specular=0.2, roughness=1, fresnel=0)
-  surface = go.Mesh3d(
-      x=x, y=y, z=z, i=i, j=j, k=k,
-      color=f'rgb{(0.94,) * 3}',
-      flatshading=True, lighting=lighting, lightposition=dict(x=0.55, y=0.55, z=0.50),
-  )
+  shading = dict(flatshading=True, lighting=lighting, lightposition=dict(x=0.55, y=0.55, z=0.50))
+  surface = go.Mesh3d(x=x, y=y, z=z, i=i, j=j, k=k, color=f'rgb{(0.94,) * 3}', **shading)
   fig = go.Figure(data=[surface])
 
-  scene = dict(
-      aspectratio=dict(x=1, y=1, z=1),
-      xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False),
-      camera=dict(
-          center=dict(x=-0.03, y=0, z=-.03),
-          eye=dict(x=0.47, y=-0.99, z=0.74),
-      )
-  )
+  camera = dict(center=dict(x=-0.03, y=0, z=-0.03), eye=dict(x=0.47, y=-0.99, z=0.74))
+  no_axes = dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False))
+  scene = dict(aspectratio=dict(x=1, y=1, z=1), camera=camera, **no_axes)
   fig.update_layout(width=400, height=400, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
 
   if SHOW_BIG_MEDIA:
@@ -3414,6 +3566,10 @@ def day18v(s):  # Visualize Part 1 using plotly 3D rendering.
 day18v(puzzle.input)
 
 
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day18c.gif"/>
+
 # %%
 # https://github.com/mjpieters/adventofcode/blob/master/2022/Day%2018.ipynb is super compact,
 # but not as fast as the final method.
@@ -3432,9 +3588,11 @@ def day18w(s, *, part2=False, visualize=False):
   if part2:
     grid = scipy.ndimage.binary_fill_holes(grid)
 
-  kernel = [[[0, 0, 0], [0, -1, 0], [0, 0, 0]],
-            [[0, -1, 0], [-1, 6, -1], [0, -1, 0]],
-            [[0, 0, 0], [0, -1, 0], [0, 0, 0]]]
+  kernel = [
+      [[0, 0, 0], [0, -1, 0], [0, 0, 0]],
+      [[0, -1, 0], [-1, 6, -1], [0, -1, 0]],
+      [[0, 0, 0], [0, -1, 0], [0, 0, 0]],
+  ]
   uncovered = scipy.signal.convolve(grid, kernel, 'same')
   return uncovered[grid].sum()
 
@@ -3459,8 +3617,14 @@ def day18_march_along_exterior(grid, adjacent, start):
   count = 0
   while stack:
     x, y, z = stack.pop()
-    for p2 in ((x - 1, y, z), (x + 1, y, z), (x, y - 1, z), (x, y + 1, z),
-               (x, y, z - 1), (x, y, z + 1)):
+    for p2 in (
+        (x - 1, y, z),
+        (x + 1, y, z),
+        (x, y - 1, z),
+        (x, y + 1, z),
+        (x, y, z - 1),
+        (x, y, z + 1),
+    ):
       if grid[p2]:
         count += 1
       elif not outside[p2] and adjacent[p2]:
@@ -3597,7 +3761,7 @@ def day19a_process(recipes, part2):
 
 
 def day19a(s, *, part2=False):
-  lines = s.splitlines()[:3 if part2 else None]
+  lines = s.splitlines()[: 3 if part2 else None]
   bests = []
   for line in lines:
     recipes = day19_parse_recipe(line)
@@ -3618,7 +3782,6 @@ check_eq(day19a_part2(s1), 56 * 62)
 
 # @numba.njit  # Commented out to speed up notebook evaluation.
 def day19b_process(recipes, part2, prune_size):
-
   def estimated_goodness(state):
     return state[0] * 1 + state[1] * 2 + state[2] * 5 + state[3] * 20
 
@@ -3629,7 +3792,7 @@ def day19b_process(recipes, part2, prune_size):
 
   for _ in range(32 if part2 else 24):
     if len(states) > prune_size:
-      states = set(sorted(states, key=estimated_goodness)[len(states) // 2:])
+      states = set(sorted(states, key=estimated_goodness)[len(states) // 2 :])
     new_states = set()
     for r0, r1, r2, r3, n0, n1, n2, n3 in states:
       nn0, nn1, nn2, nn3 = n0 + r0, n1 + r1, n2 + r2, n3 + r3
@@ -3652,7 +3815,7 @@ def day19b_process(recipes, part2, prune_size):
 
 
 def day19b(s, *, part2=False, prune_size=30_000):
-  lines = s.splitlines()[:3 if part2 else None]
+  lines = s.splitlines()[: 3 if part2 else None]
   bests = []
   for line in lines:
     recipes = day19_parse_recipe(line)
@@ -3676,7 +3839,6 @@ check_eq(day19b(s1), 33)  # bests = [9, 12]
 # - Improve goodness function.
 # - Reduce prune_size.
 # - Bound n0,n1,n2 if r0,r1,r2 are at max.
-
 @numba.njit  # ~20x speedup.
 def day19_process(recipes, part2, prune_size):
   (r00, _, _, _), (r10, _, _, _), (r20, r21, _, _), (r30, _, r32, _) = recipes
@@ -3700,7 +3862,7 @@ def day19_process(recipes, part2, prune_size):
       tmp = []
       for state in states:
         tmp.append((estimated_goodness(state), state))
-      tmp = sorted(tmp)[len(states) // 2:]
+      tmp = sorted(tmp)[len(states) // 2 :]
       states.clear()
       for _, state in tmp:
         states.add(state)
@@ -3737,7 +3899,7 @@ def day19_process(recipes, part2, prune_size):
 
 
 def day19(s, *, part2=False, prune_size=30):
-  lines = s.splitlines()[:3 if part2 else None]
+  lines = s.splitlines()[: 3 if part2 else None]
   bests = []
   for line in lines:
     recipes = day19_parse_recipe(line)
@@ -3805,13 +3967,13 @@ def day20a(s, *, part2=False):  # Slow, using a single list.
     for original_index in range(n):
       # index, = [i for i, t in enumerate(a) if t[1] == original_index]  # Slowest.
       # index, = [i for i, (_, value) in enumerate(a) if value == original_index]  # Slow.
-      index, = [i for i in range(n) if a[i][1] == original_index]  # Fast.
+      (index,) = [i for i in range(n) if a[i][1] == original_index]  # Fast.
       value = a[index][0]
       t = a.pop(index)
       index2 = (index + value) % (n - 1)
       a.insert(index2, t)
 
-  index0, = [i for i, t in enumerate(a) if t[0] == 0]
+  (index0,) = [i for i, t in enumerate(a) if t[0] == 0]
   return sum(a[(index0 + offset) % n][0] for offset in [1000, 2000, 3000])
 
 
@@ -3858,25 +4020,25 @@ def day20c(s, *, part2=False):  # Faster, using numpy.
 
   for _ in range(10 if part2 else 1):
     for original_index in range(len(a)):
-      (index,), = np.nonzero(a[:, 0] == original_index)
+      ((index,),) = np.nonzero(a[:, 0] == original_index)
       i, value = a[index]
       index2 = (index + value) % (len(a) - 1)
       if 0:  # 2.8x slower.
         a = np.insert(np.delete(a, index, axis=0), index2, (i, value), axis=0)
       elif 0:  # 1.7x slower.  (https://stackoverflow.com/a/61877806)
         index, index2, shift = (index, index2, -1) if index < index2 else (index2, index, 1)
-        a[index:index2 + 1] = np.roll(a[index:index2 + 1], shift=shift, axis=0)
+        a[index : index2 + 1] = np.roll(a[index : index2 + 1], shift=shift, axis=0)
       elif 0:  # 1.2x slower.
-        a[index:-1] = a[index + 1:]
-        a[index2 + 1:] = a[index2:-1]
+        a[index:-1] = a[index + 1 :]
+        a[index2 + 1 :] = a[index2:-1]
         a[index2] = i, value
       else:  # Fastest.
         if index < index2:
-          a[index:index2], a[index2] = a[index + 1:index2 + 1], a[index].copy()
+          a[index:index2], a[index2] = a[index + 1 : index2 + 1], a[index].copy()
         elif index2 < index:
-          a[index2 + 1:index + 1], a[index2] = a[index2:index], a[index].copy()
+          a[index2 + 1 : index + 1], a[index2] = a[index2:index], a[index].copy()
 
-  (index0,), = np.nonzero(a[:, 1] == 0)
+  ((index0,),) = np.nonzero(a[:, 1] == 0)
   return sum(a[(index0 + offset) % len(a), 1] for offset in [1000, 2000, 3000])
 
 
@@ -3919,7 +4081,7 @@ def day20(s, *, part2=False):
   for _ in range(10 if part2 else 1):
     day20_mix(a_value, a_prev, a_next)
 
-  (i,), = np.nonzero(a_value == 0)
+  ((i,),) = np.nonzero(a_value == 0)
   values = []
   for _ in range(n):
     values.append(a_value[i])
@@ -4004,8 +4166,9 @@ def day21a(s, *, part2=False):  # Brute-force assignments.
     for dst, (dep0, op, dep1) in fields.items():
       if dep0 in assigned and dep1 in assigned:
         a, b = assigned[dep0], assigned[dep1]
-        assigned[dst] = (a + b if op == '+' else a - b if op == '-' else
-                         a * b if op == '*' else a // b)  # if op == '/'
+        assigned[dst] = (
+            a + b if op == '+' else a - b if op == '-' else a * b if op == '*' else a // b
+        )  # if op == '/'
         del fields[dst]
         break
     else:
@@ -4021,13 +4184,31 @@ def day21a(s, *, part2=False):  # Brute-force assignments.
     if dep0 in assigned:
       a = assigned[dep0]
       value: int
-      value = (a if op == '=' else value - a if op == '+' else a - value if op == '-' else
-               value // a if op == '*' else a // value)  # if op == '/'
+      value = (
+          a
+          if op == '='
+          else value - a
+          if op == '+'
+          else a - value
+          if op == '-'
+          else value // a
+          if op == '*'
+          else a // value
+      )  # if op == '/'
       dst = dep1
     else:
       b = assigned[dep1]
-      value = (b if op == '=' else value - b if op == '+' else value + b if op == '-' else
-               value // b if op == '*' else value * b)  # if op == '/'
+      value = (
+          b
+          if op == '='
+          else value - b
+          if op == '+'
+          else value + b
+          if op == '-'
+          else value // b
+          if op == '*'
+          else value * b
+      )  # if op == '/'
       dst = dep0
 
   return value
@@ -4043,7 +4224,8 @@ puzzle.verify(2, day21a_part2)
 # %%
 if sys.version_info >= (3, 10):  # Using match/case and graphlib.TopologicalSorter.
   # pylint: disable-next=exec-used
-  exec("""
+  exec(
+      """
 def day21b(s, *, part2=False, mode='graphlib'):  # Topo-sort or top-down, for single-pass.
   dependencies, ops, assigned = {}, {}, {}
   for line in s.splitlines():
@@ -4134,7 +4316,8 @@ puzzle.verify(1, day21c)
 day21c_part2 = functools.partial(day21c, part2=True)
 check_eq(day21c_part2(s1), 301)
 puzzle.verify(2, day21c_part2)
-  """)
+  """
+  )
 
 
 # %%
@@ -4142,6 +4325,7 @@ puzzle.verify(2, day21c_part2)
 # https://www.reddit.com/r/adventofcode/comments/zrav4h/2022_day_21_solutions/j12p36w/
 def day21(s, *, part2=False):
   import sympy
+
   monkeys = dict(line.split(': ') for line in s.splitlines())
   operators = {'+': operator.add, '-': operator.sub, '*': operator.mul, '/': operator.truediv}
   x = sympy.symbols('x')
@@ -4176,6 +4360,8 @@ else:
 # %%
 # Visualize graphs.
 def day21v(s, *, simplify=False, directed=True, prog='dot', figsize=(3, 3)) -> np.ndarray:
+  import networkx as nx
+
   assert prog in 'dot neato'.split()  # Possibly also 'sfdp'.
   monkeys = dict(line.split(': ') for line in s.splitlines())
   operators = {'+': operator.add, '-': operator.sub, '*': operator.mul, '/': operator.truediv}
@@ -4199,7 +4385,6 @@ def day21v(s, *, simplify=False, directed=True, prog='dot', figsize=(3, 3)) -> n
   if simplify:
     recursively_simplify('root')
 
-  import networkx as nx
   graph = nx.DiGraph() if directed else nx.Graph()
 
   def create_node(monkey: str) -> int:
@@ -4244,11 +4429,20 @@ if not importlib.util.find_spec('networkx'):
 else:
   media.show_image(day21v(s1))
   media.show_image(day21v(s1, simplify=True))
-  media.show_image(day21v(puzzle.input, simplify=True, figsize=(30, 15)), title='day21a', border=True)
+  media.show_image(
+      day21v(puzzle.input, simplify=True, figsize=(30, 15)), title='day21a', border=True
+  )
   if SHOW_BIG_MEDIA:
-    media.show_image(day21v(puzzle.input, prog='neato', figsize=(40, 20)), title='day21b', border=True)
-    media.show_image(day21v(puzzle.input, figsize=(60, 30)), title='day21c', border=True,
-                     height=800, downsample=False)
+    media.show_image(
+        day21v(puzzle.input, prog='neato', figsize=(40, 20)), title='day21b', border=True
+    )
+    media.show_image(
+        day21v(puzzle.input, figsize=(60, 30)),
+        title='day21c',
+        border=True,
+        height=800,
+        downsample=False,
+    )
   media.set_max_output_height(5000)
 
 # %% [markdown]
@@ -4307,37 +4501,24 @@ s1 = """\
 
 # %%
 def day22_wrap_on_cube(shape, y, x, dy, dx):
+  row = {(0, 1): 0, (0, -1): 1, (1, 0): 2, (-1, 0): 3}[dy, dx]
   if shape == (12, 16):  # Example data.
-    return {(0, +1): ((11 - y, 15, 0, -1) if y < 4 else
-                      (8, 19 - y, 1, 0) if y < 8 else
-                      (11 - y, 11, 0, -1)),
-            (0, -1): ((4, 4 + y, 1, 0) if y < 4 else
-                      (11, 19 - y, -1, 0) if y < 8 else
-                      (7, 15 - y, -1, 0)),
-            (+1, 0): ((11, 11 - x, -1, 0) if x < 4 else
-                      (15 - x, 8, 0, 1) if x < 8 else
-                      (7, 11 - x, -1, 0) if x < 12 else
-                      (19 - x, 0, 0, 1)),
-            (-1, 0): ((0, 11 - x, 0, -1) if x < 4 else
-                      (x - 4, 8, 0, 1) if x < 8 else
-                      (4, 11 - x, 1, 0) if x < 12 else
-                      (19 - x, 11, 0, -1))}[dy, dx]
+    col = min(y // 4, 2) if dx != 0 else min(x // 4, 3)
+    return [
+        [(11 - y, 15, 0, -1), (8, 19 - y, 1, 0), (11 - y, 11, 0, -1)],
+        [(4, 4 + y, 1, 0), (11, 19 - y, -1, 0), (7, 15 - y, -1, 0)],
+        [(11, 11 - x, -1, 0), (15 - x, 8, 0, 1), (7, 11 - x, -1, 0), (19 - x, 0, 0, 1)],
+        [(0, 11 - x, 0, -1), (x - 4, 8, 0, 1), (4, 11 - x, 1, 0), (19 - x, 11, 0, -1)],
+    ][row][col]
 
   if shape == (200, 150):  # Puzzle input.
-    return {(0, +1): ((149 - y, 99, 0, -1) if y < 50 else
-                      (49, 50 + y, -1, 0) if y < 100 else
-                      (149 - y, 149, 0, -1) if y < 150 else
-                      (149, y - 100, -1, 0)),
-            (0, -1): ((149 - y, 0, 0, 1) if y < 50 else
-                      (100, y - 50, 1, 0) if y < 100 else
-                      (149 - y, 50, 0, 1) if y < 150 else
-                      (0, y - 100, 1, 0)),
-            (+1, 0): ((0, 100 + x, 1, 0) if x < 50 else
-                      (100 + x, 49, 0, -1) if x < 100 else
-                      (x - 50, 99, 0, -1)),
-            (-1, 0): ((50 + x, 50, 0, 1) if x < 50 else
-                      (100 + x, 0, 0, 1) if x < 100 else
-                      (199, x - 100, -1, 0))}[dy, dx]
+    col = min(y // 50, 3) if dx != 0 else min(x // 50, 2)
+    return [
+        [(149 - y, 99, 0, -1), (49, 50 + y, -1, 0), (149 - y, 149, 0, -1), (149, y - 100, -1, 0)],
+        [(149 - y, 0, 0, 1), (100, y - 50, 1, 0), (149 - y, 50, 0, 1), (0, y - 100, 1, 0)],
+        [(0, 100 + x, 1, 0), (100 + x, 49, 0, -1), (x - 50, 99, 0, -1)],
+        [(50 + x, 50, 0, 1), (100 + x, 0, 0, 1), (199, x - 100, -1, 0)],
+    ][row][col]
 
 
 # %%
@@ -4346,7 +4527,7 @@ def day22(s, *, part2=False, visualize=False, background=(252,) * 3):
   shape = len(lines), max(len(line) for line in lines)
   grid = np.full(shape, ' ')
   for y, line in enumerate(lines):
-    grid[y][:len(line)] = list(line)
+    grid[y][: len(line)] = list(line)
   y, x, dy, dx = 0, len(lines[0]) - len(lines[0].lstrip()), 0, 1
 
   images: list[np.ndarray] = []
@@ -4380,8 +4561,14 @@ def day22(s, *, part2=False, visualize=False, background=(252,) * 3):
             cmap = {' ': background, '.': (244,) * 3, '#': (20, 20, 20), '@': (100, 130, 255)}
             image = np.array([cmap[ch] for ch in grid2.flat], np.uint8).reshape(*grid2.shape, 3)
             image = image.repeat(2, axis=0).repeat(2, axis=1)
-            hh.overlay_text(image, (383, 140), f'Step {num_steps:5}',
-                            fontsize=18, shape=(21, 120), background=background)
+            hh.overlay_text(
+                image,
+                (383, 140),
+                f'Step {num_steps:5}',
+                fontsize=18,
+                shape=(21, 120),
+                background=background,
+            )
             images.append(image)
 
   if visualize:
@@ -4444,6 +4631,7 @@ s1 = """\
 
 # %%
 if 0:
+
   def get_grid(current):
     yxs = np.array(list(current))
     grid = np.full(yxs.max(0) - yxs.min(0) + 1, '.')
@@ -4466,8 +4654,14 @@ def day23a(s, *, part2=False, visualize=False, pad=60, background=250):
       yxs = np.array(list(current))
       image[tuple((yxs + (pad, pad)).T)] = 0, 0, 180
       image = image[30:, 35:].repeat(2, axis=0).repeat(2, axis=1)
-      hh.overlay_text(image, (0, 0), f'Round {round_index:4}',
-                      fontsize=20, shape=(18, 110), background=background)
+      hh.overlay_text(
+          image,
+          (0, 0),
+          f'Round {round_index:4}',
+          fontsize=20,
+          shape=(18, 110),
+          background=background,
+      )
       images.append(image)
 
     proposed = {}
@@ -4521,10 +4715,12 @@ def day23_process(grid, part2, stride=570):
     current.add(y * stride + x + stride // 4)
   offsets8 = (-stride - 1, -stride, -stride + 1, -1, 1, stride - 1, stride, stride + 1)
   dirs = [-stride, stride, -1, 1]
-  neighb3s = [(-stride - 1, -stride, -stride + 1),
-              (stride - 1, stride, stride + 1),
-              (-stride - 1, -1, stride - 1),
-              (-stride + 1, 1, stride + 1)]
+  neighb3s = [
+      (-stride - 1, -stride, -stride + 1),
+      (stride - 1, stride, stride + 1),
+      (-stride - 1, -1, stride - 1),
+      (-stride + 1, 1, stride + 1),
+  ]
   elf_proposed = np.full(len(current), 0)
 
   for round_index in range(10**8 if part2 else 10):
@@ -4569,7 +4765,7 @@ def day23_process(grid, part2, stride=570):
     if part2 and not have_moved:
       return round_index + 1
 
-  xmin, ymin, xmax, ymax = 10**8, 10**8, -10**8, -10**8
+  xmin, ymin, xmax, ymax = 10**8, 10**8, -(10**8), -(10**8)
   for yx in current:
     y, x = yx // stride, (yx % stride) - stride // 4
     xmin, ymin, xmax, ymax = min(xmin, x), min(ymin, y), max(xmax, x), max(ymax, y)
@@ -4595,7 +4791,8 @@ puzzle.verify(2, day23_part2)
 # %% [markdown]
 # - Part 1: What is the fewest number of minutes required to avoid the blizzards and reach the goal?
 #
-# - Part 2: What is the fewest number of minutes required to reach the goal, go back to the start, then reach the goal again?
+# - Part 2: What is the fewest number of minutes required to reach the goal,
+#   go back to the start, then reach the goal again?
 #
 # ---
 #
@@ -4658,12 +4855,14 @@ def day24a(s, *, part2=False, visualize=False, repeat=3):
       time += 1
       for dy, dx in ((1, 0), (0, 1), (0, 0), (-1, 0), (0, -1)):
         yx2 = y2, x2 = y + dy, x + dx
-        if (yx2 in (start_yx, dst_yx) or
-            (0 <= y2 < shape[0] and 0 <= x2 < shape[1] and
-             grid[y2, (x2 - time) % shape[1]] != '>' and
-             grid[y2, (x2 + time) % shape[1]] != '<' and
-             grid[(y2 - time) % shape[0], x2] != 'v' and
-             grid[(y2 + time) % shape[0], x2] != '^')):
+        if yx2 in (start_yx, dst_yx) or (
+            0 <= y2 < shape[0]
+            and 0 <= x2 < shape[1]
+            and grid[y2, (x2 - time) % shape[1]] != '>'
+            and grid[y2, (x2 + time) % shape[1]] != '<'
+            and grid[(y2 - time) % shape[0], x2] != 'v'
+            and grid[(y2 + time) % shape[0], x2] != '^'
+        ):
           remaining_dist = abs(y2 - dst_yx[0]) + abs(x2 - dst_yx[1])
           tyx2 = time, y2, x2
           if time + remaining_dist <= max_time and tyx2 not in previous:  # Approx. A* pruning.
@@ -4684,18 +4883,27 @@ def day24a(s, *, part2=False, visualize=False, repeat=3):
     for time, (y, x) in enumerate(path):
       wall, empty = np.array([120] * 3, np.uint8), np.array([255] * 3, np.uint8)
       image = np.where(grid0[..., None] == '#', wall, empty)
-      blizzards = np.array([np.roll(grid == '>', time, 1),
-                            np.roll(grid == '<', -time, 1),
-                            np.roll(grid == 'v', time, 0),
-                            np.roll(grid == '^', -time, 0)]).transpose(1, 2, 0)[..., None]
+      blizzards = np.array([
+          np.roll(grid == '>', time, 1),
+          np.roll(grid == '<', -time, 1),
+          np.roll(grid == 'v', time, 0),
+          np.roll(grid == '^', -time, 0),
+      ]).transpose(1, 2, 0)[..., None]
       # colors = 1.0 - blizzards * [(0.3, 0, 0), (0, 0.2, 0), (0, 0, 0.3), (0.2, 0, 0.2)]
       colors = 1.0 - blizzards * (0.1, 0.1, 0.1)
       image[1:-1, 1:-1] = colors.prod(2) * 255.999
       image[y + 1, x + 1] = 255, 0, 0
       image = image.repeat(repeat, axis=0).repeat(repeat, axis=1)
       if image.shape[1] > 200:
-        hh.overlay_text(image, (8, 235), f'Time {time:3}',
-                        fontsize=14, shape=(12, 60), background=empty, margin=2)
+        hh.overlay_text(
+            image,
+            (8, 235),
+            f'Time {time:3}',
+            fontsize=14,
+            shape=(12, 60),
+            background=empty,
+            margin=2,
+        )
       images.append(image)
     fps = {4: 5, 35: 50}[grid.shape[0]]
     hold = int(fps * 1.5)
@@ -4742,12 +4950,14 @@ def day24b_min_time_at_dst(grid, time, start_yx, dst_yx):
         yx2 = y2, x2 = y + dy, x + dx
         if yx2 == dst_yx:
           return time
-        if (yx2 == start_yx or
-            (0 <= y2 < shape[0] and 0 <= x2 < shape[1] and
-             grid[y2, (x2 - time) % shape[1]] != '>' and
-             grid[y2, (x2 + time) % shape[1]] != '<' and
-             grid[(y2 - time) % shape[0], x2] != 'v' and
-             grid[(y2 + time) % shape[0], x2] != '^')):
+        if yx2 == start_yx or (
+            0 <= y2 < shape[0]
+            and 0 <= x2 < shape[1]
+            and grid[y2, (x2 - time) % shape[1]] != '>'
+            and grid[y2, (x2 + time) % shape[1]] != '<'
+            and grid[(y2 - time) % shape[0], x2] != 'v'
+            and grid[(y2 + time) % shape[0], x2] != '^'
+        ):
           remaining_dist = abs(y2 - dst_yx[0]) + abs(x2 - dst_yx[1])
           if time + remaining_dist <= max_time:
             new_active.add(yx2)
@@ -4778,8 +4988,9 @@ puzzle.verify(2, day24b_part2)
 # %%
 # Numba; use `active` set for each time step; use prune_size.
 @numba.njit
-def day24_min_time_at_dst(grid, time, start_yx, dst_yx,
-                          prune_size=50):  # 30 is min prune_size for my puzzle input.
+def day24_min_time_at_dst(
+    grid, time, start_yx, dst_yx, prune_size=50
+):  # 30 is min prune_size for my puzzle input.
   shape = grid.shape
   active = {start_yx}
 
@@ -4799,12 +5010,14 @@ def day24_min_time_at_dst(grid, time, start_yx, dst_yx,
         yx2 = y2, x2 = y + dy, x + dx
         if yx2 == dst_yx:
           return time
-        if (yx2 == start_yx or
-            (0 <= y2 < shape[0] and 0 <= x2 < shape[1] and
-             grid[y2, (x2 - time) % shape[1]] != '>' and
-             grid[y2, (x2 + time) % shape[1]] != '<' and
-             grid[(y2 - time) % shape[0], x2] != 'v' and
-             grid[(y2 + time) % shape[0], x2] != '^')):
+        if yx2 == start_yx or (
+            0 <= y2 < shape[0]
+            and 0 <= x2 < shape[1]
+            and grid[y2, (x2 - time) % shape[1]] != '>'
+            and grid[y2, (x2 + time) % shape[1]] != '<'
+            and grid[(y2 - time) % shape[0], x2] != 'v'
+            and grid[(y2 + time) % shape[0], x2] != '^'
+        ):
           new_active.add(yx2)
     active = new_active
   raise AssertionError('No path found; try increasing prune_size.')
@@ -4870,7 +5083,6 @@ s1 = """\
 
 # %%
 def day25a(s):
-
   def from_snafu(text):
     n = 0
     power = 1
@@ -4899,7 +5111,6 @@ puzzle.verify(1, day25a)
 
 # %%
 def day25b(s):
-
   def from_snafu(text):
     n = 0
     for ch in text:
@@ -4922,7 +5133,6 @@ puzzle.verify(1, day25b)
 
 # %%
 def day25c(s):
-
   def from_snafu(text):
     return functools.reduce(lambda n, ch: n * 5 + '=-012'.index(ch) - 2, text, 0)
 
@@ -4944,7 +5154,6 @@ puzzle.verify(1, day25c)
 # %%
 # https://www.reddit.com/r/adventofcode/comments/zur1an/comment/j1l08w6
 def day25d(s):
-
   def from_snafu(s):
     return from_snafu(s[:-1]) * 5 + '=-012'.find(s[-1]) - 2 if s else 0
 
@@ -4977,8 +5186,10 @@ def day25(s):  # Addition in the SNAFU algebra, using only iterators.
   it = itertools.accumulate(
       itertools.zip_longest(*(line[::-1] for line in s.splitlines()), '0' * 20, fillvalue='0'),
       lambda state, t: divmod(state[0] + sum('=-012'.index(ch) - 2 for ch in t) + 2, 5),
-      initial=(0, 0))
+      initial=(0, 0),
+  )
   return ''.join('=-012'[mod] for _, mod in it)[:0:-1].lstrip('0')
+
 
 check_eq(day25(s1), '2=-1=0')
 puzzle.verify(1, day25)
@@ -4999,27 +5210,36 @@ if 0:  # Compute min execution times over several calls.
 
 # %%
 if 1:  # Look for unwanted pollution of namespace.
-  print(textwrap.fill(' '.join(name for name, value in globals().items() if not (
-      name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS))))
+
+  def _bad_name(name):
+    return not (name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS)
+
+  print(textwrap.fill(' '.join(name for name, value in globals().items() if _bad_name(name))))
 
 # %%
 if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
   # Create a new tar.gz file.
-  hh.run(f"""cd /mnt/c/hh/tmp && mkdir -p '{PROFILE}' &&
+  hh.run(
+      f"""cd /mnt/c/hh/tmp && mkdir -p '{PROFILE}' &&
       cp -p ~/.config/aocd/'{PROFILE.replace("_", " ")}'/{YEAR}*[rt].txt '{PROFILE}' &&
-      tar -czf '{PROFILE}.tar.gz' '{PROFILE}'""")
+      tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
+  )
 
 # %%
 if 0:  # Look for misspelled words.
-  hh.run(rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/_/ /g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true""")
+  hh.run(
+      rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/_/ /g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true"""
+  )
 
 # %%
 if 0:  # Lint.
   hh.run('echo autopep8; autopep8 -j8 -d .')
   hh.run('echo mypy; mypy . || true')
   hh.run('echo pylint; pylint -j8 . || true')
-  hh.run('echo flake8; flake8 --indent-size=2 --exclude .ipynb_checkpoints'
-         ' --ignore E121,E125,E126,E129,E226,E302,E305,E501,W504,E741,E704')
+  hh.run(
+      'echo flake8; flake8 --indent-size=2 --exclude .ipynb_checkpoints'
+      ' --ignore E121,E125,E126,E129,E226,E302,E305,E501,E741,E704,E203,W503,W504'
+  )
   print('All ran.')
 
 # %%

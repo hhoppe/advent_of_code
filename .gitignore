@@ -1,5 +1,6 @@
 .ipynb_checkpoints/
 __pycache__/
+.mypy_cache/
 /*/data/*/
 /2016/
 /Notes.txt

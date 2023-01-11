@@ -69,6 +69,7 @@ from typing import Any, Generic, Tuple, TypeVar
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import advent_of_code_ocr  # https://github.com/bsoyka/advent-of-code-ocr/blob/main/advent_of_code_ocr/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
+import matplotlib.pyplot as plt
 import mediapy as media
 import more_itertools
 import numpy as np
@@ -94,8 +95,10 @@ PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
 TAR_URL = f'https://github.com/hhoppe/advent_of_code_{YEAR}/raw/main/data/{PROFILE}.tar.gz'
 if 1:
-  hh.run(f"if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&"
-         f" wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi")
+  hh.run(
+      f'if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&'
+      f' wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi'
+  )
 INPUT_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}_input.txt'
 ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
 
@@ -235,6 +238,7 @@ def day2_part1(s):
       assert False
   return x * y
 
+
 check_eq(day2_part1(s1), 150)
 puzzle.verify(1, day2_part1)  # ~1 ms.
 
@@ -255,6 +259,7 @@ def day2_part2(s):
     else:
       assert False
   return x * y
+
 
 check_eq(day2_part2(s1), 900)
 puzzle.verify(2, day2_part2)  # ~1 ms.
@@ -371,17 +376,17 @@ s1 = """\
 # %%
 def day4a(s, *, part2=False):  # Compact.
   sections = s.split('\n\n')
-  boards = np.array([
-      [[int(n) for n in line.split()] for line in t.splitlines()]
-      for t in sections[1:]
-  ])
+  boards = np.array(
+      [[[int(n) for n in line.split()] for line in t.splitlines()] for t in sections[1:]]
+  )
   matches = boards < 0
   scores = []
   previously_finished = False
   for number in map(int, sections[0].split(',')):
     matches[boards == number] = True
-    finished = ((matches.sum(1).max(1) == boards.shape[1]) |
-                (matches.sum(2).max(1) == boards.shape[2]))
+    finished = (matches.sum(1).max(1) == boards.shape[1]) | (
+        matches.sum(2).max(1) == boards.shape[2]
+    )
     for winner in np.argwhere(finished & ~previously_finished):
       scores.append(boards[winner][~matches[winner]].sum() * number)
     previously_finished = finished
@@ -401,17 +406,17 @@ puzzle.verify(2, day4a_part2)  # ~10 ms.
 def day4(s, *, part2=False):  # More readable.
   sections = s.split('\n\n')
   numbers = list(map(int, sections[0].split(',')))
-  boards = np.array([
-      [[int(n) for n in line.split()] for line in t.splitlines()]
-      for t in sections[1:]
-  ])
+  boards = np.array(
+      [[[int(n) for n in line.split()] for line in t.splitlines()] for t in sections[1:]]
+  )
   matches = np.full(boards.shape, False)
   scores = []
   previously_finished = np.full(len(boards), False)
   for number in numbers:
     matches[boards == number] = True
-    finished = ((matches.sum(axis=1).max(axis=1) == boards.shape[1]) |
-                (matches.sum(axis=2).max(axis=1) == boards.shape[2]))
+    finished = (matches.sum(axis=1).max(axis=1) == boards.shape[1]) | (
+        matches.sum(axis=2).max(axis=1) == boards.shape[2]
+    )
     for winner in np.argwhere(finished & ~previously_finished):
       scores.append(boards[winner][~matches[winner]].sum() * number)
     previously_finished = finished
@@ -528,11 +533,12 @@ def day5c(s, *, part2=False, size=1000):  # All numpy; clever diagonal slicing.
     elif x1 == x2:
       count[f(y1, y2), x1] += 1
     elif part2:
-      t = count[min(y1, y2):max(y1, y2) + 1, min(x1, x2):max(x1, x2) + 1]
+      t = count[min(y1, y2) : max(y1, y2) + 1, min(x1, x2) : max(x1, x2) + 1]
       if (y1 < y2) ^ (x1 < x2):
         t = t[::-1]
       t = np.lib.stride_tricks.as_strided(
-          t, shape=t.shape[:1], strides=[t.strides[0] + t.strides[1]])
+          t, shape=t.shape[:1], strides=[t.strides[0] + t.strides[1]]
+      )
       t += 1
 
   return np.count_nonzero(count >= 2)
@@ -618,6 +624,7 @@ def day6a(s, *, part2=False):  # Initial solution, using Counter.
     counter = counter2
   return sum(counter.values())  # (counter.total() in Python 3.10)
 
+
 puzzle.verify(1, day6a)  # ~1 ms.
 day6a_part2 = functools.partial(day6a, part2=True)
 puzzle.verify(2, day6a_part2)  # ~3 ms.
@@ -634,6 +641,7 @@ def day6(s, *, part2=False):  # List-based approach used by colleagues.
     counts = counts[1:] + [tmp]
     counts[6] += tmp
   return sum(counts)
+
 
 puzzle.verify(1, day6)  # ~0 ms.
 day6_part2 = functools.partial(day6, part2=True)
@@ -654,6 +662,7 @@ def day6_test(s):
         counter2[e - 1] += count
     counter = counter2
     print(i, sum(counter.values()))
+
 
 if 0:
   day6_test('1')
@@ -716,6 +725,7 @@ def day7(s, *, part2=False):  # Almost closed-form expression.
   def func(x):
     diff = abs(values - x)
     return ((diff + 1) * diff // 2).sum()
+
   return min(func(x) for x in np.array([-1, 0, 1]) + int(values.mean()))
 
 
@@ -781,21 +791,41 @@ def day8a_part1(s):
     total += sum(len(output) in [2, 3, 4, 7] for output in outputs)
   return total
 
+
 check_eq(day8a_part1(s1), 26)
 
+
 def day8_part1(s):
-  return sum(len(output) in [2, 3, 4, 7] for line in s.splitlines()
-             for output in line.split(' | ')[1].split())
+  return sum(
+      len(output) in [2, 3, 4, 7]
+      for line in s.splitlines()
+      for output in line.split(' | ')[1].split()
+  )
+
 
 check_eq(day8_part1(s1), 26)
 puzzle.verify(1, day8_part1)  # ~0 ms.
 
 
 # %%
+def day8_lookup():
+  return {
+      'abcefg': '0',
+      'cf': '1',
+      'acdeg': '2',
+      'acdfg': '3',
+      'bcdf': '4',
+      'abdfg': '5',
+      'abdefg': '6',
+      'acf': '7',
+      'abcdefg': '8',
+      'abcdfg': '9',
+  }
+
+
+# %%
 def day8a_part2(s):  # Brute-force; most compact.
-  lookup = {'abcefg': '0', 'cf': '1', 'acdeg': '2', 'acdfg': '3',
-            'bcdf': '4', 'abdfg': '5', 'abdefg': '6', 'acf': '7',
-            'abcdefg': '8', 'abcdfg': '9'}
+  lookup = day8_lookup()
   total = 0
 
   for line in s.splitlines():
@@ -814,18 +844,17 @@ def day8a_part2(s):  # Brute-force; most compact.
 
   return total
 
+
 check_eq(day8a_part2(s1), 61229)
 puzzle.verify(2, day8a_part2)  # ~1450 ms.
 
 
 # %%
 def day8b_part2(s):  # Faster; cache a translation table for each permutation.
-  lookup0 = {'abcefg': 0, 'cf': 1, 'acdeg': 2, 'acdfg': 3, 'bcdf': 4,
-             'abdfg': 5, 'abdefg': 6, 'acf': 7, 'abcdefg': 8, 'abcdfg': 9}
-  lookup = {frozenset(k): str(v) for k, v in lookup0.items()}
+  lookup = {frozenset(k): str(v) for k, v in day8_lookup().items()}
   total = 0
 
-  @functools.lru_cache(maxsize=None)   # (@functools.cache in Python 3.9)
+  @functools.lru_cache(maxsize=None)  # (@functools.cache in Python 3.9)
   def digit_mapper(permutation):
     translation = str.maketrans('abcdefg', ''.join(permutation))
     return lambda segs: lookup.get(frozenset(segs.translate(translation)), None)
@@ -843,14 +872,14 @@ def day8b_part2(s):  # Faster; cache a translation table for each permutation.
 
   return total
 
+
 check_eq(day8b_part2(s1), 61229)
 puzzle.verify(2, day8b_part2)  # ~810 ms.
 
 
 # %%
 def day8c_part2(s):  # Faster; loop over permutations first, then lines.
-  lookup = {'abcefg': 0, 'cf': 1, 'acdeg': 2, 'acdfg': 3, 'bcdf': 4,
-            'abdfg': 5, 'abdefg': 6, 'acf': 7, 'abcdefg': 8, 'abcdfg': 9}
+  lookup = day8_lookup()
   lines = s.splitlines()
   ins0, outs0 = zip(*(map(str.split, line.split(' | ')) for line in lines))
   ins = [[frozenset(input) for input in inputs] for inputs in ins0]
@@ -862,12 +891,12 @@ def day8c_part2(s):  # Faster; loop over permutations first, then lines.
     decode = {frozenset(k.translate(translation)): v for k, v in lookup.items()}
     for i in reversed(range(len(ins))):
       if all(input in decode for input in ins[i]):
-        total += int(''.join(str(decode[frozenset(output)])
-                             for output in outs[i]))
+        total += int(''.join(str(decode[frozenset(output)]) for output in outs[i]))
         _ = ins.pop(i), outs.pop(i)
 
   assert not ins
   return total
+
 
 check_eq(day8c_part2(s1), 61229)
 puzzle.verify(2, day8c_part2)  # ~360 ms.
@@ -875,11 +904,13 @@ puzzle.verify(2, day8c_part2)  # ~360 ms.
 
 # %%
 def day8d_part2(s):  # Faster; precompute seg sets for each permutation.
-  lookup = {'abcefg': 0, 'cf': 1, 'acdeg': 2, 'acdfg': 3, 'bcdf': 4,
-            'abdfg': 5, 'abdefg': 6, 'acf': 7, 'abcdefg': 8, 'abcdfg': 9}
-  valids = {''.join(permutation): set(frozenset(k.translate(
-               str.maketrans('abcdefg', ''.join(permutation)))) for k in lookup)
-            for permutation in itertools.permutations('abcdefg')}
+  lookup = day8_lookup()
+  valids = {
+      ''.join(permutation): set(
+          frozenset(k.translate(str.maketrans('abcdefg', ''.join(permutation)))) for k in lookup
+      )
+      for permutation in itertools.permutations('abcdefg')
+  }
   total = 0
 
   for line in s.splitlines():
@@ -888,8 +919,7 @@ def day8d_part2(s):  # Faster; precompute seg sets for each permutation.
     for permutation, valid in valids.items():
       if inputs == valid:
         translation = str.maketrans('abcdefg', permutation)
-        decode = {frozenset(k.translate(translation)): str(v)
-                  for k, v in lookup.items()}
+        decode = {frozenset(k.translate(translation)): str(v) for k, v in lookup.items()}
         total += int(''.join(decode[frozenset(output)] for output in outputs))
         break
     else:
@@ -897,18 +927,19 @@ def day8d_part2(s):  # Faster; precompute seg sets for each permutation.
 
   return total
 
+
 check_eq(day8d_part2(s1), 61229)
 puzzle.verify(2, day8d_part2)  # ~240 ms.
 
 
 # %%
 def day8e_part2(s):  # Faster; loop over permutations first, and use sets of lines.
-  lookup = {'abcefg': 0, 'cf': 1, 'acdeg': 2, 'acdfg': 3, 'bcdf': 4,
-            'abdfg': 5, 'abdefg': 6, 'acf': 7, 'abcdefg': 8, 'abcdfg': 9}
-  lines = {(frozenset(frozenset(input) for input in inputs),
-            tuple(frozenset(output) for output in outputs))
-           for line in s.splitlines()
-           for inputs, outputs in [map(str.split, line.split(' | '))]}
+  lookup = day8_lookup()
+  lines = {
+      (frozenset(frozenset(i) for i in inputs), tuple(frozenset(o) for o in outputs))
+      for line in s.splitlines()
+      for inputs, outputs in [map(str.split, line.split(' | '))]
+  }
   total = 0
 
   for permutation in itertools.permutations('abcdefg'):
@@ -925,6 +956,7 @@ def day8e_part2(s):  # Faster; loop over permutations first, and use sets of lin
 
   assert not lines
   return total
+
 
 check_eq(day8e_part2(s1), 61229)
 puzzle.verify(2, day8e_part2)  # ~170 ms.
@@ -953,14 +985,14 @@ def day8_part2(s):  # Fastest; custom solution for the 7-segment LED.
     inputs = set(frozenset(input) for input in inputs0)
     segs_from_digit.clear()
     for digit, length, predicate in rules:
-      segs, = (e for e in inputs if len(e) == length and predicate(e))
+      (segs,) = (e for e in inputs if len(e) == length and predicate(e))
       segs_from_digit[digit] = segs
       inputs.remove(segs)
     digit_from_segs = {segs: digit for digit, segs in segs_from_digit.items()}
-    total += int(''.join(
-        str(digit_from_segs[frozenset(output)]) for output in outputs))
+    total += int(''.join(str(digit_from_segs[frozenset(output)]) for output in outputs))
 
   return total
+
 
 check_eq(day8_part2(s1), 61229)
 puzzle.verify(2, day8_part2)  # ~5 ms.
@@ -1025,8 +1057,9 @@ def day9a(s, *, part2=False):  # Solution using Union-Find.  Relatively slow.
     dy, dx = downward[y, x]
     union_find.union((y, x), (y + dy, x + dx))
 
-  rep = np.array([[union_find.find((y, x)) for x in range(grid.shape[1])]
-                  for y in range(grid.shape[0])])
+  rep = np.array(
+      [[union_find.find((y, x)) for x in range(grid.shape[1])] for y in range(grid.shape[0])]
+  )
 
   _, count = np.unique(rep.reshape(-1, 2), axis=0, return_counts=True)
   return np.sort(count)[-3:].prod()
@@ -1119,6 +1152,7 @@ def day9(s, *, part2=False, visualize=False):  # Faster, using flat indexing.
 
   return math.prod(heapq.nlargest(3, count))
 
+
 # To generalize to arbitrary dimensions:
 # downward = downward.dot(np.cumprod([1, *grid.shape[-1:0:-1]])[::-1]).ravel()
 
@@ -1181,6 +1215,7 @@ def day10_part1(s):
 
   return total
 
+
 check_eq(day10_part1(s1), 26397)
 puzzle.verify(1, day10_part1)  # ~2 ms.
 
@@ -1204,6 +1239,7 @@ def day10_part2(s):
       continue
 
   return int(np.median(scores))
+
 
 check_eq(day10_part2(s1), 288957)
 puzzle.verify(2, day10_part2)  # ~3 ms.
@@ -1262,8 +1298,7 @@ def day11a(s, *, part2=False):  # Compact.
       yx = stack.pop()
       for dyx in set(itertools.product((-1, 0, 1), repeat=2)) - {(0, 0)}:
         yx2 = tuple(np.array(yx) + dyx)
-        if (all(0 <= yx2[i] < grid.shape[i] for i in range(2)) and
-            grid[yx2] < 10):
+        if all(0 <= yx2[i] < grid.shape[i] for i in range(2)) and grid[yx2] < 10:
           grid[yx2] += 1
           if grid[yx2] == 10:
             stack.append(yx2)
@@ -1275,6 +1310,7 @@ def day11a(s, *, part2=False):  # Compact.
     elif np.all(grid == 10):
       return step
     grid[grid == 10] = 0
+
 
 check_eq(day11a(s1), 1656)
 puzzle.verify(1, day11a)  # ~110 ms.
@@ -1312,6 +1348,7 @@ def day11b(s, *, part2=False):  # Faster, using ndenumerate and bool array.
         return total
     elif flashed.all():
       return step
+
 
 check_eq(day11b(s1), 1656)
 puzzle.verify(1, day11b)  # ~16 ms.
@@ -1370,6 +1407,7 @@ def day11(s, *, part2=False, visualize=False):  # Fastest, using flat array.
         images = [images[0]] * 15 + images + [images[-1]] * 15
         media.show_video(images, codec='gif', fps=15, border=True)
       return step
+
 
 check_eq(day11(s1), 1656)
 puzzle.verify(1, day11)  # ~8 ms.
@@ -1562,8 +1600,7 @@ def day13a(s, *, part2=False):  # Most compact; set-based.
     axis, value = {'x': 0, 'y': 1}[line[11:12]], int(line[13:])
 
     def fold(xy):
-      return tuple(c if i != axis or c < value else 2 * value - c
-                   for i, c in enumerate(xy))
+      return tuple(c if i != axis or c < value else 2 * value - c for i, c in enumerate(xy))
 
     dots = {fold(xy) for xy in dots}
     if not part2:
@@ -1625,16 +1662,15 @@ _ = day13b_part2(puzzle.input, visualize=True)
 # %%
 def day13(s, *, part2=False, visualize=False):  # Numpy approach; as fast.
   chunk1, chunk2 = s.split('\n\n')
-  yx = np.array([list(map(int, line.split(',')))[::-1]
-                 for line in chunk1.splitlines()])
+  yx = np.array([list(map(int, line.split(',')))[::-1] for line in chunk1.splitlines()])
   grid = np.zeros(yx.max(axis=0) + 1, np.uint8)
   grid[tuple(yx.T)] = 1
 
   for line in chunk2.splitlines():
     axis, value = {'y': 0, 'x': 1}[line[11:12]], int(line[13:])
     grid = grid.T if axis else grid
-    grid, side2 = grid[:value], grid[value + 1:]
-    grid[-len(side2):] |= side2[::-1]
+    grid, side2 = grid[:value], grid[value + 1 :]
+    grid[-len(side2) :] |= side2[::-1]
     grid = grid.T if axis else grid
     if not part2:
       return np.count_nonzero(grid)
@@ -1702,18 +1738,22 @@ def day14a(s, *, part2=False):  # Compact.
   Counter = collections.Counter
   lines = s.splitlines()
   start = lines[0]
-  pairs = Counter(start[i:i+2] for i in range(len(start) - 1))
+  pairs = Counter(start[i : i + 2] for i in range(len(start) - 1))
   rules = dict(rule.split(' -> ') for rule in lines[2:])
 
   for _ in range(40 if part2 else 10):
-    pairs = sum((Counter({pair[0] + rules[pair]: count,
-                          rules[pair] + pair[1]: count})
-                 for pair, count in pairs.items()),
-                Counter())
+    pairs = sum(
+        (
+            Counter({pair[0] + rules[pair]: count, rules[pair] + pair[1]: count})
+            for pair, count in pairs.items()
+        ),
+        Counter(),
+    )
 
-  letters2 = sum((Counter({letter: count})
-                  for pair, count in pairs.items() for letter in pair),
-                 Counter([start[0], start[-1]]))
+  letters2 = sum(
+      (Counter({letter: count}) for pair, count in pairs.items() for letter in pair),
+      Counter([start[0], start[-1]]),
+  )
   return np.ptp(list(letters2.values())) // 2
 
 
@@ -1729,7 +1769,7 @@ puzzle.verify(2, day14a_part2)  # ~85 ms.
 def day14(s, *, part2=False):  # Faster (avoiding inefficient sum()).
   lines = s.splitlines()
   start = lines[0]
-  pairs = collections.Counter(start[i:i+2] for i in range(len(start) - 1))
+  pairs = collections.Counter(start[i : i + 2] for i in range(len(start) - 1))
   rules = dict(line.split(' -> ') for line in lines[2:])
 
   for _ in range(40 if part2 else 10):
@@ -1804,10 +1844,8 @@ s1 = """\
 def day15a(s, *, part2=False):  # Compact.
   grid = np.array([list(line) for line in s.splitlines()], int)
   if part2:
-    grid = np.concatenate([
-        np.concatenate([(grid + (y + x - 1)) % 9 + 1 for x in range(5)], axis=1)
-        for y in range(5)
-    ], axis=0)
+    a = [np.concatenate([(grid + (y + x - 1)) % 9 + 1 for x in range(5)], axis=1) for y in range(5)]
+    grid = np.concatenate(a, axis=0)
 
   distances = np.full(grid.shape, 10**6)
   distances[0, 0] = 0
@@ -1836,11 +1874,8 @@ puzzle.verify(2, day15a_part2)  # ~1700 ms.
 def day15b(s, *, part2=False):  # Try A* search.
   grid = np.array([list(line) for line in s.splitlines()], int)
   if part2:
-    grid = np.concatenate([
-        np.concatenate([(grid + (y + x - 1)) % 9 + 1 for x in range(5)],
-                       axis=1)
-        for y in range(5)
-    ], axis=0)
+    a = [np.concatenate([(grid + (y + x - 1)) % 9 + 1 for x in range(5)], axis=1) for y in range(5)]
+    grid = np.concatenate(a, axis=0)
 
   grid = np.pad(grid, 1, constant_values=10**8)  # To avoid boundary checks.
   c0 = grid.shape[0] - 2 + grid.shape[1] - 2
@@ -1876,6 +1911,7 @@ def day15b(s, *, part2=False):  # Try A* search.
         heapq.heappush(pq, (f, yx2))
   return best_solution
 
+
 check_eq(day15b(s1), 40)
 # puzzle.verify(1, day15b)  # ~140 ms.
 day15b_part2 = functools.partial(day15b, part2=True)
@@ -1884,7 +1920,6 @@ check_eq(day15b_part2(s1), 315)
 
 # %%
 # Fastest: several opposing sweeps, but can fail.
-
 @numba.njit
 def day15c_func(grid):
   stride = grid.shape[1]
@@ -1915,10 +1950,8 @@ def day15c_func(grid):
 def day15c(s, *, part2=False):
   grid = np.array([list(line) for line in s.splitlines()], int)
   if part2:
-    grid = np.concatenate([
-        np.concatenate([(grid + (y + x - 1)) % 9 + 1 for x in range(5)], axis=1)
-        for y in range(5)
-    ], axis=0)
+    a = [np.concatenate([(grid + (y + x - 1)) % 9 + 1 for x in range(5)], axis=1) for y in range(5)]
+    grid = np.concatenate(a, axis=0)
   grid = np.pad(grid, 1, constant_values=10**8)  # To avoid boundary checks.
   return day15c_func(grid)
 
@@ -1931,7 +1964,6 @@ check_eq(day15c_part2(s1), 315)
 
 # %%
 # Padded, numba, visualization.
-
 @numba.njit
 def day15_func(grid, visualize):
   start = 1, 1
@@ -1965,10 +1997,8 @@ def day15_func(grid, visualize):
 def day15(s, *, part2=False, visualize=False):
   grid = np.array([list(line) for line in s.splitlines()], int)
   if part2:
-    grid = np.concatenate([
-        np.concatenate([(grid + (y + x - 1)) % 9 + 1 for x in range(5)], axis=1)
-        for y in range(5)
-    ], axis=0)
+    a = [np.concatenate([(grid + (y + x - 1)) % 9 + 1 for x in range(5)], axis=1) for y in range(5)]
+    grid = np.concatenate(a, axis=0)
   grid = np.pad(grid, 1, constant_values=10**8)  # To avoid boundary checks.
   d, path_image = day15_func(grid, visualize)
   if visualize:
@@ -2085,11 +2115,9 @@ def day16(s, *, part2=False, visualize=0):  # Construct tree first.
       6: lambda operand1, operand2: int(operand1 < operand2),
       7: lambda operand1, operand2: int(operand1 == operand2),
   }
-  name_for_id = {0: 'sum', 1: 'prod', 2: 'min', 3: 'max',
-                 5: 'gt', 6: 'lt', 7: 'eq'}
+  name_for_id = {0: 'sum', 1: 'prod', 2: 'min', 3: 'max', 5: 'gt', 6: 'lt', 7: 'eq'}
 
   def parse_s():
-
     def read_bits(n):
       nonlocal s
       value = int(s[:n], 2)
@@ -2122,8 +2150,7 @@ def day16(s, *, part2=False, visualize=0):  # Construct tree first.
   assert all(ch == '0' for ch in s)
 
   def sum_versions(node):
-    return (node[0] +
-            (sum(sum_versions(e) for e in node[2]) if node[1] != 4 else 0))
+    return node[0] + (sum(sum_versions(e) for e in node[2]) if node[1] != 4 else 0)
 
   def evaluate(node, depth=0):
     packet_id = node[1]
@@ -2230,20 +2257,17 @@ puzzle.verify(2, day17a_part2)  # ~320 ms.
 
 # %%
 # Fast with numba.
-
 @numba.jit
 def day17_simulations(x1, x2, y1, y2):
   highest = -1000
   winners = []
   # (math.isqrt() not yet supported by numba.)
-  for dx0 in range(int(x1**0.5) if x1 > 0 else x1,
-                   (-int((-x2)**0.5) if x2 < 0 else x2) + 1):
+  for dx0 in range(int(x1**0.5) if x1 > 0 else x1, (-int((-x2) ** 0.5) if x2 < 0 else x2) + 1):
     for dy0 in range(y1, max(abs(y1), abs(y2)) + 1):
       dx, dy = dx0, dy0
       x = y = 0
       max_y = 0
-      while ((x <= x2 or dx < 0) and (x >= x1 or dx > 0) and
-             (y >= y1 or dy > 0)):
+      while (x <= x2 or dx < 0) and (x >= x1 or dx > 0) and (y >= y1 or dy > 0):
         x, y = x + dx, y + dy
         max_y = max(max_y, y)
         dx, dy = dx - np.sign(dx), dy - 1
@@ -2255,15 +2279,13 @@ def day17_simulations(x1, x2, y1, y2):
 
 
 def day17(s, *, part2=False, visualize=False):
-  x1, x2, y1, y2 = parse.parse(
-      'target area: x={:d}..{:d}, y={:d}..{:d}', s.strip()).fixed
+  x1, x2, y1, y2 = parse.parse('target area: x={:d}..{:d}, y={:d}..{:d}', s.strip()).fixed
   winners, highest = day17_simulations(x1, x2, y1, y2)
   if visualize:
     yx_map = {
         (0, 0): (0, 200, 0),
         **{yx: (255, 100, 100) for yx in winners},
-        **{(y, x): (100, 100, 255)
-           for y in range(y1, y2 + 1) for x in range(x1, x2 + 1)},
+        **{(y, x): (100, 100, 255) for y in range(y1, y2 + 1) for x in range(x1, x2 + 1)},
     }
     image = hh.grid_from_indices(yx_map, background=(250,) * 3, pad=1, dtype=np.uint8)[::-1]
     media.show_image(image, border=True, height=min(image.shape[0] * 2, 500))
@@ -2361,7 +2383,6 @@ s5 = """\
 
 # %%
 def day18a(s, *, part2=False, return_snail=False):  # Using List-based tree.
-
   def parse_snail(line):
     # (Next solution instead uses ast.literal_eval.)
 
@@ -2380,7 +2401,6 @@ def day18a(s, *, part2=False, return_snail=False):  # Using List-based tree.
     return snail
 
   def explode_one(snail) -> bool:
-
     def add_to_middle(snail, side, value):
       side1 = 1 - side
       while not isinstance(snail[side], int):
@@ -2433,8 +2453,11 @@ def day18a(s, *, part2=False, return_snail=False):  # Using List-based tree.
       snail = reduce_snail([snail, snails[i]])
     return str(snail).replace(' ', '') if return_snail else magnitude(snail)
 
-  return max(magnitude(reduce_snail(copy.deepcopy([snail0, snail1])))
-             for snail0, snail1 in itertools.permutations(snails, 2))
+  return max(
+      magnitude(reduce_snail(copy.deepcopy([snail0, snail1])))
+      for snail0, snail1 in itertools.permutations(snails, 2)
+  )
+
 
 day18_parse_reduce_a = functools.partial(day18a, return_snail=True)
 check_eq(day18_parse_reduce_a(s1), '[[[[0,7],4],[[7,8],[6,0]]],[8,1]]')
@@ -2452,12 +2475,10 @@ check_eq(day18a_part2(s5), 3993)
 
 # %%
 def day18b(s, *, part2=False, return_snail=False):  # Explode all in the same pass.
-
   def parse_snail(line):
     return ast.literal_eval(line)
 
   def explode_all(snail):
-
     def add_to_middle(snail, side, value):
       side1 = 1 - side
       while not isinstance(snail[side], int):
@@ -2518,8 +2539,11 @@ def day18b(s, *, part2=False, return_snail=False):  # Explode all in the same pa
       snail = reduce_snail([snail, snails[i]])
     return str(snail).replace(' ', '') if return_snail else magnitude(snail)
 
-  return max(magnitude(reduce_snail(copy.deepcopy([snail0, snail1])))
-             for snail0, snail1 in itertools.permutations(snails, 2))
+  return max(
+      magnitude(reduce_snail(copy.deepcopy([snail0, snail1])))
+      for snail0, snail1 in itertools.permutations(snails, 2)
+  )
+
 
 day18_parse_reduce_b = functools.partial(day18b, return_snail=True)
 check_eq(day18_parse_reduce_b(s1), '[[[[0,7],4],[[7,8],[6,0]]],[8,1]]')
@@ -2539,10 +2563,8 @@ if not using_numba:
 
 # %%
 # Approach based on 1D arrays, without recursion, to support fast numba.
-
 @numba.njit
 def day18_reduce_snail(snail: np.ndarray) -> np.ndarray:
-
   def explode_all(snail):
     depth = 0
     i = 0
@@ -2552,7 +2574,7 @@ def day18_reduce_snail(snail: np.ndarray) -> np.ndarray:
         if depth < 4:
           depth += 1
         else:
-          left, right, close = snail[i + 1: i + 4]
+          left, right, close = snail[i + 1 : i + 4]
           assert left >= 0 and right >= 0 and close == -2
           snail = np.delete(snail, slice(i + 1, i + 4))
           snail[i] = 0
@@ -2574,8 +2596,8 @@ def day18_reduce_snail(snail: np.ndarray) -> np.ndarray:
     for i, value in enumerate(snail):
       if value >= 10:
         snail = np.concatenate(
-            (snail[:i], np.array([-1, value // 2, (value + 1) // 2, -2]),
-             snail[i + 1:]))
+            (snail[:i], np.array([-1, value // 2, (value + 1) // 2, -2]), snail[i + 1 :])
+        )
         return True, snail
     return False, snail
 
@@ -2605,10 +2627,10 @@ def day18_add_snails(snail1, snail2):
 
 
 def day18(s, *, part2=False, return_snail=False):
-
   def parse_snail(line):
-    return np.array([-1 if ch == '[' else -2 if ch == ']' else int(ch)
-                     for ch in line.replace(',', '')])
+    return np.array(
+        [-1 if ch == '[' else -2 if ch == ']' else int(ch) for ch in line.replace(',', '')]
+    )
 
   def format_snail(snail):
     result = []
@@ -2635,12 +2657,13 @@ def day18(s, *, part2=False, return_snail=False):
   snails = [parse_snail(line) for line in lines]
 
   if not part2:
-    snail = functools.reduce(
-        lambda s1, s2: day18_reduce_snail(day18_add_snails(s1, s2)), snails)
+    snail = functools.reduce(lambda s1, s2: day18_reduce_snail(day18_add_snails(s1, s2)), snails)
     return format_snail(snail) if return_snail else day18_magnitude(snail)
 
-  return max(day18_magnitude(day18_reduce_snail(day18_add_snails(snail0, snail1)))
-             for snail0, snail1 in itertools.permutations(snails, 2))
+  return max(
+      day18_magnitude(day18_reduce_snail(day18_add_snails(snail0, snail1)))
+      for snail0, snail1 in itertools.permutations(snails, 2)
+  )
 
 
 day18_parse_reduce = functools.partial(day18, return_snail=True)
@@ -2833,8 +2856,7 @@ s1 = """\
 def day19a(s, *, part2=False):  # Brute-force approach.
   # https://github.com/shaeberling/euler/blob/master/kotlin/src/com/s13g/aoc/aoc2021/Day19.kt
   scanners = [
-    {tuple(map(int, line.split(','))) for line in s2.splitlines()[1:]}
-    for s2 in s.split('\n\n')
+      {tuple(map(int, line.split(','))) for line in s2.splitlines()[1:]} for s2 in s.split('\n\n')
   ]
   ROTATIONS = tuple(
       np.array(rows)
@@ -2859,11 +2881,10 @@ def day19a(s, *, part2=False):  # Brute-force approach.
               offset = np.array(aligned_point) - point0
               o = tuple(offset)
               count_matches = sum(  # (Optimized "point + offset".)
-                  (p[0] + o[0], p[1] + o[1], p[2] + o[2]) in aligned_points
-                  for p in rotated_scan)
+                  (p[0] + o[0], p[1] + o[1], p[2] + o[2]) in aligned_points for p in rotated_scan
+              )
               if count_matches >= 11:
-                aligned_points.update(
-                    tuple(point + offset) for point in rotated_scan)
+                aligned_points.update(tuple(point + offset) for point in rotated_scan)
                 aligned_scanners.add(scanner_index)
                 scanner_positions.append(offset)
                 break
@@ -2871,8 +2892,9 @@ def day19a(s, *, part2=False):  # Brute-force approach.
   if not part2:
     return len(aligned_points)
 
-  return max(abs(point1 - point2).sum()
-             for point1, point2 in itertools.combinations(scanner_positions, 2))
+  return max(
+      abs(point1 - point2).sum() for point1, point2 in itertools.combinations(scanner_positions, 2)
+  )
 
 
 check_eq(day19a(s1), 79)
@@ -2888,6 +2910,7 @@ def day19_encode_3d(point):
   point = np.asarray(point)
   return point[..., 0] * 2**42 + point[..., 1] * 2**21 + point[..., 2]
 
+
 def day19_decode_3d(value):
   """Extracts three 21-bit signed integers from a 64-bit int."""
   value2 = np.atleast_1d(value)
@@ -2901,8 +2924,8 @@ def day19_decode_3d(value):
 # %%
 def day19b(s, *, part2=False):  # Brute-force; encode 3D point/vector as integer.
   scanners = [
-    np.array([list(map(int, line.split(','))) for line in s2.splitlines()[1:]])
-    for s2 in s.split('\n\n')
+      np.array([list(map(int, line.split(','))) for line in s2.splitlines()[1:]])
+      for s2 in s.split('\n\n')
   ]
   ROTATIONS = tuple(
       np.array(rows)
@@ -2911,8 +2934,7 @@ def day19b(s, *, part2=False):  # Brute-force; encode 3D point/vector as integer
       if np.linalg.det(rows) > 0
   )
   rotated_scans = [
-      [set(day19_encode_3d(np.tensordot(rotation, scanner, (1, 1)).T))
-       for rotation in ROTATIONS]
+      [set(day19_encode_3d(np.tensordot(rotation, scanner, (1, 1)).T)) for rotation in ROTATIONS]
       for scanner in scanners
   ]
   aligned_points = rotated_scans[0][0]
@@ -2926,8 +2948,7 @@ def day19b(s, *, part2=False):  # Brute-force; encode 3D point/vector as integer
           for rotated_scan in rotated_scans[scanner_index]:
             for point0 in rotated_scan:
               offset = aligned_point - point0  # (3-vector encoded in an int64)
-              count_matches = sum(point + offset in aligned_points
-                                  for point in rotated_scan)
+              count_matches = sum(point + offset in aligned_points for point in rotated_scan)
               if count_matches >= 11:
                 aligned_points.update(point + offset for point in rotated_scan)
                 aligned_scanners.add(scanner_index)
@@ -2937,8 +2958,10 @@ def day19b(s, *, part2=False):  # Brute-force; encode 3D point/vector as integer
   if not part2:
     return len(aligned_points)
 
-  return max(np.abs(day19_decode_3d(point1 - point2)).sum()
-             for point1, point2 in itertools.combinations(scanner_positions, 2))
+  return max(
+      np.abs(day19_decode_3d(point1 - point2)).sum()
+      for point1, point2 in itertools.combinations(scanner_positions, 2)
+  )
 
 
 check_eq(day19b(s1), 79)
@@ -2951,8 +2974,8 @@ check_eq(day19b_part2(s1), 3621)
 # %%
 def day19c(s, *, part2=False):  # Brute-force np.isin() with encoded points.
   scanners = [
-    np.array([list(map(int, line.split(','))) for line in s2.splitlines()[1:]])
-    for s2 in s.split('\n\n')
+      np.array([list(map(int, line.split(','))) for line in s2.splitlines()[1:]])
+      for s2 in s.split('\n\n')
   ]
   ROTATIONS = tuple(
       np.array(rows)
@@ -2961,8 +2984,10 @@ def day19c(s, *, part2=False):  # Brute-force np.isin() with encoded points.
       if np.linalg.det(rows) > 0
   )
   rotated_scans = [
-      np.sort([day19_encode_3d(np.tensordot(rotation, scanner, (1, 1)).T)
-               for rotation in ROTATIONS], axis=-1)
+      np.sort(
+          [day19_encode_3d(np.tensordot(rotation, scanner, (1, 1)).T) for rotation in ROTATIONS],
+          axis=-1,
+      )
       for scanner in scanners
   ]
   aligned_points = rotated_scans[0][0]
@@ -2976,11 +3001,11 @@ def day19c(s, *, part2=False):  # Brute-force np.isin() with encoded points.
           continue
         t = rotated_scans[scanner_index].T  # [point_index][rot_index]
         offset_scans = t + (aligned_point - t[:, None])
-        count_matches = np.isin(
-            offset_scans, aligned_points, assume_unique=True).sum(axis=1)
+        count_matches = np.isin(offset_scans, aligned_points, assume_unique=True).sum(axis=1)
         if count_matches.max() >= 11:
           point_index, rotation_index = np.unravel_index(
-              count_matches.argmax(), count_matches.shape)
+              count_matches.argmax(), count_matches.shape
+          )
           offset_points = offset_scans[point_index, :, rotation_index]
           offset = aligned_point - t[point_index][rotation_index]
           aligned_points = np.union1d(aligned_points, offset_points)
@@ -2990,8 +3015,10 @@ def day19c(s, *, part2=False):  # Brute-force np.isin() with encoded points.
   if not part2:
     return len(aligned_points)
 
-  return max(np.abs(day19_decode_3d(point1 - point2)).sum()
-             for point1, point2 in itertools.combinations(scanner_positions, 2))
+  return max(
+      np.abs(day19_decode_3d(point1 - point2)).sum()
+      for point1, point2 in itertools.combinations(scanner_positions, 2)
+  )
 
 
 check_eq(day19c(s1), 79)
@@ -3027,8 +3054,7 @@ def day19(s, *, part2=False):  # Fast.
       points = scanner[indices].reshape(-1, 2, 3)
       diff = np.sort(abs(points[:, 1] - points[:, 0]), axis=-1)
       encoded = day19_encode_3d(diff)
-      signatures = {value: tuple(i)
-                    for value, i in zip(encoded, indices.reshape(-1, 2))}
+      signatures = {value: tuple(i) for value, i in zip(encoded, indices.reshape(-1, 2))}
       all_signatures.append(signatures)
     return all_signatures
 
@@ -3036,7 +3062,8 @@ def day19(s, *, part2=False):  # Fast.
   all_signature_sets = [set(signature) for signature in all_signatures]
   intersection_counts = [
       (len(all_signature_sets[i] & all_signature_sets[j]), i, j)
-      for i, j in itertools.combinations(range(len(scanners)), 2)]
+      for i, j in itertools.combinations(range(len(scanners)), 2)
+  ]
 
   for _, i, j in sorted(intersection_counts, reverse=True):
     ir, jr = scanner_rep[i], scanner_rep[j]
@@ -3045,7 +3072,8 @@ def day19(s, *, part2=False):  # Fast.
     intersection = all_signature_sets[i] & all_signature_sets[j]
 
     match_count: collections.defaultdict[int, collections.defaultdict[int, int]] = (
-        collections.defaultdict(lambda: collections.defaultdict(int)))
+        collections.defaultdict(lambda: collections.defaultdict(int))
+    )
     for encoding, indices_i in all_signatures[i].items():
       if encoding in intersection:
         indices_j = all_signatures[j][encoding]
@@ -3056,8 +3084,8 @@ def day19(s, *, part2=False):  # Fast.
     index_mapping = {}
     for index_i in range(len(scanners[i])):
       max_count, index_j = max(
-          ((count, index) for index, count in match_count[index_i].items()),
-          default=(0, 0))
+          ((count, index) for index, count in match_count[index_i].items()), default=(0, 0)
+      )
       if max_count >= 11:  # Heuristically selected.
         index_mapping[index_i] = index_j
 
@@ -3071,12 +3099,14 @@ def day19(s, *, part2=False):  # Fast.
           if np.any(transformed != scanners[i][index_i]):
             break
         else:
-          return np.vstack((np.hstack((transform, offset[:, None])),
-                            [[0, 0, 0, 1]]))
+          return np.vstack((np.hstack((transform, offset[:, None])), [[0, 0, 0, 1]]))
 
     transform4 = get_transform4()  # To i from j.  (We want ir from jr.)
-    transform4 = scanner_transforms[ir][i] @ transform4 @ np.linalg.inv(
-        scanner_transforms[jr][j].astype(np.float32)).astype(int)
+    transform4 = (
+        scanner_transforms[ir][i]
+        @ transform4
+        @ np.linalg.inv(scanner_transforms[jr][j].astype(np.float32)).astype(int)
+    )
 
     points_ir = {tuple(point) for point in scanners[ir]}
     new_points = []
@@ -3096,8 +3126,9 @@ def day19(s, *, part2=False):  # Fast.
     return len(scanners[last_merged])
 
   final_transforms = scanner_transforms[last_merged].values()
-  return max(abs(t1[:3, 3] - t2[:3, 3]).sum()
-             for t1, t2 in itertools.combinations(final_transforms, 2))
+  return max(
+      abs(t1[:3, 3] - t2[:3, 3]).sum() for t1, t2 in itertools.combinations(final_transforms, 2)
+  )
 
 
 check_eq(day19(s1), 79)
@@ -3183,6 +3214,7 @@ def day20a(s, *, part2=False):  # Slow.
 
   return np.count_nonzero(grid)
 
+
 check_eq(day20a(s1), 35)
 puzzle.verify(1, day20a)  # ~165 ms.
 
@@ -3201,9 +3233,10 @@ def day20b(s, *, part2=False):  # Most compact and fast.
     grid = np.pad(grid, 2, constant_values=outside_value)
     dyxs = itertools.product([-1, 0, 1], repeat=2)
     neighbors = [np.roll(grid, dyx, (0, 1))[1:-1, 1:-1] for dyx in dyxs]
-    grid = lookup[np.tensordot(neighbors, 2**np.arange(9), (0, 0))]
+    grid = lookup[np.tensordot(neighbors, 2 ** np.arange(9), (0, 0))]
 
   return grid.sum()
+
 
 check_eq(day20b(s1), 35)
 puzzle.verify(1, day20b)  # ~3 ms.
@@ -3229,7 +3262,7 @@ def day20(s, *, part2=False, visualize=False):  # Same with visualization.
     grid = np.pad(grid, 2, constant_values=outside_value)
     dyxs = itertools.product([-1, 0, 1], repeat=2)
     neighbors = [np.roll(grid, dyx, (0, 1))[1:-1, 1:-1] for dyx in dyxs]
-    grid = lookup[np.moveaxis(np.array(neighbors), 0, -1).dot(2**np.arange(9))]
+    grid = lookup[np.moveaxis(np.array(neighbors), 0, -1).dot(2 ** np.arange(9))]
     if visualize and cycle % 2 == 0:
       images.append(np.pad(grid, num_cycles - cycle, constant_values=not outside_value))
 
@@ -3237,6 +3270,7 @@ def day20(s, *, part2=False, visualize=False):  # Same with visualization.
     images = [images[0]] * 5 + images + [images[-1]] * 5
     media.show_video(images, codec='gif', fps=5)
   return np.count_nonzero(grid)
+
 
 check_eq(day20(s1), 35)
 puzzle.verify(1, day20)  # ~3 ms.
@@ -3309,6 +3343,7 @@ def day21_part1(s):
       if score[player] >= 1000:
         return num_rolls * score[1 - player]
 
+
 check_eq(day21_part1(s1), 739785)
 puzzle.verify(1, day21_part1)  # ~0 ms.
 
@@ -3337,6 +3372,7 @@ def day21a_part2(s):  # Simple 3 "for" loops and caching.
   wins0, wins1 = compute(pos[0] - 1, pos[1] - 1, 0, 0)
   return max(wins0, wins1)
 
+
 check_eq(day21a_part2(s1), 444356092776315)
 puzzle.verify(2, day21a_part2)  # ~240 ms.
 
@@ -3346,7 +3382,8 @@ def day21b_part2(s):  # Avoiding functools.lru_cache().
   lines = s.splitlines()
   pos = [int(lines[0][27:]), int(lines[1][27:])]
   die_sum_distribution = collections.Counter(
-      sum(die) for die in itertools.product([1, 2, 3], repeat=3))
+      sum(die) for die in itertools.product([1, 2, 3], repeat=3)
+  )
   wins = np.zeros((21, 21, 10, 10, 2), np.int64)
 
   for total_score in range(40, -1, -1):
@@ -3361,9 +3398,11 @@ def day21b_part2(s):  # Avoiding functools.lru_cache().
               wins[score0, score1, pos0, pos1, 0] += count
             else:
               wins[score0, score1, pos0, pos1, :] += (
-                  count * wins[score1, new_score0, pos1, new_pos0, ::-1])
+                  count * wins[score1, new_score0, pos1, new_pos0, ::-1]
+              )
 
   return wins[0, 0, pos[0] - 1, pos[1] - 1, :].max()
+
 
 check_eq(day21b_part2(s1), 444356092776315)
 puzzle.verify(2, day21b_part2)  # ~850 ms.
@@ -3373,8 +3412,9 @@ puzzle.verify(2, day21b_part2)  # ~850 ms.
 def day21c_part2(s):  # Numpy, vectorized on pos1.
   lines = s.splitlines()
   pos = [int(lines[0][27:]), int(lines[1][27:])]
-  die_sum_distribution = tuple(collections.Counter(
-      sum(die) for die in itertools.product([1, 2, 3], repeat=3)).items())
+  die_sum_distribution = tuple(
+      collections.Counter(sum(die) for die in itertools.product([1, 2, 3], repeat=3)).items()
+  )
   # Count of wins for [score0, score1, pos0, pos1, player]
   wins = np.zeros((21, 21, 10, 10, 2), np.int64)
 
@@ -3392,6 +3432,7 @@ def day21c_part2(s):  # Numpy, vectorized on pos1.
 
   return wins[0, 0, pos[0] - 1, pos[1] - 1].max()
 
+
 check_eq(day21c_part2(s1), 444356092776315)
 puzzle.verify(2, day21c_part2)  # ~130 ms.
 
@@ -3400,8 +3441,9 @@ puzzle.verify(2, day21c_part2)  # ~130 ms.
 def day21d_part2(s, *, win_score=21, visualize=False):  # Most compact.
   lines = s.splitlines()
   pos0, pos1 = int(lines[0][27:]) - 1, int(lines[1][27:]) - 1
-  die_sum_distribution = tuple(collections.Counter(
-      sum(die) for die in itertools.product([1, 2, 3], repeat=3)).items())
+  die_sum_distribution = tuple(
+      collections.Counter(sum(die) for die in itertools.product([1, 2, 3], repeat=3)).items()
+  )
 
   @functools.lru_cache(maxsize=None)
   def compute(pos0, pos1, score0, score1):
@@ -3418,41 +3460,58 @@ def day21d_part2(s, *, win_score=21, visualize=False):  # Most compact.
     return wins0, wins1
 
   if visualize:
-    win0 = np.array([[wins0 / (wins0 + wins1) for pos1 in range(10)
-                      for wins0, wins1 in [compute(pos0, pos1, 0, 0)]]
-                    for pos0 in range(10)])
-    import matplotlib.pyplot as plt
-    fig, ax = plt.subplots()
-    pos = ax.imshow(win0, vmin=0.3, vmax=0.7, cmap='jet',
-                    origin='lower', extent=(0.5, 10.5, 0.5, 10.5))
-    ax.set(title='Probability that player 1 wins',
-           xlabel='Starting position for player 1', ylabel='Starting position for player 2',
-           xticks=np.arange(1, 11), yticks=np.arange(1, 11))
+    win0 = np.array(
+        [
+            [
+                wins0 / (wins0 + wins1)
+                for pos1 in range(10)
+                for wins0, wins1 in [compute(pos0, pos1, 0, 0)]
+            ]
+            for pos0 in range(10)
+        ]
+    )
+    hh.display_html(
+        f'Start positions for max probability of player 1 win:'
+        f' {np.argwhere(win0 == win0.max())[0] + 1} = {win0.max():.3f}'
+    )
+    hh.display_html(
+        f'Start positions for min probability of player 1 win:'
+        f' {np.argwhere(win0 == win0.min())[0] + 1} = {win0.min():.3f}'
+    )
+    hh.display_html(f'Player 1 win probability at [1 1]: {win0[0, 0]:.3f}')
+    fig, ax = plt.subplots(figsize=(4, 4), dpi=100)
+    pos = ax.imshow(
+        win0, vmin=0.3, vmax=0.7, cmap='jet', origin='lower', extent=(0.5, 10.5, 0.5, 10.5)
+    )
+    ax.set(
+        title='Probability that player 1 wins',
+        xlabel='Starting position for player 1',
+        ylabel='Starting position for player 2',
+        xticks=np.arange(1, 11),
+        yticks=np.arange(1, 11),
+    )
     fig.colorbar(pos, ax=ax)
-    plt.show()
-    if 0:
-      print(f'Start positions for max probability of player 1 win:'
-            f' {np.argwhere(win0 == win0.max())[0] + 1} = {win0.max():.3f}')
-      print(f'Start positions for min probability of player 1 win:'
-            f' {np.argwhere(win0 == win0.min())[0] + 1} = {win0.min():.3f}')
-      print(f'Player 1 win probability at [1 1]: {win0[0, 0]:.3f}')
+    # fig.tight_layout(pad=0)  # It does not properly handle the colorbar.
+    image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
+    plt.close(fig)
+    return image
 
   return max(*compute(pos0, pos1, 0, 0))
+
 
 check_eq(day21d_part2(s1), 444356092776315)
 puzzle.verify(2, day21d_part2)  # ~50 ms.
 
 # The conclusion is that starting first is a big advantage, but there are some
 # start locations where player 2 still has an advantage.
-_ = day21d_part2(puzzle.input, visualize=True)
+media.show_image(day21d_part2(puzzle.input, visualize=True), border=True)
 
 # If the winning score is increased from 21 to 100, there is still a 5% edge
 # in starting first with the best position.
-# _ = day21d_part2(puzzle.input, win_score=100, visualize=True)
+# media.show_image(day21d_part2(puzzle.input, win_score=100, visualize=True))
 
 # %%
 # Fastest, using numba.
-
 @numba.njit
 def day21_part2_func(pos, die_sum_distribution):
   wins = np.zeros((21, 21, 10, 10, 2), np.int64)
@@ -3468,9 +3527,11 @@ def day21_part2_func(pos, die_sum_distribution):
               wins[score0, score1, pos0, pos1, 0] += count
             else:
               wins[score0, score1, pos0, pos1, 0] += (
-                  count * wins[score1, new_score0, pos1, new_pos0, 1])
+                  count * wins[score1, new_score0, pos1, new_pos0, 1]
+              )
               wins[score0, score1, pos0, pos1, 1] += (
-                  count * wins[score1, new_score0, pos1, new_pos0, 0])
+                  count * wins[score1, new_score0, pos1, new_pos0, 0]
+              )
 
   return wins[0, 0, pos[0], pos[1], :].max()
 
@@ -3478,8 +3539,9 @@ def day21_part2_func(pos, die_sum_distribution):
 def day21_part2(s):
   lines = s.splitlines()
   pos = np.array([lines[0][27:], lines[1][27:]], int) - 1
-  die_sum_distribution = np.array(list(collections.Counter(
-      sum(die) for die in itertools.product([1, 2, 3], repeat=3)).items()))
+  die_sum_distribution = np.array(
+      list(collections.Counter(sum(die) for die in itertools.product([1, 2, 3], repeat=3)).items())
+  )
   return day21_part2_func(pos, die_sum_distribution)
 
 
@@ -3627,8 +3689,7 @@ def day22a_part1(s):  # Initial specialized solution for part 1.
   shape = 101, 101, 101
   grid = np.full(shape, 0, int)
   for line in lines:
-    state, x1, x2, y1, y2, z1, z2 = parse.parse(
-        '{} x={:d}..{:d},y={:d}..{:d},z={:d}..{:d}', line)
+    state, x1, x2, y1, y2, z1, z2 = parse.parse('{} x={:d}..{:d},y={:d}..{:d},z={:d}..{:d}', line)
     if not all(-50 <= c <= 50 for c in [x1, x2, y1, y2, z1, z2]):
       continue
     x1 += 50
@@ -3637,7 +3698,7 @@ def day22a_part1(s):  # Initial specialized solution for part 1.
     y2 += 50
     z1 += 50
     z2 += 50
-    grid[x1: x2 + 1, y1: y2 + 1, z1: z2 + 1] = 1 if state == 'on' else 0
+    grid[x1 : x2 + 1, y1 : y2 + 1, z1 : z2 + 1] = 1 if state == 'on' else 0
 
   return np.count_nonzero(grid)
 
@@ -3653,13 +3714,18 @@ def day22b(s, *, part2=False):  # Using 3D grid over unique range coordinates.
   # Approach inspired from https://www.youtube.com/watch?v=YKpViLcTp64.
   lines = s.splitlines()
   states = [l[:3].strip() == 'on' for l in lines]
-  boxes = np.array([[list(map(int, range_[2:].split('..')))
-                    for range_ in l[3:].strip().split(',')] for l in lines])
+  boxes = np.array(
+      [
+          [list(map(int, range_[2:].split('..'))) for range_ in l[3:].strip().split(',')]
+          for l in lines
+      ]
+  )
   if not part2:
     boxes = boxes[((boxes[..., 0] >= -50) & (boxes[..., 1] <= 50)).all(axis=1)]
   boxes[..., 1] += 1  # Convert [min, max] to [start, stop].
-  coords, inverses = zip(*(np.unique(boxes[:, c], return_inverse=True)
-                           for c in range(boxes.shape[1])))
+  coords, inverses = zip(
+      *(np.unique(boxes[:, c], return_inverse=True) for c in range(boxes.shape[1]))
+  )
   is_on = np.full([len(coord) - 1 for coord in coords], False)
   for state, *ranges in zip(states, *(a.reshape(-1, 2) for a in inverses)):
     is_on[tuple(slice(start, stop) for start, stop in ranges)] = state
@@ -3685,25 +3751,30 @@ def day22c(s, *, part2=False):  # Using CSG of boxes.
   state_cuboids = []
   for line in lines:
     state = line[:3].strip()
-    cuboid = tuple(tuple(map(int, range_[2:].split('..')))
-                   for range_ in line[3:].strip().split(','))
+    cuboid = tuple(
+        tuple(map(int, range_[2:].split('..'))) for range_ in line[3:].strip().split(',')
+    )
     if all(-50 <= c <= 50 for range_ in cuboid for c in range_) or part2:
       state_cuboids.append((state == 'on', cuboid))
 
   def inside(a, b):
     (ax, ay, az), (bx, by, bz) = a, b
-    return (ax[0] >= bx[0] and ay[0] >= by[0] and az[0] >= bz[0] and
-            ax[1] <= bx[1] and ay[1] <= by[1] and az[1] <= bz[1])
+    return (ax[0] >= bx[0] and ay[0] >= by[0] and az[0] >= bz[0]) and (
+        ax[1] <= bx[1] and ay[1] <= by[1] and az[1] <= bz[1]
+    )
 
   def outside(a, b):
     (ax, ay, az), (bx, by, bz) = a, b
-    return (ax[0] > bx[1] or ay[0] > by[1] or az[0] > bz[1] or
-            ax[1] < bx[0] or ay[1] < by[0] or az[1] < bz[0])
+    return (ax[0] > bx[1] or ay[0] > by[1] or az[0] > bz[1]) or (
+        ax[1] < bx[0] or ay[1] < by[0] or az[1] < bz[0]
+    )
 
   def subdivide_a_subtracting_b(a, b):  # Slow because up to 27 subcells.
     coords = [sorted((a[c][0], a[c][1], b[c][0], b[c][1])) for c in range(3)]
-    intervals = [[(c1, c2) for c1, c2 in ((x0, x1 - 1), (x1, x2), (x2 + 1, x3)) if c1 <= c2]
-                 for x0, x1, x2, x3 in coords]
+    intervals = [
+        [(c1, c2) for c1, c2 in ((x0, x1 - 1), (x1, x2), (x2 + 1, x3)) if c1 <= c2]
+        for x0, x1, x2, x3 in coords
+    ]
     for subcell in itertools.product(*intervals):
       if inside(subcell, a) and not inside(subcell, b):
         yield subcell
@@ -3742,23 +3813,26 @@ def day22d(s, *, part2=False):  # Faster by reducing CSG fragment count.
   state_cuboids = []
   for line in lines:
     state = line[:3].strip()
-    cuboid = tuple(tuple(map(int, range_[2:].split('..')))
-                   for range_ in line[3:].strip().split(','))
+    cuboid = tuple(
+        tuple(map(int, range_[2:].split('..'))) for range_ in line[3:].strip().split(',')
+    )
     if all(-50 <= c <= 50 for range_ in cuboid for c in range_) or part2:
       state_cuboids.append((state == 'on', cuboid))
 
   def inside(a, b):
     (ax, ay, az), (bx, by, bz) = a, b
-    return (ax[0] >= bx[0] and ay[0] >= by[0] and az[0] >= bz[0] and
-            ax[1] <= bx[1] and ay[1] <= by[1] and az[1] <= bz[1])
+    return (ax[0] >= bx[0] and ay[0] >= by[0] and az[0] >= bz[0]) and (
+        ax[1] <= bx[1] and ay[1] <= by[1] and az[1] <= bz[1]
+    )
 
   def outside(a, b):
     (ax, ay, az), (bx, by, bz) = a, b
-    return (ax[0] > bx[1] or ay[0] > by[1] or az[0] > bz[1] or
-            ax[1] < bx[0] or ay[1] < by[0] or az[1] < bz[0])
+    return (ax[0] > bx[1] or ay[0] > by[1] or az[0] > bz[1]) or (
+        ax[1] < bx[0] or ay[1] < by[0] or az[1] < bz[0]
+    )
 
   def replace(tuple_, index, value):
-    return tuple_[:index] + (value,) + tuple_[index + 1:]
+    return tuple_[:index] + (value,) + tuple_[index + 1 :]
 
   def subdivide_a_subtracting_b(a, b):  # Faster; smaller number of subcells.
     boxes = [a]
@@ -3854,8 +3928,7 @@ class Kdtree(Generic[_T]):
     self.entries: list[Kdtree.Entry[_T]] = []
     self.nodes: list[Kdtree.Node] = []
 
-  def add(self, bb0: tuple[float, ...], bb1: tuple[float, ...],
-          data: _T) -> None:
+  def add(self, bb0: tuple[float, ...], bb1: tuple[float, ...], data: _T) -> None:
     """Stores the box-bounded element."""
     assert all(0.0 <= b0 <= b1 <= 1.0 for b0, b1 in zip(bb0, bb1))
     entry_index = len(self.entries)
@@ -3892,8 +3965,7 @@ class Kdtree(Generic[_T]):
 
     self.nodes[node_index].entries.append(entry_index)
 
-  def remove(self, bb0: tuple[float, ...], bb1: tuple[float, ...],
-             data: _T) -> None:
+  def remove(self, bb0: tuple[float, ...], bb1: tuple[float, ...], data: _T) -> None:
     """Removes the previously added element."""
     assert all(0.0 <= b0 <= b1 <= 1.0 for b0, b1 in zip(bb0, bb1))
     # entry = self.Entry[_T](bb0, bb1, data)
@@ -3925,8 +3997,7 @@ class Kdtree(Generic[_T]):
         entry2 = self.entries[entry_index2]
         if entry2.bb0 == bb0 and entry2.bb1 == bb1 and entry2.data == data:
           entry_index = entry_index2
-          self.entries[entry_index] = self.Entry[_T](
-              (-1.0,) * self.ndim, (-1.0,) * self.ndim, None)
+          self.entries[entry_index] = self.Entry[_T]((-1.0,) * self.ndim, (-1.0,) * self.ndim, None)
           break
     assert entry_index is not None
     node.entries.remove(entry_index)
@@ -3937,9 +4008,7 @@ class Kdtree(Generic[_T]):
     """Yields elements that overlap the bounding-box search range."""
     assert all(0.0 <= b0 <= b1 <= 1.0 for b0, b1 in zip(bb0, bb1))
 
-    def recurse(
-        node_index: int
-    ) -> Iterator[tuple[tuple[float, ...], tuple[float, ...], _T]]:
+    def recurse(node_index: int) -> Iterator[tuple[tuple[float, ...], tuple[float, ...], _T]]:
       while True:
         node = self.nodes[node_index]
         for entry_index in node.entries:
@@ -3990,6 +4059,7 @@ def test_kdtree():
   check_eq({r[2] for r in kdtree.search((0.15, 0.15), (0.2, 0.8))}, {'elem1', 'elem3'})
   check_eq({r[2] for r in kdtree.search((0.1, 0.1), (0.9, 0.9))}, {'elem1', 'elem2', 'elem3'})
 
+
 test_kdtree()
 
 
@@ -3999,34 +4069,41 @@ def day22e(s, *, part2=False):  # Using Kdtree.
   state_cuboids = []
   for line in lines:
     state = line[:3].strip()
-    cuboid = tuple(tuple(map(int, range_[2:].split('..')))
-                   for range_ in line[3:].strip().split(','))
+    cuboid = tuple(
+        tuple(map(int, range_[2:].split('..'))) for range_ in line[3:].strip().split(',')
+    )
     if all(-50 <= c <= 50 for range_ in cuboid for c in range_) or part2:
       state_cuboids.append((state == 'on', cuboid))
   diam, diam2 = 300_000.0, 300_000.5
 
   def inside(a, b):
     (ax, ay, az), (bx, by, bz) = a, b
-    return (ax[0] >= bx[0] and ay[0] >= by[0] and az[0] >= bz[0] and
-            ax[1] <= bx[1] and ay[1] <= by[1] and az[1] <= bz[1])
+    return (ax[0] >= bx[0] and ay[0] >= by[0] and az[0] >= bz[0]) and (
+        ax[1] <= bx[1] and ay[1] <= by[1] and az[1] <= bz[1]
+    )
 
   def outside(a, b):
     (ax, ay, az), (bx, by, bz) = a, b
-    return (ax[0] > bx[1] or ay[0] > by[1] or az[0] > bz[1] or
-            ax[1] < bx[0] or ay[1] < by[0] or az[1] < bz[0])
+    return (ax[0] > bx[1] or ay[0] > by[1] or az[0] > bz[1]) or (
+        ax[1] < bx[0] or ay[1] < by[0] or az[1] < bz[0]
+    )
 
   def replace(tuple_, index, value):
-    return tuple_[:index] + (value,) + tuple_[index + 1:]
+    return tuple_[:index] + (value,) + tuple_[index + 1 :]
 
   def to_bbox(a):
     ax, ay, az = a
-    return ((ax[0] / diam + 0.5, ay[0] / diam + 0.5, az[0] / diam + 0.5),
-            (ax[1] / diam + 0.5, ay[1] / diam + 0.5, az[1] / diam + 0.5))
+    return (
+        (ax[0] / diam + 0.5, ay[0] / diam + 0.5, az[0] / diam + 0.5),
+        (ax[1] / diam + 0.5, ay[1] / diam + 0.5, az[1] / diam + 0.5),
+    )
 
   def from_bbox(bb0, bb1):
-    return ((int((bb0[0] - 0.5) * diam2), int((bb1[0] - 0.5) * diam2)),
-            (int((bb0[1] - 0.5) * diam2), int((bb1[1] - 0.5) * diam2)),
-            (int((bb0[2] - 0.5) * diam2), int((bb1[2] - 0.5) * diam2)))
+    return (
+        (int((bb0[0] - 0.5) * diam2), int((bb1[0] - 0.5) * diam2)),
+        (int((bb0[1] - 0.5) * diam2), int((bb1[1] - 0.5) * diam2)),
+        (int((bb0[2] - 0.5) * diam2), int((bb1[2] - 0.5) * diam2)),
+    )
 
   def subdivide_a_subtracting_b(a, b):  # Faster; smaller number of subcells.
     boxes = [a]
@@ -4076,9 +4153,9 @@ def day22e(s, *, part2=False):  # Using Kdtree.
     for cell in cells_to_add:
       kdtree.add(*to_bbox(cell), None)  # type: ignore[call-arg]
 
-  cells = [from_bbox(entry.bb0, entry.bb1) for entry in kdtree.entries
-           if entry.bb0[0] >= 0.0]
+  cells = [from_bbox(entry.bb0, entry.bb1) for entry in kdtree.entries if entry.bb0[0] >= 0.0]
   return (np.diff(list(cells)) + 1)[..., 0].prod(axis=-1).sum()
+
 
 check_eq(day22e(s1), 39)
 check_eq(day22e(s2), 590784)
@@ -4092,25 +4169,25 @@ puzzle.verify(2, day22e_part2)  # ~330 ms vs. previous ~380 ms.
 
 # %%
 # Mangled numba version of day22d; fastest.
-
 @numba.njit
 def day22_func(states, cuboids):
-
   def inside(a, b):
     (ax, ay, az), (bx, by, bz) = a, b
-    return (ax[0] >= bx[0] and ay[0] >= by[0] and az[0] >= bz[0] and
-            ax[1] <= bx[1] and ay[1] <= by[1] and az[1] <= bz[1])
+    return (ax[0] >= bx[0] and ay[0] >= by[0] and az[0] >= bz[0]) and (
+        ax[1] <= bx[1] and ay[1] <= by[1] and az[1] <= bz[1]
+    )
 
   def outside(a, b):
     (ax, ay, az), (bx, by, bz) = a, b
-    return (ax[0] > bx[1] or ay[0] > by[1] or az[0] > bz[1] or
-            ax[1] < bx[0] or ay[1] < by[0] or az[1] < bz[0])
+    return (ax[0] > bx[1] or ay[0] > by[1] or az[0] > bz[1]) or (
+        ax[1] < bx[0] or ay[1] < by[0] or az[1] < bz[0]
+    )
 
   def replace(tuple_, index, value):
     if using_numba:
       setitem = numba.cpython.unsafe.tuple.tuple_setitem
       return setitem(tuple_, index, value)  # pylint: disable=no-value-for-parameter
-    return tuple_[:index] + (value,) + tuple_[index + 1:]
+    return tuple_[:index] + (value,) + tuple_[index + 1 :]
 
   def to_tuple(array):
     if using_numba:
@@ -4121,8 +4198,7 @@ def day22_func(states, cuboids):
   def subdivide_a_subtracting_b(a, b):  # Faster; smaller number of subcells.
     boxes = [a]
     finalized: list[tuple[tuple[int, int, int], tuple[int, int, int]]] = []
-    dims = np.argsort(
-        np.array([a[0][0] - a[0][1], a[1][0] - a[1][1], a[2][0] - a[2][1]]))
+    dims = np.argsort(np.array([a[0][0] - a[0][1], a[1][0] - a[1][1], a[2][0] - a[2][1]]))
     for dim in dims:
       new_boxes = []
       for box in boxes:
@@ -4179,8 +4255,9 @@ def day22(s, *, part2=False):
   states, cuboids = [], []
   for line in lines:
     state = line[:3].strip()
-    cuboid = tuple(tuple(map(int, range_[2:].split('..')))
-                   for range_ in line[3:].strip().split(','))
+    cuboid = tuple(
+        tuple(map(int, range_[2:].split('..'))) for range_ in line[3:].strip().split(',')
+    )
     if all(-50 <= c <= 50 for range_ in cuboid for c in range_) or part2:
       states.append(state == 'on')
       cuboids.append(cuboid)
@@ -4255,29 +4332,29 @@ def day23a(s, *, part2=False):  # Compact.
         if id == '.':
           continue
         j = ord(id) - ord('A')
-        row = max((i for i in range(nrows) if state[7 + i * 4 + j] == '.'),
-                  default=None)
-        if (row is None or
-            not all(state[7 + i * 4 + j] == id for i in range(row + 1, nrows))):
+        row = max((i for i in range(nrows) if state[7 + i * 4 + j] == '.'), default=None)
+        if row is None or not all(state[7 + i * 4 + j] == id for i in range(row + 1, nrows)):
           continue
         i1 = 7 + row * 4 + j
         move_right = i0 <= j + 1
-        if all(state[k] == '.' for k in (
-            range(i0 + 1, 2 + j) if move_right else range(2 + j, i0))):
-          cost = ((j - i0 + 2) * 2 - (i0 == 0) + row if move_right else
-                  (i0 - j - 1) * 2 - (i0 == 6) + row) * cost_for_id[id]
+        if all(state[k] == '.' for k in (range(i0 + 1, 2 + j) if move_right else range(2 + j, i0))):
+          cost = (
+              (j - i0 + 2) * 2 - (i0 == 0) + row
+              if move_right
+              else (i0 - j - 1) * 2 - (i0 == 6) + row
+          ) * cost_for_id[id]
           yield i0, i1, cost
 
       # Move from a room `j` to the hallway position `i1`.
       for j in range(4):
-        row = min((i for i in range(nrows) if state[7 + i * 4 + j] != '.'),
-                  default=None)
+        row = min((i for i in range(nrows) if state[7 + i * 4 + j] != '.'), default=None)
         if row is None:
           continue
         i0 = 7 + row * 4 + j
         id = state[i0]
-        if (id == chr(ord('A') + j) and not any(
-            state[7 + i * 4 + j] != id for i in range(row + 1, nrows))):
+        if id == chr(ord('A') + j) and not any(
+            state[7 + i * 4 + j] != id for i in range(row + 1, nrows)
+        ):
           continue
         for i1 in range(2 + j, 7):  # Move right in hallway.
           if all(state[k] == '.' for k in range(2 + j, i1 + 1)):
@@ -4293,9 +4370,13 @@ def day23a(s, *, part2=False):  # Compact.
       state2[i1] = id  # (previously '.')
       return tuple(state2)
 
-    return min((move_cost + compute_cost(apply_move(state, i0, i1))
-                for i0, i1, move_cost in eligible_moves(state)),
-               default=10**8)
+    return min(
+        (
+            move_cost + compute_cost(apply_move(state, i0, i1))
+            for i0, i1, move_cost in eligible_moves(state)
+        ),
+        default=10**8,
+    )
 
   return compute_cost(start_state)
 
@@ -4335,28 +4416,27 @@ def day23b(s, *, part2=False, visualize=False):  # With visualization.
       if id == '.':
         continue
       j = ord(id) - ord('A')
-      row = max((i for i in range(nrows) if state[7 + i * 4 + j] == '.'),
-                default=None)
-      if (row is None or
-          not all(state[7 + i * 4 + j] == id for i in range(row + 1, nrows))):
+      row = max((i for i in range(nrows) if state[7 + i * 4 + j] == '.'), default=None)
+      if row is None or not all(state[7 + i * 4 + j] == id for i in range(row + 1, nrows)):
         continue
       i1 = 7 + row * 4 + j
       move_right = i0 <= j + 1
       if all(state[k] == '.' for k in (range(i0 + 1, 2 + j) if move_right else range(2 + j, i0))):
-        move_cost = ((j - i0 + 2) * 2 - (i0 == 0) + row if move_right else
-                     (i0 - j - 1) * 2 - (i0 == 6) + row) * cost_for_id[id]
+        move_cost = (
+            (j - i0 + 2) * 2 - (i0 == 0) + row if move_right else (i0 - j - 1) * 2 - (i0 == 6) + row
+        ) * cost_for_id[id]
         yield i0, i1, move_cost
 
     # Move from a room `j` to the hallway position `i1`.
     for j in range(4):
-      row = min((i for i in range(nrows) if state[7 + i * 4 + j] != '.'),
-                default=None)
+      row = min((i for i in range(nrows) if state[7 + i * 4 + j] != '.'), default=None)
       if row is None:
         continue
       i0 = 7 + row * 4 + j
       id = state[i0]
-      if (id == chr(ord('A') + j) and not any(
-          state[7 + i * 4 + j] != id for i in range(row + 1, nrows))):
+      if id == chr(ord('A') + j) and not any(
+          state[7 + i * 4 + j] != id for i in range(row + 1, nrows)
+      ):
         continue
       for i1 in range(2 + j, 7):  # Move right in hallway.
         if all(state[k] == '.' for k in range(2 + j, i1 + 1)):
@@ -4392,14 +4472,24 @@ def day23b(s, *, part2=False, visualize=False):  # With visualization.
   if visualize:
 
     def make_image(grid, size=12):
-      cmap = {' ': (250,) * 3, '.': (240,) * 3, '#': (190,) * 3,
-              'A': (180, 0, 0), 'B': (0, 180, 0), 'C': (50, 50, 250), 'D': (250, 120, 0)}
-      return np.array([cmap[e] for e in grid.flat], np.uint8).reshape(
-          *grid.shape, 3).repeat(size, axis=0).repeat(size, axis=1)
+      cmap = {
+          ' ': (250,) * 3,
+          '.': (240,) * 3,
+          '#': (190,) * 3,
+          'A': (180, 0, 0),
+          'B': (0, 180, 0),
+          'C': (50, 50, 250),
+          'D': (250, 120, 0),
+      }
+      a = np.array([cmap[e] for e in grid.flat], np.uint8)
+      return a.reshape(*grid.shape, 3).repeat(size, axis=0).repeat(size, axis=1)
 
     def get_pos(i0):
-      return ((1, 1 + i0 * 2 - (i0 > 0) - (i0 == 6)) if i0 < 7 else
-              (2 + (i0 - 7) // 4, 3 + (i0 - 7) % 4 * 2))
+      return (
+          (1, 1 + i0 * 2 - (i0 > 0) - (i0 == 6))
+          if i0 < 7
+          else (2 + (i0 - 7) // 4, 3 + (i0 - 7) % 4 * 2)
+      )
 
     images = []
     state = start_state
@@ -4456,29 +4546,27 @@ def day23c(s, *, part2=False):  # Dijkstra or A* search.
       if id == '.':
         continue
       j = ord(id) - ord('A')
-      row = max((i for i in range(nrows) if state[7 + i * 4 + j] == '.'),
-                default=None)
-      if (row is None or
-          not all(state[7 + i * 4 + j] == id for i in range(row + 1, nrows))):
+      row = max((i for i in range(nrows) if state[7 + i * 4 + j] == '.'), default=None)
+      if row is None or not all(state[7 + i * 4 + j] == id for i in range(row + 1, nrows)):
         continue
       i1 = 7 + row * 4 + j
       move_right = i0 <= j + 1
-      if all(state[k] == '.' for k in (
-          range(i0 + 1, 2 + j) if move_right else range(2 + j, i0))):
-        move_cost = ((j - i0 + 2) * 2 - (i0 == 0) + row if move_right else
-                     (i0 - j - 1) * 2 - (i0 == 6) + row) * cost_for_id[id]
+      if all(state[k] == '.' for k in (range(i0 + 1, 2 + j) if move_right else range(2 + j, i0))):
+        move_cost = (
+            (j - i0 + 2) * 2 - (i0 == 0) + row if move_right else (i0 - j - 1) * 2 - (i0 == 6) + row
+        ) * cost_for_id[id]
         yield i0, i1, move_cost
 
     # Move from a room `j` to the hallway position `i1`.
     for j in range(4):
-      row = min((i for i in range(nrows) if state[7 + i * 4 + j] != '.'),
-                default=None)
+      row = min((i for i in range(nrows) if state[7 + i * 4 + j] != '.'), default=None)
       if row is None:
         continue
       i0 = 7 + row * 4 + j
       id = state[i0]
-      if (id == chr(ord('A') + j) and not any(
-          state[7 + i * 4 + j] != id for i in range(row + 1, nrows))):
+      if id == chr(ord('A') + j) and not any(
+          state[7 + i * 4 + j] != id for i in range(row + 1, nrows)
+      ):
         continue
       for i1 in range(2 + j, 7):  # Move right in hallway.
         if all(state[k] == '.' for k in range(2 + j, i1 + 1)):
@@ -4503,8 +4591,9 @@ def day23c(s, *, part2=False):  # Dijkstra or A* search.
       if id != '.':
         j = ord(id) - ord('A')
         move_right = i0 <= j + 1
-        cost += ((j - i0 + 2) * 2 - (i0 == 0) if move_right else
-                 (i0 - j - 1) * 2 - (i0 == 6)) * cost_for_id[id]
+        cost += (
+            (j - i0 + 2) * 2 - (i0 == 0) if move_right else (i0 - j - 1) * 2 - (i0 == 6)
+        ) * cost_for_id[id]
     for row in range(nrows):
       for j in range(4):
         i0 = 7 + row * 4 + j
@@ -4544,7 +4633,6 @@ day23c_part2 = functools.partial(day23c, part2=True)
 
 # %%
 # Dijkstra/A*, but mangled to support numba.
-
 @numba.njit
 def day23_func(nrows, start_state, end_state, state_size):
   # State consists of the 7 eligible hallway locations and the room locations.
@@ -4577,8 +4665,9 @@ def day23_func(nrows, start_state, end_state, state_size):
       id = state[i0]
       if id >= 0:
         move_right = i0 <= id + 1
-        cost += ((id - i0 + 2) * 2 - (i0 == 0) if move_right else
-                 (i0 - id - 1) * 2 - (i0 == 6)) * cost_for_id[id]
+        cost += (
+            (id - i0 + 2) * 2 - (i0 == 0) if move_right else (i0 - id - 1) * 2 - (i0 == 6)
+        ) * cost_for_id[id]
     for row in range(nrows):
       for j in range(4):
         i0 = 7 + row * 4 + j
@@ -4627,12 +4716,15 @@ def day23_func(nrows, start_state, end_state, state_size):
         continue
       i1 = 7 + row * 4 + id
       move_right = i0 <= id + 1
-      for k in (range(i0 + 1, 2 + id) if move_right else range(2 + id, i0)):
+      for k in range(i0 + 1, 2 + id) if move_right else range(2 + id, i0):
         if state[k] >= 0:
           break
       else:
-        move_cost = ((id - i0 + 2) * 2 - (i0 == 0) + row if move_right else
-                     (i0 - id - 1) * 2 - (i0 == 6) + row) * cost_for_id[id]
+        move_cost = (
+            (id - i0 + 2) * 2 - (i0 == 0) + row
+            if move_right
+            else (i0 - id - 1) * 2 - (i0 == 6) + row
+        ) * cost_for_id[id]
         consider(i0, i1, move_cost)
 
     # Move from a room `j` to the hallway position `i1`.
@@ -4672,8 +4764,7 @@ def day23(s, *, part2=False):
   if part2:
     letters[1:1] = [list('DCBA'), list('DBAC')]  # Insert two middle rows.
   nrows = len(letters)
-  start_state = tuple(
-      [-1] * 7 + [ord(ch) - ord('A') for ch in more_itertools.flatten(letters)])
+  start_state = tuple([-1] * 7 + [ord(ch) - ord('A') for ch in more_itertools.flatten(letters)])
   end_state = tuple([-1] * 7 + [0, 1, 2, 3] * nrows)
   state_size = len(start_state)
   return day23_func(nrows, start_state, end_state, state_size)
@@ -4850,6 +4941,7 @@ def day24_test1():  # Notice the repeated 18-line blocks; find the block differe
     set_ = set(line for i, line in enumerate(lines) if i % 18 == m)
     print('   ' + '\n   '.join(sorted(set_)))
 
+
 if 0:
   day24_test1()
 
@@ -4858,10 +4950,10 @@ if 0:
 def day24_test2():  # Extract the parameters of the 14 code blocks.
   lines = puzzle.input.splitlines()
   params = {4: 'div z ', 5: 'add x ', 15: 'add y '}
-  a, b, c = [[int(lines[i].split()[-1]) for i in range(m, 253, 18)]
-             for m in params]
+  a, b, c = [[int(lines[i].split()[-1]) for i in range(m, 253, 18)] for m in params]
   print(f'a = {a}')
   print(list(zip(range(14), a, b, c)))
+
 
 if 0:
   day24_test2()
@@ -5046,6 +5138,7 @@ def day25a(s):  # Compact and reasonably fast.
     if not moved:
       return step
 
+
 check_eq(day25a(s1), 58)
 puzzle.verify(1, day25a)  # ~550 ms.  (419 steps)
 
@@ -5070,6 +5163,7 @@ def day25b(s):  # Same speed when using indices rather than boolean mask.
     if not moved:
       return step
 
+
 check_eq(day25b(s1), 58)
 puzzle.verify(1, day25b)  # ~560 ms.
 
@@ -5092,8 +5186,8 @@ def day25c(s, *, verbose=False, visualize=False):  # With visualization.
 
     if visualize:
       cmap = {'.': (240,) * 3, '>': (180, 0, 0), 'v': (0, 180, 0)}
-      image = np.array([cmap[e] for e in grid.flat], np.uint8).reshape(
-          *grid.shape, 3).repeat(2, axis=0).repeat(2, axis=1)
+      a = np.array([cmap[e] for e in grid.flat], np.uint8)
+      image = a.reshape(*grid.shape, 3).repeat(2, axis=0).repeat(2, axis=1)
       images.append(image)
 
     if not moved:
@@ -5109,14 +5203,21 @@ if SHOW_BIG_MEDIA:
 
 # %%
 # Fastest: active sets and numba.
-
 @numba.njit
 def day25_func(grid):
   height, width = grid.shape
-  candidate_right = [(y, x) for y in range(height) for x in range(width)
-                     if grid[y, x] == '>' and grid[y, (x + 1) % width] == '.']
-  candidate_down = [(y, x) for y in range(height) for x in range(width)
-                    if grid[y, x] == 'v' and grid[(y + 1) % height, x] == '.']
+  candidate_right = [
+      (y, x)
+      for y in range(height)
+      for x in range(width)
+      if grid[y, x] == '>' and grid[y, (x + 1) % width] == '.'
+  ]
+  candidate_down = [
+      (y, x)
+      for y in range(height)
+      for x in range(width)
+      if grid[y, x] == 'v' and grid[(y + 1) % height, x] == '.'
+  ]
 
   for step in range(1, 10**8):
     moved = False
@@ -5180,17 +5281,28 @@ if 0:  # Compute min execution times over several calls.
 
 # %%
 if 1:  # Look for unwanted pollution of namespace.
-  print(textwrap.fill(' '.join(name for name, value in globals().items() if not (
-      name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS))))
+  print(
+      textwrap.fill(
+          ' '.join(
+              name
+              for name, value in globals().items()
+              if not (name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS)
+          )
+      )
+  )
 
 # %%
 if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
   # Create a new tar.gz file.
-  hh.run(f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'""")
+  hh.run(
+      f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
+  )
 
 # %%
 if 0:  # Look for misspelled words.
-  hh.run(rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true""")
+  hh.run(
+      rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true"""
+  )
 
 # %%
 if 0:  # Lint.
@@ -5208,6 +5320,7 @@ hh.show_notebook_cell_top_times()
 
 # %%
 if 0:  # Original non-numpy versions.
+
   def day19_encode_3d_old(point):
     """Packs three 21-bit signed integers into a 64-bit int."""
     return point[0] * 2**42 + point[1] * 2**21 + point[2]
@@ -5220,9 +5333,11 @@ if 0:  # Original non-numpy versions.
     z = value - y * 2**21
     return x, y, z
 
+
 # %%
 if 0:  # Experiments with encoding three small ints into a large int.
   if 0:
+
     def encode(point):
       return point[0] * 4_294_967_291 + point[1] * 65_521 + point[2]
 
@@ -5232,6 +5347,7 @@ if 0:  # Experiments with encoding three small ints into a large int.
       return x, y, z
 
   else:
+
     def encode(point):  # 64-bit encoding of three 21-bit signed integers.
       return point[0] * 2**42 + point[1] * 2**21 + point[2]
 
@@ -5243,11 +5359,13 @@ if 0:  # Experiments with encoding three small ints into a large int.
       return x, y, value
 
   def test():
-    for point in itertools.product([-30_000, -257, -256, -255, -10, -1, 0,
-                                    1, 10, 255, 256, 257, 30_000], repeat=3):
+    for point in itertools.product(
+        [-30_000, -257, -256, -255, -10, -1, 0, 1, 10, 255, 256, 257, 30_000], repeat=3
+    ):
       e = encode(point)
       point2 = decode(e)
       check_eq(point, point2)
+
   test()
 
 # %%
@@ -5264,8 +5382,10 @@ if 0:  # Experiments with encoding three small ints into a large int.
 # %%
 if 0:
   ZIP_URL = f'https://github.com/hhoppe/advent_of_code_{YEAR}/raw/main/data/{PROFILE}.zip'
-  hh.run(f"if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&"
-         f" wget -q {ZIP_URL} && unzip -q {PROFILE}); fi")
+  hh.run(
+      f'if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&'
+      f' wget -q {ZIP_URL} && unzip -q {PROFILE}); fi'
+  )
 
   # Create a new zip file, quietly (-q) and ignoring relative paths (-j).
   hh.run(f"""!zip -q -j - ~/.config/aocd/'{PROFILE.replace("_", " ")}'/*.txt >/content/data.zip""")

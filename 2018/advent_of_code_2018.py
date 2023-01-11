@@ -59,6 +59,7 @@ import collections
 from collections.abc import Callable
 import dataclasses
 import functools
+import hashlib
 import heapq
 import importlib
 import itertools
@@ -68,6 +69,7 @@ import sys
 import textwrap
 import types
 from typing import Any
+import warnings
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
@@ -75,6 +77,8 @@ import mediapy as media
 import more_itertools
 import numpy as np
 import scipy.optimize
+import scipy.signal
+
 
 # %%
 if not media.video_is_available():
@@ -92,8 +96,10 @@ PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
 TAR_URL = f'https://github.com/hhoppe/advent_of_code_{YEAR}/raw/main/data/{PROFILE}.tar.gz'
 if 1:
-  hh.run(f"if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&"
-         f" wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi")
+  hh.run(
+      f'if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&'
+      f' wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi'
+  )
 INPUT_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}_input.txt'
 ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
 
@@ -135,6 +141,7 @@ _ORIGINAL_GLOBALS = list(globals())
 @dataclasses.dataclass
 class Machine:
   """Abstract machine used in several puzzles."""
+
   num_registers: int = 6
   registers: list[int] = dataclasses.field(default_factory=list)
   ip_register: int | None = None
@@ -149,8 +156,7 @@ class Machine:
   def __post_init__(self) -> None:
     self.registers = [0] * self.num_registers
 
-    def assign(registers: list[int], operands: tuple[int, ...],
-               value: int | bool) -> None:
+    def assign(registers: list[int], operands: tuple[int, ...], value: int | bool) -> None:
       output = operands[2]
       assert 0 <= output < len(registers)
       registers[output] = int(value)
@@ -192,8 +198,7 @@ class Machine:
     instruction = self.instructions[self.ip]
     self.operations[instruction.operation](self.registers, instruction.operands)
     if verbose:
-      print(self.ip, instruction.operation, instruction.operands,
-            self.registers)
+      print(self.ip, instruction.operation, instruction.operands, self.registers)
     if self.ip_register is not None:
       self.ip = self.registers[self.ip_register] + 1
     else:
@@ -218,6 +223,7 @@ def day1_part1(s):
   entries = map(int, s.replace(', ', '\n').splitlines())
   return sum(entries)
 
+
 check_eq(day1_part1('+1, +1, +1'), 3)
 check_eq(day1_part1('+1, +1, -2'), 0)
 check_eq(day1_part1('-1, -2, -3'), -6)
@@ -235,6 +241,7 @@ def day1_part2(s):
     if total in found:
       return total
   assert False
+
 
 check_eq(day1_part2('+1, -1'), 0)
 check_eq(day1_part2('+3, +3, +4, -2, -4'), 10)
@@ -264,6 +271,7 @@ def day2(s):
     sum_thrice += 3 in counts.values()
   return sum_twice * sum_thrice
 
+
 check_eq(day2('abcdef bababc abbcde abcccd aabcdd abcdee ababab'), 4 * 3)
 puzzle.verify(1, day2)  # ~2 ms.
 
@@ -273,11 +281,12 @@ def day2_part2(s):
   candidates = set()
   for id in s.split():
     for pos in range(len(id)):
-      id2 = id[:pos] + '*' + id[pos + 1:]
+      id2 = id[:pos] + '*' + id[pos + 1 :]
       if id2 in candidates:
         return id2.replace('*', '')
       candidates.add(id2)
   return None
+
 
 check_eq(day2_part2('abcde fghij klmno pqrst fguij axcye wvxyz'), 'fgij')
 puzzle.verify(2, day2_part2)  # ~4 ms.
@@ -337,7 +346,7 @@ def day3(s, *, part2=False, visualize=False):  # Faster with numpy.
   grid = np.full(shape, 0)
   for line in lines:
     claim, l, t, w, h = map(int, hh.re_groups(pattern, line))
-    grid[t: t + h, l: l + w] += 1
+    grid[t : t + h, l : l + w] += 1
 
   if not part2:
     return np.count_nonzero(grid >= 2)
@@ -345,13 +354,13 @@ def day3(s, *, part2=False, visualize=False):  # Faster with numpy.
   claim = -1
   for line in lines:
     claim, l, t, w, h = map(int, hh.re_groups(pattern, line))
-    if np.all(grid[t: t + h, l: l + w] == 1):
+    if np.all(grid[t : t + h, l : l + w] == 1):
       break
 
   if visualize:
     image1 = media.to_rgb(grid * 1.0)
     image2 = image1.copy()
-    image2[t: t + h, l: l + w] = 0.9, 0.9, 0.0
+    image2[t : t + h, l : l + w] = 0.9, 0.9, 0.0
     video: Any = [image1, image2]
     shrink = 2
     if shrink > 1:
@@ -416,9 +425,9 @@ def day4(s, *, part2=False):
   date_guard = np.empty(num_dates, int)
   row = -1
   for line in lines:
-    minute, = map(int, hh.re_groups(r' \d\d:(\d\d)', line))
+    (minute,) = map(int, hh.re_groups(r' \d\d:(\d\d)', line))
     if 'Guard' in line:
-      guard, = map(int, hh.re_groups(r' Guard #(\d+) begins shift', line))
+      (guard,) = map(int, hh.re_groups(r' Guard #(\d+) begins shift', line))
       row += 1
       date_guard[row] = guard
     elif 'falls asleep' in line:
@@ -437,11 +446,8 @@ def day4(s, *, part2=False):
     minute_most_sleep = minute_sleep.argmax()
     return guard_most_sleep * minute_most_sleep
 
-  guard_sleep_by_minute = {guard: asleep[date_guard == guard].sum(axis=0)
-                           for guard in guards}
-  guard_max_sleep_by_minute = {
-      guard: array.max() for guard, array in guard_sleep_by_minute.items()
-  }
+  guard_sleep_by_minute = {guard: asleep[date_guard == guard].sum(axis=0) for guard in guards}
+  guard_max_sleep_by_minute = {guard: array.max() for guard, array in guard_sleep_by_minute.items()}
   guard = max(guard_max_sleep_by_minute, key=lambda guard: guard_max_sleep_by_minute[guard])
   minute = guard_sleep_by_minute[guard].argmax()
   return guard * minute
@@ -469,7 +475,6 @@ puzzle = advent.puzzle(day=5)
 
 # %%
 def day5a(s, *, part2=False):  # Slow.
-
   def simplify_polymer(s):
     pairs = [chr(ord('a') + i) + chr(ord('A') + i) for i in range(26)]
     pairs += [chr(ord('A') + i) + chr(ord('a') + i) for i in range(26)]
@@ -499,7 +504,6 @@ check_eq(day5a_part2('dabAcCaCBAcCcaDA'), 4)
 
 # %%
 # Faster, using stack and numba.
-
 @numba.njit
 def day5b_simplify_polymer(s):
   l: list[str] = []
@@ -512,7 +516,6 @@ def day5b_simplify_polymer(s):
 
 
 def day5b(s, *, part2=False):
-
   def remove_elem(s, i):
     return s.replace(chr(ord('A') + i), '').replace(chr(ord('a') + i), '')
 
@@ -533,7 +536,6 @@ puzzle.verify(2, day5b_part2)  # ~260 ms with numba (~440 ms without numba)
 
 # %%
 # Fastest; nested loops in numba.
-
 @numba.njit
 def day5_length_of_simplified_polymer(codes):
   l: list[int] = []
@@ -621,8 +623,7 @@ def day6(s, *, part2=False, max_sum=10_000, visualize=False):
     closest[count_min > 1] = -1  # Disqualify equidistant locations.
     unbounded = set(closest[0]) | set(closest[-1]) | set(closest[:, 0]) | set(closest[:, -1])
     counts = collections.Counter(closest.flat)
-    count, i = max((c, i) for i, c in counts.items()
-                   if i not in unbounded | {-1})
+    count, i = max((c, i) for i, c in counts.items() if i not in unbounded | {-1})
     if visualize:
       cmap = np.random.default_rng(0).choice(range(30, 150), (len(yxs) + 1, 3)).astype(np.uint8)
       image = cmap[closest + 1]
@@ -638,6 +639,7 @@ def day6(s, *, part2=False, max_sum=10_000, visualize=False):
   if visualize:
     media.show_image(sum_manhattans < max_sum)
   return np.count_nonzero(sum_manhattans < max_sum)
+
 
 check_eq(day6(s1), 17)
 puzzle.verify(1, day6)  # ~135 ms.
@@ -750,7 +752,6 @@ puzzle = advent.puzzle(day=8)
 
 # %%
 def day8(s, *, part2=False):
-
   @dataclasses.dataclass
   class TreeNode:
     children: list[TreeNode]
@@ -780,9 +781,11 @@ def day8(s, *, part2=False):
   def node_value(node):
     if not node.children:
       return sum(node.metadatas)
-    return sum(node_value(node.children[child_index - 1])
-               for child_index in node.metadatas
-               if 1 <= child_index <= len(node.children))
+    return sum(
+        node_value(node.children[child_index - 1])
+        for child_index in node.metadatas
+        if 1 <= child_index <= len(node.children)
+    )
 
   return node_value(tree)
 
@@ -881,7 +884,6 @@ day9b_part2 = functools.partial(day9b, part2=True)
 
 # %%
 # Fastest.  Singly-linked list is sufficient!
-
 @numba.njit
 def day9_func(num_players: int, last_marble: int) -> int:
   scores = [0] * num_players
@@ -1004,13 +1006,15 @@ def day10a(s, *, part2=False):  # Slow.
     return index
 
   grid = hh.grid_from_indices(positions, dtype=np.uint8)
-  import hashlib
   hashed = hashlib.md5(''.join(map(str, grid.flat)).encode()).hexdigest()
   # print(hashed)
+  if shape[1] <= 30:
+    return 'HI'
   return {
       '05d005c2fd38c74568ab697305825ff6': 'FPRBRRZA',  # google.Hugues_Hoppe.965276
       '7a115ac723c75059c742c8bb21d5ee1c': 'ERCXLAJL',  # github.hhoppe.1452460
-  }[hashed] if shape[1] > 30 else 'HI'
+  }[hashed]
+
 
 check_eq(day10a(s1), 'HI')
 puzzle.verify(1, day10a)  # ~230 ms.
@@ -1032,9 +1036,10 @@ def day10(s, *, part2=False, visualize=False):  # Quick initial jump; visualize.
   all_positions = []
 
   leftmost, rightmost = positions[:, 1].argmin(), positions[:, 1].argmax()
-  index = max(
-      (positions[rightmost, 1] - positions[leftmost, 1]) // abs(
-          velocities[leftmost, 1] - velocities[rightmost, 1]) - 20, 0)
+  index = (positions[rightmost, 1] - positions[leftmost, 1]) // abs(
+      velocities[leftmost, 1] - velocities[rightmost, 1]
+  )
+  index = max(index - 20, 0)
   positions += velocities * index
 
   while True:
@@ -1055,13 +1060,15 @@ def day10(s, *, part2=False, visualize=False):  # Quick initial jump; visualize.
     video: Any = hh.grid_from_indices(all_positions, dtype=float)
     video = [video[0]] * 5 + list(video) + [video[-1]] * 10
     media.show_video(video, codec='gif', fps=5)
-  import hashlib
   hashed = hashlib.md5(''.join(map(str, grid.flat)).encode()).hexdigest()
   # print(hashed)
+  if shape[1] <= 30:
+    return 'HI'
   return {
       '05d005c2fd38c74568ab697305825ff6': 'FPRBRRZA',  # google.Hugues_Hoppe.965276
       '7a115ac723c75059c742c8bb21d5ee1c': 'ERCXLAJL',  # github.hhoppe.1452460
-  }[hashed] if shape[1] > 30 else 'HI'
+  }[hashed]
+
 
 check_eq(day10(s1), 'HI')
 puzzle.verify(1, day10)  # ~3 ms.
@@ -1088,7 +1095,6 @@ puzzle = advent.puzzle(day=11)
 
 # %%
 def day11(s, *, part2=False, visualize=False):
-
   def power_level(yx, serial_number):
     rack_id = yx[1] + 10
     return ((rack_id * yx[0] + serial_number) * rack_id // 100) % 10 - 5
@@ -1105,12 +1111,15 @@ def day11(s, *, part2=False, visualize=False):
 
   def get_yx_largest(size):
     if 0:  # Slower.
-      import scipy.signal
       box = np.full((size, size), 1, np.int32)
       result = scipy.signal.convolve2d(power, box, mode='valid')
     else:
-      result = (integral[size:, size:] - integral[size:, :-size] -
-                integral[:-size, size:] + integral[:-size, :-size])
+      result = (
+          integral[size:, size:]
+          - integral[size:, :-size]
+          - integral[:-size, size:]
+          + integral[:-size, :-size]
+      )
     yx_largest = np.unravel_index(result.argmax(), result.shape)
     return yx_largest, result[yx_largest]
 
@@ -1125,8 +1134,9 @@ def day11(s, *, part2=False, visualize=False):
   if visualize:
     image = media.to_rgb(power * 1.0, cmap='bwr')
     image2 = image.copy()
-    image2[yx_largest[0]: yx_largest[0] + best_size,
-           yx_largest[1]: yx_largest[1] + best_size] *= 0.7
+    image2[
+        yx_largest[0] : yx_largest[0] + best_size, yx_largest[1] : yx_largest[1] + best_size
+    ] *= 0.7
     image = image.repeat(2, axis=0).repeat(2, axis=1)
     image2 = image2.repeat(2, axis=0).repeat(2, axis=1)
     media.show_video([image, image2], codec='gif', fps=1)
@@ -1204,8 +1214,9 @@ def day12(s, *, part2=False, visualize=False):
     state = ''.join(rules[''.join(w)] for w in more_itertools.sliding_window(state, 5))
     states.append(state)
     if part2 and len(states) >= 2:
-      if any(states[-2] == states[-1][2 + shift: 2 + shift + len(states[-2])]
-             for shift in (-1, 0, 1)):
+      if any(
+          states[-2] == states[-1][2 + shift : 2 + shift + len(states[-2])] for shift in (-1, 0, 1)
+      ):
         break
 
   if visualize:
@@ -1215,7 +1226,7 @@ def day12(s, *, part2=False, visualize=False):
       padded_states.append('.' * pad_len + state + '.' * pad_len)
     grid = np.array([list(state) for state in padded_states]) == '#'
     xmin, xmax = np.nonzero(grid.any(axis=0))[0][[0, -1]]
-    grid = grid[:, max(xmin - 4, 0):xmax + 5]
+    grid = grid[:, max(xmin - 4, 0) : xmax + 5]
     grid = grid.repeat(2, axis=0).repeat(2, axis=1)
     media.show_image(grid)
 
@@ -1262,7 +1273,11 @@ s1 = r"""
 | | |  | v  |EOL
 \-+-/  \-+--/EOL
   \------/   EOL
-"""[1:].replace('EOL', '')
+"""[
+    1:
+].replace(
+    'EOL', ''
+)
 
 s2 = r"""
 />-<\  EOL
@@ -1272,12 +1287,15 @@ s2 = r"""
 \>+</ |EOL
   |   ^EOL
   \<->/EOL
-"""[1:].replace('EOL', '')
+"""[
+    1:
+].replace(
+    'EOL', ''
+)
 
 
 # %%
 def day13(s, *, part2=False, verbose=False, visualize=False):
-
   @dataclasses.dataclass
   class Cart:
     yx: tuple[int, int]
@@ -1300,8 +1318,7 @@ def day13(s, *, part2=False, verbose=False, visualize=False):
   check_eq(text_from_grid(), s.rstrip('\n'))
 
   if visualize:
-    cmap = {' ': (250,) * 3, '+': (140, 140, 140),
-            **{ch: (180,) * 3 for ch in r'|-\/'}}
+    cmap = {' ': (250,) * 3, '+': (140, 140, 140), **{ch: (180,) * 3 for ch in r'|-\/'}}
     image0 = np.array([cmap[e] for e in grid.flat], np.uint8).reshape(*grid.shape, 3)
 
   images = []
@@ -1317,8 +1334,7 @@ def day13(s, *, part2=False, verbose=False, visualize=False):
     for cart in sorted(carts, key=lambda cart: cart.yx):
       if cart.yx[0] == -1:
         continue
-      dyx = {'<': (0, -1), '>': (0, 1),
-             '^': (-1, 0), 'v': (1, 0)}[cart.direction]
+      dyx = {'<': (0, -1), '>': (0, 1), '^': (-1, 0), 'v': (1, 0)}[cart.direction]
       # new_yx = tuple(np.array(cart.yx) + dyx)
       new_yx = cart.yx[0] + dyx[0], cart.yx[1] + dyx[1]
       cart2 = next((cart2 for cart2 in carts if cart2.yx == new_yx), None)
@@ -1342,14 +1358,26 @@ def day13(s, *, part2=False, verbose=False, visualize=False):
       assert ch in '/\\+-|', ord(ch)
       if ch in '/\\':
         cart.direction = {
-            '</': 'v', '<\\': '^', '>/': '^', '>\\': 'v',
-            '^/': '>', '^\\': '<', 'v/': '<', 'v\\': '>',
+            '</': 'v',
+            '<\\': '^',
+            '>/': '^',
+            '>\\': 'v',
+            '^/': '>',
+            '^\\': '<',
+            'v/': '<',
+            'v\\': '>',
         }[cart.direction + ch]
       elif ch == '+':
         if cart.next_turn in (0, 2):
           cart.direction = {
-              '<0': 'v', '<2': '^', '>0': '^', '>2': 'v',
-              '^0': '<', '^2': '>', 'v0': '>', 'v2': '<',
+              '<0': 'v',
+              '<2': '^',
+              '>0': '^',
+              '>2': 'v',
+              '^0': '<',
+              '^2': '>',
+              'v0': '>',
+              'v2': '<',
           }[cart.direction + str(cart.next_turn)]
         cart.next_turn = (cart.next_turn + 1) % 3
       cart.yx = new_yx
@@ -1397,7 +1425,7 @@ def day14a_part1(s):  # Slow.
     recipes.extend(digits)
     indices = [(index + 1 + recipes[index]) % len(recipes) for index in indices]
 
-  return ''.join(map(str, recipes[num_recipes:num_recipes + 10]))
+  return ''.join(map(str, recipes[num_recipes : num_recipes + 10]))
 
 
 check_eq(day14a_part1('9'), '5158916779')
@@ -1409,7 +1437,6 @@ puzzle.verify(1, day14a_part1)  # ~820 ms.
 
 # %%
 # Fast Part 1 using numba.
-
 @numba.njit
 def day14_part1_func(num_recipes: int) -> np.ndarray:
   recipes = np.full(num_recipes + 11, 1, np.uint8)
@@ -1432,7 +1459,7 @@ def day14_part1_func(num_recipes: int) -> np.ndarray:
     index1 += 1 + current1
     if index1 >= num:
       index1 %= num
-  return recipes[num_recipes:num_recipes + 10]
+  return recipes[num_recipes : num_recipes + 10]
 
 
 def day14_part1(s):
@@ -1459,9 +1486,10 @@ def day14a_part2(s):  # Slow.
     digits = [1, total - 10] if total >= 10 else [total]
     for digit in digits:
       recipes.append(digit)
-      if recipes[-len(pattern):] == pattern:
+      if recipes[-len(pattern) :] == pattern:
         return len(recipes) - len(pattern)
     indices = [(index + 1 + recipes[index]) % len(recipes) for index in indices]
+
 
 check_eq(day14a_part2('92510'), 18)
 check_eq(day14a_part2('59414'), 2018)
@@ -1469,7 +1497,6 @@ check_eq(day14a_part2('59414'), 2018)
 
 # %%
 # Fast Part 2 using numba.
-
 @numba.njit
 def day14b_part2_func(pattern):
   len_pattern = len(pattern)
@@ -1525,7 +1552,6 @@ puzzle.verify(2, day14b_part2)  # ~360 ms.
 
 # %%
 # Faster by generating batches.
-
 @numba.njit
 def day14c_part2_func(pattern: np.ndarray) -> int:
   max_recipes = 100_000_000
@@ -1584,7 +1610,6 @@ puzzle.verify(2, day14c_part2)  # ~190 ms.
 
 # %%
 # Try using Knuth-Morris-Pratt (KMP); not a win for 6-subseq.
-
 @numba.njit
 def day14d_part2_func(pattern: np.ndarray) -> int:
   # Precompute offsets for Knuth-Morris-Pratt (KMP) subsequence search; see
@@ -1795,9 +1820,7 @@ s14 = """\
 
 
 # %%
-def day15a_part1(s, verbose=False,
-                 elf_attack_power=3, fail_if_elf_dies=False):
-
+def day15a_part1(s, verbose=False, elf_attack_power=3, fail_if_elf_dies=False):
   @dataclasses.dataclass
   class Unit:
     yx: tuple[int, int]
@@ -1855,8 +1878,7 @@ def day15a_part1(s, verbose=False,
             if distance + manhattan(yx2, unit.yx) <= nearest_distance:  # A*
               distances[yx2] = distance + 1
               next_queue.append(yx2)
-    return min(empty_adjacent_yxs(unit.yx),
-               key=lambda yx: (distances.get(yx, math.inf), yx))
+    return min(empty_adjacent_yxs(unit.yx), key=lambda yx: (distances.get(yx, math.inf), yx))
 
   for round in itertools.count():
     hit_points = [u.hit_points for u in sorted(units, key=lambda u: u.yx)]
@@ -1873,8 +1895,7 @@ def day15a_part1(s, verbose=False,
       # Find nearest attacker-adjacent position and try to move towards it.
       adjacent_opponents = get_adjacent_opponents(unit)
       if not adjacent_opponents:
-        inrange = {yx for u in get_opponents(unit)
-                   for yx in empty_adjacent_yxs(u.yx)}
+        inrange = {yx for u in get_opponents(unit) for yx in empty_adjacent_yxs(u.yx)}
         if not inrange:  # No accessible opponent.
           continue
         best_adjacent = adjacent_towards_opponent(inrange)
@@ -1909,6 +1930,7 @@ def day15a_part1(s, verbose=False,
   # show('' + hh.string_from_grid(grid))
   return num_rounds * sum_points
 
+
 check_eq(day15a_part1(s1), 27730)
 check_eq(day15a_part1(s10), 36334)
 check_eq(day15a_part1(s11), 39514)
@@ -1921,7 +1943,6 @@ puzzle.verify(1, day15a_part1)  # ~800 ms.
 
 # %%
 # Using numba; optimized.
-
 @numba.njit
 def day15_adjacent_towards_opponent(grid, unit_yx, inrange):
   # BFS from unit until yx in inrange; record all others at same distance.
@@ -1966,9 +1987,7 @@ def day15_adjacent_towards_opponent(grid, unit_yx, inrange):
   return best[1]
 
 
-def day15_part1(s, visualize=False, elf_attack_power=3,
-                fail_if_elf_dies=False):
-
+def day15_part1(s, visualize=False, elf_attack_power=3, fail_if_elf_dies=False):
   @dataclasses.dataclass
   class Unit:
     yx: tuple[int, int]
@@ -1995,18 +2014,15 @@ def day15_part1(s, visualize=False, elf_attack_power=3,
         yield yx2
 
   # Passing a `set` into numba is ok but deprecated; frozenset is not supported.
-  import warnings
   warnings_context = warnings.catch_warnings()
   warnings_context.__enter__()  # pylint: disable=unnecessary-dunder-call
-  warnings.simplefilter(
-      'ignore', category=numba.core.errors.NumbaPendingDeprecationWarning)
+  warnings.simplefilter('ignore', category=numba.core.errors.NumbaPendingDeprecationWarning)
 
   images = []
   incomplete_round = False
   for round in itertools.count():
     if visualize:
-      cmap = {'.': (250,) * 3, '#': (0, 0, 0),
-              'E': (255, 0, 0), 'G': (0, 190, 0)}
+      cmap = {'.': (250,) * 3, '#': (0, 0, 0), 'E': (255, 0, 0), 'G': (0, 190, 0)}
       image = np.array([cmap[e] for e in grid.flat], np.uint8)
       image = image.reshape(*grid.shape, 3)
       image = image.repeat(5, axis=0).repeat(5, axis=1)
@@ -2025,8 +2041,7 @@ def day15_part1(s, visualize=False, elf_attack_power=3,
       # Find nearest attacker-adjacent position and try to move towards it.
       adjacent_opponents = get_adjacent_opponents(unit)
       if not adjacent_opponents:
-        inrange = {yx for u in get_opponents(unit)
-                   for yx in empty_adjacent_yxs(u.yx)}
+        inrange = {yx for u in get_opponents(unit) for yx in empty_adjacent_yxs(u.yx)}
         if not inrange:  # No accessible opponent.
           continue
         best_adjacent = day15_adjacent_towards_opponent(grid, unit.yx, inrange)
@@ -2083,6 +2098,7 @@ def day15a_part2(s):  # Brute-force search of increasing attack power.
         print(f'Found solution at {elf_attack_power=}')
       return result
 
+
 check_eq(day15a_part2(s1), 4988)
 check_eq(day15a_part2(s11), 31284)
 check_eq(day15a_part2(s12), 3478)
@@ -2120,6 +2136,7 @@ def day15_part2(s, *, visualize=False):  # Faster bisection search.
   if visualize:
     day15_part1(s, elf_attack_power=current, fail_if_elf_dies=True, visualize=True)
   return results[current]
+
 
 check_eq(day15_part2(s1), 4988)
 check_eq(day15_part2(s11), 31284)
@@ -2185,7 +2202,7 @@ def day16(s, *, part2=False):
   operation_from_opcode = {}
   while candidates:
     operation = next(op for op, set_ in candidates.items() if len(set_) == 1)
-    opcode, = candidates.pop(operation)
+    (opcode,) = candidates.pop(operation)
     operation_from_opcode[opcode] = operation
     for set_ in candidates.values():
       set_ -= {opcode}
@@ -2294,15 +2311,13 @@ def day17(s, *, part2=False, visualize=False):
         grid[yx[0], x] = '~'
 
   if visualize:
-    cmap = {'.': (250,) * 3, '#': (0, 0, 0),
-            '~': (0, 0, 255), '|': (150, 150, 255)}
+    cmap = {'.': (250,) * 3, '#': (0, 0, 0), '~': (0, 0, 255), '|': (150, 150, 255)}
     image = hh.image_from_yx_map(grid, '.', cmap=cmap, pad=1).transpose(1, 0, 2)
     media.show_image(image, title='(transposed)', border=True)
     return None
 
   desired = '~' if part2 else '~|'
-  return sum(1 for yx, ch in grid.items()
-             if ymin <= yx[0] <= ymax and ch in desired)
+  return sum(1 for yx, ch in grid.items() if ymin <= yx[0] <= ymax and ch in desired)
 
 
 check_eq(day17(s1), 57)
@@ -2353,8 +2368,7 @@ def day18(s, *, num_minutes=10, part2=False, visualize=False):
     old_grid = grid.copy()
     grid[(old_grid == '.') & (num_adjacent_trees >= 3)] = '|'
     grid[(old_grid == '|') & (num_adjacent_lumberyards >= 3)] = '#'
-    grid[(old_grid == '#') & ((num_adjacent_trees < 1) |
-                              (num_adjacent_lumberyards < 1))] = '.'
+    grid[(old_grid == '#') & ((num_adjacent_trees < 1) | (num_adjacent_lumberyards < 1))] = '.'
 
   def resource_value():
     num_trees = np.count_nonzero(grid == '|')
@@ -2495,10 +2509,9 @@ seti 9 0 5
 
 # %%
 def day19(s, *, part2=False, verbose=False):
-
   def factors(n):
     result = set()
-    for i in range(1, int(n ** 0.5) + 1):
+    for i in range(1, int(n**0.5) + 1):
       div, mod = divmod(n, i)
       if mod == 0:
         result |= {i, div}
@@ -2559,16 +2572,13 @@ puzzle = advent.puzzle(day=20)
 
 
 # %%
-# I created a general solution, which can work on inputs that define
-# passageways with 2D cycles.  However, it appears that all instances of the
-# puzzle inputs give rise to a simple tree of passageways?
-# In the case of a tree, can one simply look for the longest expansion of the
-# regular expression?  No, it appears that the regexp expansions may involve
-# backtracking along edges of the tree.  My solution is likely overkill for
-# this simpler case.
-
+# I created a general solution, which can work on inputs that define passageways with 2D cycles.
+# However, it appears that all instances of the puzzle inputs give rise to a simple tree
+# of passageways?  In the case of a tree, can one simply look for the longest expansion of the
+# regular expression?  No, it appears that the regexp expansions may involve backtracking along
+# edges of the tree.  My solution is likely overkill for this simpler case.
 def day20(s, *, part2=False, visualize=False):
-  s, = hh.re_groups(r'^\^([SNEW(|)]+)\$$', s.strip())
+  (s,) = hh.re_groups(r'^\^([SNEW(|)]+)\$$', s.strip())
 
   def parse(s):
     l = []
@@ -2596,10 +2606,12 @@ def day20(s, *, part2=False, visualize=False):
     if half := len(l) // 2:
       doors_s1, doors_e1, yxs1 = traverse(l[:half])
       doors_s2, doors_e2, yxs2 = traverse(l[half:])
-      return (doors_s1 | {(y + v, x + u) for y, x in yxs1 for v, u in doors_s2},
-              doors_e1 | {(y + v, x + u) for y, x in yxs1 for v, u in doors_e2},
-              {(y + v, x + u) for y, x in yxs1 for v, u in yxs2})
-    elem, = l
+      return (
+          doors_s1 | {(y + v, x + u) for y, x in yxs1 for v, u in doors_s2},
+          doors_e1 | {(y + v, x + u) for y, x in yxs1 for v, u in doors_e2},
+          {(y + v, x + u) for y, x in yxs1 for v, u in yxs2},
+      )
+    (elem,) = l
     if isinstance(elem, str):
       doors_s, doors_e = set(), set()
       y, x = 0, 0
@@ -2626,10 +2638,12 @@ def day20(s, *, part2=False, visualize=False):
   doors_s, doors_e, _ = traverse(l)
 
   if 0 and visualize:
+
     def symbols_from_doors():
       map1 = {(y * 2 + 1, x * 2): '-' for y, x in doors_s}
       map2 = {(y * 2, x * 2 + 1): '|' for y, x in doors_e}
       return {**map1, **map2, (0, 0): 'X'}
+
     print(hh.string_from_grid(hh.grid_from_indices(symbols_from_doors(), background='.')))
 
   yx = 0, 0
@@ -2637,10 +2651,12 @@ def day20(s, *, part2=False, visualize=False):
   queue = collections.deque([yx])
   while queue:
     yx = queue.popleft()
-    for yx2, present in [((yx[0] + 1, yx[1]), yx in doors_s),
-                         ((yx[0] - 1, yx[1]), (yx[0] - 1, yx[1]) in doors_s),
-                         ((yx[0], yx[1] + 1), yx in doors_e),
-                         ((yx[0], yx[1] - 1), (yx[0], yx[1] - 1) in doors_e)]:
+    for yx2, present in [
+        ((yx[0] + 1, yx[1]), yx in doors_s),
+        ((yx[0] - 1, yx[1]), (yx[0] - 1, yx[1]) in doors_s),
+        ((yx[0], yx[1] + 1), yx in doors_e),
+        ((yx[0], yx[1] - 1), (yx[0], yx[1] - 1) in doors_e),
+    ]:
       if present and yx2 not in distances:
         distances[yx2] = distances[yx] + 1
         queue.append(yx2)
@@ -2683,8 +2699,9 @@ _ = day20_part2(puzzle.input, visualize=True)
 
 # %%
 if 0:  # Due to backtracking, one cannot simply look for longest expansion.
+
   def day20a(s):
-    s, = hh.re_groups(r'^\^([SNEW(|)]+)\$$', s.strip())
+    (s,) = hh.re_groups(r'^\^([SNEW(|)]+)\$$', s.strip())
 
     def max_regex_length(s):
       max_len = 0
@@ -2804,7 +2821,6 @@ if 0:
 
 # %%
 def day21_test():
-
   def simulate(max_count=10_000_000, verbose=False):
     d = 65536
     e = 16098955
@@ -2943,13 +2959,12 @@ def day22a(s, *, part2=False, pad=60):  # Using networkx; slower.
   rocky, wet, narrow = 0, 1, 2
   del narrow  # unused
   torch, gear, neither = 0, 1, 2
-  valid_items = {rocky: (torch, gear), wet: (gear, neither),
-                 neither: (torch, neither)}
+  valid_items = {rocky: (torch, gear), wet: (gear, neither), neither: (torch, neither)}
 
   def get_cave():
     lines = iter(line for line in s.splitlines())
-    depth = int(next(lines)[len('depth: '):])
-    target = tuple(int(n) for n in next(lines)[len('target: '):].split(','))
+    depth = int(next(lines)[len('depth: ') :])
+    target = tuple(int(n) for n in next(lines)[len('target: ') :].split(','))
     return depth, target
 
   def generate_grid(depth, shape):
@@ -2963,7 +2978,7 @@ def day22a(s, *, part2=False, pad=60):  # Using networkx; slower.
       elif y == 0:
         geo = x * 16807
       else:
-        geo = grid[x-1, y][1] * grid[x, y-1][1]
+        geo = grid[x - 1, y][1] * grid[x, y - 1][1]
       ero = (geo + depth) % 20183
       risk = ero % 3
       grid[x, y] = geo, ero, risk
@@ -2996,13 +3011,13 @@ def day22a(s, *, part2=False, pad=60):  # Using networkx; slower.
     return sum(v[2] for v in grid.values())
 
   import networkx as nx
+
   shape = target[0] + pad, target[1] + pad
   grid = {c: v[2] for c, v in (generate_grid(depth, shape)).items()}
   graph = generate_graph(grid, shape)
   use_astar = True
   if use_astar:
-    return nx.astar_path_length(
-        graph, (0, 0, torch), (*target, torch), heuristic=cost_lower_bound)
+    return nx.astar_path_length(graph, (0, 0, torch), (*target, torch), heuristic=cost_lower_bound)
   return nx.dijkstra_path_length(graph, (0, 0, torch), (*target, torch))
 
 
@@ -3019,7 +3034,6 @@ else:
 
 # %%
 # With numba.
-
 @numba.njit
 def day22_dijkstra(grid, target_yx, visualize):
   # https://levelup.gitconnected.com/dijkstra-algorithm-in-python-8f0e75e3f16e
@@ -3178,8 +3192,10 @@ def day23a(s, *, part2=False):
   # where face 0 has h = (-1, -1, -1),  face 1 has h = (-1, -1, 1), etc.
 
   hvalues = tuple(itertools.product((-1, 1), repeat=3))  # shape [8, 3]
-  polytopes = [tuple(np.dot(h, position) + radius for h in hvalues)
-               for position, radius in zip(positions, radii)]
+  polytopes = [
+      tuple(np.dot(h, position) + radius for h in hvalues)
+      for position, radius in zip(positions, radii)
+  ]
 
   def num_in_range(position):
     return np.count_nonzero(abs(positions - position).sum(axis=1) <= radii)
@@ -3192,8 +3208,8 @@ def day23a(s, *, part2=False):
 
   def is_empty(polytope):
     # Note that half-space h[i] is in opposite direction of h[-(i + 1)].
-    return (polytope[0] < -polytope[7] or polytope[1] < -polytope[6] or
-            polytope[2] < -polytope[5] or polytope[3] < -polytope[4])
+    p = polytope
+    return p[0] < -p[7] or p[1] < -p[6] or p[2] < -p[5] or p[3] < -p[4]
 
   def is_infinite(polytope):
     return min(polytope) == math.inf
@@ -3201,8 +3217,7 @@ def day23a(s, *, part2=False):
   if not part2:
     if 1:  # Faster.
       i0 = radii.argmax()
-      return np.count_nonzero(
-          abs(positions - positions[i0]).sum(axis=1) <= radii[i0])
+      return np.count_nonzero(abs(positions - positions[i0]).sum(axis=1) <= radii[i0])
     # Sanity check on polytopes.
     polytope = polytopes[radii.argmax()]
     return sum(1 for p in positions if point_in_polytope(p, polytope))
@@ -3210,7 +3225,8 @@ def day23a(s, *, part2=False):
   # Estimate an initial position with a high count of overlapping octahedra.
   good_position = tuple(max(positions, key=num_in_range))
 
-  distance_threshold, prune_allowance = 10_000_000, 8  # len(polytopes2) = 529, max_count = 528; 0.4 s.
+  # len(polytopes2) = 529, max_count = 528; 0.4 s.
+  distance_threshold, prune_allowance = 10_000_000, 8
 
   while True:
     good_ds = tuple(np.dot(hvalue, good_position) for hvalue in hvalues)
@@ -3220,8 +3236,10 @@ def day23a(s, *, part2=False):
     # Modify a polytope to ignore any half-space whose linear boundary is
     # distant from good_position.
     def omit_far_halfspaces(polytope, good_ds):
-      return tuple(d if abs(d - good_d) < distance_threshold else math.inf
-                   for d, good_d in zip(polytope, good_ds))
+      return tuple(
+          d if abs(d - good_d) < distance_threshold else math.inf
+          for d, good_d in zip(polytope, good_ds)
+      )
 
     polytopes2 = [omit_far_halfspaces(p, good_ds) for p in polytopes]
     polytopes2 = [p for p in polytopes2 if not is_infinite(p)]
@@ -3237,18 +3255,15 @@ def day23a(s, *, part2=False):
         piece2 = intersect(polytope, piece)
         if is_empty(piece2):
           continue
-        new_pieces[piece2] = max(count + 1,
-                                 pieces.get(piece2, 0),
-                                 new_pieces.get(piece2, 0))
+        new_pieces[piece2] = max(count + 1, pieces.get(piece2, 0), new_pieces.get(piece2, 0))
       pieces.update(new_pieces)
       pieces[polytope] = max(1, pieces.get(polytope, 0))
       if prune_allowance:
-        pieces = {piece: count for piece, count in pieces.items()
-                  if count > i - prune_allowance}
+        pieces = {piece: count for piece, count in pieces.items() if count > i - prune_allowance}
 
     max_count = max(pieces.values())
     max_list = [piece for piece, count in pieces.items() if count == max_count]
-    best_polytope, = max_list
+    (best_polytope,) = max_list
     if len(polytopes2) - max_count > prune_allowance:
       print('Warning: pruning too large to guarantee the optimal solution.')
 
@@ -3294,8 +3309,7 @@ def day23b(s, *, part2=False):
   # Divide-and-conquer using octree decomposition, inspired by
   # https://github.com/wimglenn/advent-of-code-wim/blob/master/aoc_wim/aoc2018/q23.py.
   pattern = r'^pos=<([0-9-]+),([0-9-]+),([0-9-]+)>, r=(\d+)$'
-  data: Any = np.array([list(map(int, hh.re_groups(pattern, line)))
-                        for line in s.splitlines()])
+  data: Any = np.array([list(map(int, hh.re_groups(pattern, line))) for line in s.splitlines()])
   xs, rs = data[:, :3], data[:, 3]
   i = rs.argmax()
   if not part2:
@@ -3331,6 +3345,7 @@ def day23b(s, *, part2=False):
 
   return d
 
+
 check_eq(day23b(s1), 7)
 puzzle.verify(1, day23b)  # ~4 ms.
 
@@ -3345,8 +3360,7 @@ def day23(s, *, part2=False):
   # https://github.com/wimglenn/advent-of-code-wim/blob/master/aoc_wim/aoc2018/q23.py.
   # Improved to be robust (not assuming cubes with power-of-two dimensions).
   pattern = r'^pos=<([0-9-]+),([0-9-]+),([0-9-]+)>, r=(\d+)$'
-  data: Any = np.array([list(map(int, hh.re_groups(pattern, line)))
-                        for line in s.splitlines()])
+  data: Any = np.array([list(map(int, hh.re_groups(pattern, line))) for line in s.splitlines()])
   xs, rs = data[:, :-1], data[:, -1]
   if not part2:
     i = rs.argmax()
@@ -3360,8 +3374,8 @@ def day23(s, *, part2=False):
       return d
     xm = (np.array(xl) + xh) // 2  # Partition into up to 8 octree child cells.
     for child_min_max in itertools.product(
-        *(((l, m), (m + 1, h)) if m < h else ((l, h),)
-          for l, m, h in zip(xl, xm, xh))):
+        *(((l, m), (m + 1, h)) if m < h else ((l, h),) for l, m, h in zip(xl, xm, xh))
+    ):
       xl, xh = np.array(child_min_max).T
       # Maximize num in-range = minimize num out-of-range.
       n_out = ((np.maximum(xl - xs, 0) + np.maximum(xs - xh, 0)).sum(axis=1) > rs).sum()
@@ -3401,7 +3415,6 @@ Infection:
 
 # %%
 def day24(s, *, verbose=False, boost=0, immune_must_win=False):
-
   @dataclasses.dataclass
   class Group:
     army: Army
@@ -3418,12 +3431,20 @@ def day24(s, *, verbose=False, boost=0, immune_must_win=False):
     def __init__(self, army, id, line):
       self.army = army
       self.id = id
-      pattern = (r'^(\d+) units each with (\d+) hit points( \(.*\))? with'
-                 r' an attack that does (\d+) (.*) damage at initiative (\d+)$')
+      pattern = (
+          r'^(\d+) units each with (\d+) hit points( \(.*\))? with'
+          r' an attack that does (\d+) (.*) damage at initiative (\d+)$'
+      )
       units, hit_points, attributes, attack_damage, attack_type, initiative = hh.re_groups(
-          pattern, line)
+          pattern, line
+      )
       self.units, self.hit_points, self.attack_damage, self.attack_type, self.initiative = (
-          int(units), int(hit_points), int(attack_damage), attack_type, int(initiative))
+          int(units),
+          int(hit_points),
+          int(attack_damage),
+          attack_type,
+          int(initiative),
+      )
       self.attributes = {'immune': set(), 'weak': set()}
       if attributes:
         for attribute in attributes[2:-1].split('; '):
@@ -3447,8 +3468,7 @@ def day24(s, *, verbose=False, boost=0, immune_must_win=False):
     def __init__(self, s):
       lines = s.splitlines()
       self.name = lines[0][:-1]
-      self.groups = [Group(self, i + 1, line)
-                     for i, line in enumerate(lines[1:])]
+      self.groups = [Group(self, i + 1, line) for i, line in enumerate(lines[1:])]
 
   armies = [Army(s_army) for s_army in s.split('\n\n')]
 
@@ -3481,10 +3501,12 @@ def day24(s, *, verbose=False, boost=0, immune_must_win=False):
         group.targeted = False
     for army in armies:
       opponent = get_opponent(army)
+
+      def key(g):
+        return (not g.targeted, compute_damage(group, g), g.effective_power(), g.initiative)
+
       for group in sorted(army.groups, key=lambda g: g.selection_order()):
-        target = max(opponent.groups, key=lambda g: (
-            not g.targeted, compute_damage(group, g),
-            g.effective_power(), g.initiative))
+        target = max(opponent.groups, key=key)
         damage = compute_damage(group, target)
         if target.targeted or damage == 0:
           group.target = None
@@ -3492,23 +3514,22 @@ def day24(s, *, verbose=False, boost=0, immune_must_win=False):
           group.target = target
           target.targeted = True
           if verbose and target:
-            print(f'{army.name} group {group.id} would deal defending'
-                  f' group {target.id} {damage} damage')
+            print(f'{army.name=} {group.id=} would deal defending group {target.id=} {damage=}')
     if verbose:
       print()
 
     # Attacking.
     total_killed = 0
-    for group in sorted((group for army in armies for group in army.groups),
-                        key=lambda g: -g.initiative):
+    for group in sorted(
+        (group for army in armies for group in army.groups), key=lambda g: -g.initiative
+    ):
       if group.units == 0 or not group.target or group.target.units == 0:
         continue
       target = group.target
       damage = compute_damage(group, target)
       units_killed = min(damage // target.hit_points, target.units)
       if verbose:
-        print(f'{group.army.name} group {group.id} attacks defending'
-              f' group {target.id}, killing {units_killed} units')
+        print(f'{group.army.name=} {group.id=} attacks {target.id=} -> {units_killed=}')
       target.units -= units_killed
       total_killed += units_killed
     if verbose:
@@ -3532,7 +3553,6 @@ puzzle.verify(1, day24)  # ~100 ms.
 
 # %%
 def day24_part2(s):
-
   def boost_result(boost):
     return day24(s, boost=boost, immune_must_win=True)
 
@@ -3631,9 +3651,8 @@ def day25a(s):  # Slower version.
   union_find = hh.UnionFind[int]()
   num_edges = 0
   for i, p in enumerate(points):
-    for j, q in enumerate(points[i + 1:], i + 1):
-      if (abs(p[0] - q[0]) + abs(p[1] - q[1]) +
-          abs(p[2] - q[2]) + abs(p[3] - q[3])) <= 3:
+    for j, q in enumerate(points[i + 1 :], i + 1):
+      if (abs(p[0] - q[0]) + abs(p[1] - q[1]) + abs(p[2] - q[2]) + abs(p[3] - q[3])) <= 3:
         num_edges += 1
         union_find.union(i, j)
 
@@ -3641,6 +3660,7 @@ def day25a(s):  # Slower version.
     print(f'Graph has {len(points)} vertices and {num_edges} edges.')
   cluster_reps = {union_find.find(i) for i in range(len(points))}
   return len(cluster_reps)
+
 
 check_eq(day25a(s1), 2)
 check_eq(day25a(s2), 4)
@@ -3657,6 +3677,7 @@ def day25(s):  # Faster version, using numpy to identify the graph edges.
   for i, j in np.argwhere(edges):
     union_find.union(i, j)
   return len({union_find.find(i) for i in range(len(points))})
+
 
 check_eq(day25(s1), 2)
 check_eq(day25(s2), 4)
@@ -3681,17 +3702,28 @@ if 0:  # Compute min execution times over several calls.
 
 # %%
 if 1:  # Look for unwanted pollution of namespace.
-  print(textwrap.fill(' '.join(name for name, value in globals().items() if not (
-      name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS))))
+  print(
+      textwrap.fill(
+          ' '.join(
+              name
+              for name, value in globals().items()
+              if not (name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS)
+          )
+      )
+  )
 
 # %%
 if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
   # Create a new tar.gz file.
-  hh.run(f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'""")
+  hh.run(
+      f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
+  )
 
 # %%
 if 0:  # Look for misspelled words.
-  hh.run(rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true""")
+  hh.run(
+      rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true"""
+  )
 
 # %%
 if 0:  # Lint.

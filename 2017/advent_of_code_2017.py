@@ -72,8 +72,10 @@ PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
 TAR_URL = f'https://github.com/hhoppe/advent_of_code_{YEAR}/raw/main/data/{PROFILE}.tar.gz'
 if 1:
-  hh.run(f"if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&"
-         f" wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi")
+  hh.run(
+      f'if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&'
+      f' wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi'
+  )
 INPUT_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}_input.txt'
 ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
 
@@ -128,6 +130,7 @@ def day1(s, *, part2=False):
     if d0 == d1:
       total += d0
   return total
+
 
 check_eq(day1('1122'), 3)
 check_eq(day1('1111'), 4)
@@ -238,6 +241,7 @@ def day3_part1_slow(s):
   y, x = next(itertools.islice(day3_spiral_yx(), value - 1, None))
   return abs(y) + abs(x)
 
+
 check_eq(day3_part1_slow('1'), 0)
 check_eq(day3_part1_slow('12'), 3)
 check_eq(day3_part1_slow('22'), 3)
@@ -267,6 +271,7 @@ def day3_part1(s):
   d = abs(xd) + r
   return d
 
+
 check_eq(day3_part1('1'), 0)
 check_eq(day3_part1('12'), 3)
 check_eq(day3_part1('22'), 3)
@@ -284,11 +289,12 @@ def day3_part2(s, *, size=41):
   for y0, x0 in day3_spiral_yx():
     y, x = y0 + g, x0 + g
     assert y >= 1 and x >= 1
-    count = max(np.sum(grid[y - 1: y + 2, x - 1: x + 2]), 1)
+    count = max(np.sum(grid[y - 1 : y + 2, x - 1 : x + 2]), 1)
     grid[y, x] = count
     if count > value:
       return count
   raise AssertionError
+
 
 check_eq(day3_part2('1'), 2)
 check_eq(day3_part2('2'), 4)
@@ -395,7 +401,6 @@ if 0:
 
 # %%
 # Fast.
-
 @numba.njit
 def day5_compute(values: Any, part2: bool) -> int:
   pos = 0
@@ -499,7 +504,7 @@ def day7(s, *, part2=False):
   for line in s.splitlines():
     name, weight, rest = hh.re_groups(r'^([a-z]+) \((\d+)\)( -> .*)?$', line)
     weights[name] = int(weight)
-    graph[name] = rest[len(' -> '):].split(', ') if rest else []
+    graph[name] = rest[len(' -> ') :].split(', ') if rest else []
   nodes = hh.topological_sort(graph)
 
   if not part2:
@@ -552,8 +557,14 @@ c inc -20 if c == 10
 
 # %%
 def day8(s, *, part2=False):
-  COND_OPS = {'<': operator.lt, '>': operator.gt, '<=': operator.le, '>=': operator.ge,
-              '==': operator.eq, '!=': operator.ne}
+  COND_OPS = {
+      '<': operator.lt,
+      '>': operator.gt,
+      '<=': operator.le,
+      '>=': operator.ge,
+      '==': operator.eq,
+      '!=': operator.ne,
+  }
   registers: collections.defaultdict[str, int] = collections.defaultdict(int)
   max_value = 0
 
@@ -670,8 +681,10 @@ def day10(s, *, num=256, num_rounds=1, part2=False):
   if not part2:
     return state[0] * state[1]
 
-  xors = [functools.reduce(operator.xor, group, 0)
-          for group in more_itertools.chunked(state, 16, strict=True)]
+  xors = [
+      functools.reduce(operator.xor, group, 0)
+      for group in more_itertools.chunked(state, 16, strict=True)
+  ]
   return ''.join(f'{value:02x}' for value in xors)
 
 
@@ -871,6 +884,7 @@ def day13b_part2(s):  # Use numpy but one delay at a time.
     if np.all((delay + depth) % period):
       return delay
 
+
 check_eq(day13b_part2(s1), 10)
 if 0:
   puzzle.verify(2, day13b_part2)  # ~11 s.
@@ -883,9 +897,10 @@ def day13c_part2(s, *, chunk=3_000):  # Use numpy vectorized over chunks of dela
   for index in itertools.count():
     delay = np.arange(index * chunk, (index + 1) * chunk)
     matrix = (delay[:, None] + depth) % period
-    indices, = np.nonzero(matrix.all(axis=1))
+    (indices,) = np.nonzero(matrix.all(axis=1))
     if len(indices):
       return delay[0] + indices[0]
+
 
 check_eq(day13c_part2(s1), 10)
 puzzle.verify(2, day13c_part2)  # ~0.5 s.
@@ -900,9 +915,10 @@ def day13d_part2(s, *, chunk=80_000):  # Use numpy sieve; iterate on scanners ov
     ok = np.full(chunk, True)
     for d, p in zip(depth, period):
       ok[(delay + d) % p == 0] = False
-    indices, = np.nonzero(ok)
+    (indices,) = np.nonzero(ok)
     if len(indices):
       return delay[0] + indices[0]
+
 
 check_eq(day13d_part2(s1), 10)
 puzzle.verify(2, day13d_part2)  # ~0.4 s.
@@ -917,9 +933,10 @@ def day13_part2(s, *, chunk=100_000):  # Use numpy sieve (~Eratosthenes) with ar
     for d, p in zip(depth, period):
       first = (-(start + d)) % p
       ok[first:chunk:p] = False
-    indices, = np.nonzero(ok)
+    (indices,) = np.nonzero(ok)
     if len(indices):
       return start + indices[0]
+
 
 check_eq(day13_part2(s1, chunk=4), 10)
 puzzle.verify(2, day13_part2)  # ~0.005 s.
@@ -953,8 +970,10 @@ def day14a(s, *, part2=False):  # Slower version.
         state = rotated[-position:] + rotated[:-position] if position else rotated
         position = (position + length + skip) % num
         skip += 1
-    return [functools.reduce(operator.xor, group, 0)
-            for group in more_itertools.chunked(state, 16, strict=True)]
+    return [
+        functools.reduce(operator.xor, group, 0)
+        for group in more_itertools.chunked(state, 16, strict=True)
+    ]
 
   shape = 128, 128
   grid = np.full(shape, 0)
@@ -999,23 +1018,28 @@ def day14(s, *, part2=False, visualize=False):  # Faster, without rotation or re
         rear = num - position
         front = length - rear
         if front <= 0:
-          state[position:position + length] = state[
-              position + length - 1:(position - 1 if position else None):-1]
+          state[position : position + length] = state[
+              position + length - 1 : (position - 1 if position else None) : -1
+          ]
         elif front <= rear:
-          state[:front], state[position:position + front] = (
-              state[position + front - 1:(position - 1 if position else None):-1],
-              state[front - 1::-1])
-          state[position + front:] = state[-1:position + front - 1:-1]
+          state[:front], state[position : position + front] = (
+              state[position + front - 1 : (position - 1 if position else None) : -1],
+              state[front - 1 :: -1],
+          )
+          state[position + front :] = state[-1 : position + front - 1 : -1]
         else:
           begin = front - rear
           state[position:], state[begin:front] = (
-              state[front - 1:(begin - 1 if begin else None):-1],
-              state[-1:position - 1:-1])
-          state[:begin] = state[begin - 1::-1]
+              state[front - 1 : (begin - 1 if begin else None) : -1],
+              state[-1 : position - 1 : -1],
+          )
+          state[:begin] = state[begin - 1 :: -1]
         position = (position + length + skip) % num
         skip += 1
-    return [functools.reduce(operator.xor, group, 0)
-            for group in more_itertools.chunked(state, 16, strict=True)]
+    return [
+        functools.reduce(operator.xor, group, 0)
+        for group in more_itertools.chunked(state, 16, strict=True)
+    ]
 
   shape = 128, 128
   grid = np.full(shape, 0)
@@ -1174,8 +1198,7 @@ def day16(s, *, num=16, num_permutations=1):
       return perm_sym, perm_pos
     num0, num1 = (num_permutations + 1) // 2, num_permutations // 2
     (perm_sym0, perm_pos0), (perm_sym1, perm_pos1) = compose(num0), compose(num1)
-    return ([perm_sym1[sym0] for sym0 in perm_sym0],
-            [perm_pos1[pos0] for pos0 in perm_pos0])
+    return ([perm_sym1[sym0] for sym0 in perm_sym0], [perm_pos1[pos0] for pos0 in perm_pos0])
 
   return evaluate(*compose(num_permutations))
 
@@ -1227,7 +1250,7 @@ def day17(s, *, part2=False):
 
     for index in range(2017):
       pos = (pos + step) % len(state)
-      state = state[:pos + 1] + [index + 1] + state[pos + 1:]
+      state = state[: pos + 1] + [index + 1] + state[pos + 1 :]
       pos = pos + 1
 
     return state[pos + 1]
@@ -1323,16 +1346,22 @@ puzzle.verify(1, day18)
 # %%
 def day18_part2(s):
   instructions = [tuple(line.split(' ')) for line in s.splitlines()]
-  evaluate = {'set': lambda _, b: b, 'add': lambda a, b: a + b, 'mul': lambda a, b: a * b,
-              'mod': lambda a, b: a % b}
+  evaluate = {
+      'set': lambda _, b: b,
+      'add': lambda a, b: a + b,
+      'mul': lambda a, b: a * b,
+      'mod': lambda a, b: a % b,
+  }
 
   @dataclasses.dataclass
   class Program:
     """One of two programs running the shared `instructions`."""
+
     program_id: int
     pc: int = 0
     registers: collections.defaultdict[str, int] = dataclasses.field(
-        default_factory=lambda: collections.defaultdict(int))
+        default_factory=lambda: collections.defaultdict(int)
+    )
     queue: collections.deque[int] = dataclasses.field(default_factory=collections.deque)
     total_sends: int = 0
 
@@ -1393,7 +1422,9 @@ s1 = """\
  F---|----E|--+ X
      |  |  |  D X
      +B-+  +--+ X
-""".replace('X', '')
+""".replace(
+    'X', ''
+)
 
 
 # %%
@@ -1401,7 +1432,7 @@ def day19(s, *, part2=False):
   grid = hh.grid_from_string(s)  # shape=(201, 201).
   grid = np.pad(grid, ((0, 1), (0, 1)), constant_values=' ')
   # (y,), (x,) = np.nonzero(grid[:1] == '|')
-  (y, x), = np.argwhere(grid[:1] == '|')
+  ((y, x),) = np.argwhere(grid[:1] == '|')
   dy, dx = 1, 0
   letters = []
   num_steps = 0
@@ -1477,7 +1508,8 @@ def day20(s, *, part2=False):
     velocity += acceleration
     position += velocity
     unused_unique, index, counts = np.unique(
-        position, axis=0, return_index=True, return_counts=True)
+        position, axis=0, return_index=True, return_counts=True
+    )
     index = index[counts == 1]  # Indices of non-intersecting particles.
     position, velocity, acceleration = position[index], velocity[index], acceleration[index]
 
@@ -1512,7 +1544,6 @@ s1 = """\
 
 # %%
 def day21(s, *, num_iterations=5, visualize=False):
-
   def get_grid(s: str) -> np.ndarray:
     return (np.array([list(row) for row in s.split('/')]) == '#').astype(int)
 
@@ -1524,7 +1555,7 @@ def day21(s, *, num_iterations=5, visualize=False):
       grid_lhs = np.fliplr(grid_lhs)
       for _ in range(4):
         grid_lhs = np.rot90(grid_lhs)
-        encoded = grid_lhs.reshape(-1).dot(2**np.arange(size**2))
+        encoded = grid_lhs.reshape(-1).dot(2 ** np.arange(size**2))
         rules[size][encoded] = grid_rhs
 
   grid = np.array([[0, 1, 0], [0, 0, 1], [1, 1, 1]])
@@ -1539,7 +1570,7 @@ def day21(s, *, num_iterations=5, visualize=False):
     m = n // size
     new_n = m * new_size
     grid_blocks = grid.reshape((m, size, m, size)).transpose(0, 2, 1, 3).reshape((m, m, size**2))
-    encoded = grid_blocks.dot(2**np.arange(size**2))
+    encoded = grid_blocks.dot(2 ** np.arange(size**2))
     new_blocks = rules[size][encoded]
     grid = new_blocks.transpose(0, 2, 1, 3).reshape(new_n, new_n)
 
@@ -1834,7 +1865,8 @@ s1 = """\
 # %%
 def day24a(s, *, start=0, part2=False):  # Slower, creating list of updated remaining components.
   components: list[tuple[int, int]] = [
-      tuple(map(int, line.split('/'))) for line in s.splitlines()]  # type: ignore[misc]
+      tuple(map(int, line.split('/'))) for line in s.splitlines()  # type: ignore[misc]
+  ]
   check_eq(len(components), len(set(components)))  # In fact, they are all unique.
 
   def compatible_components(start: int, components: list[tuple[int, int]]):
@@ -1843,7 +1875,7 @@ def day24a(s, *, start=0, part2=False):  # Slower, creating list of updated rema
         v1 = v0
       elif v0 != start:
         continue
-      remaining = components[:i] + components[i + 1:]
+      remaining = components[:i] + components[i + 1 :]
       yield v1, remaining
 
   def compute_strongest(v0: int, components: list[tuple[int, int]]) -> int:
@@ -1865,7 +1897,8 @@ def day24a(s, *, start=0, part2=False):  # Slower, creating list of updated rema
     max_strength = 0 if remaining_length == 0 else -10_000
     for v1, remaining in compatible_components(v0, components):
       max_strength = max(
-          max_strength, v0 + v1 + compute_longest(v1, remaining_length - 1, remaining))
+          max_strength, v0 + v1 + compute_longest(v1, remaining_length - 1, remaining)
+      )
     return max_strength
 
   longest_length = compute_longest_length(start, components)
@@ -2046,14 +2079,14 @@ def day25a(s):  # Slow version using dicts and Python.
   num_steps = int(s_steps)
   logic = {}
   for part in parts[1:]:
-    current, = hh.re_groups(r'^In state (.+):', part)
+    (current,) = hh.re_groups(r'^In state (.+):', part)
     conditions = part.split('If the current ')[1:]
     assert len(conditions) == 2
     for condition in conditions:
       pattern = r'^(?s)value is (.+):.*Write the value (.+)\..*to the (.+)\..* state (.+)\.'
       condition_state, s_write_value, s_move, next_state = hh.re_groups(pattern, condition)
-      logic[current, int(condition_state)] = (
-          int(s_write_value), {'left': -1, 'right': +1}[s_move], next_state)
+      t = int(s_write_value), {'left': -1, 'right': +1}[s_move], next_state
+      logic[current, int(condition_state)] = t
 
   tape: collections.defaultdict[int, int] = collections.defaultdict(int)
   pos = 0
@@ -2072,7 +2105,6 @@ puzzle.verify(1, day25a)  # ~1.1 s.
 
 # %%
 # Fast version using integer arrays and jitted numba.
-
 @numba.njit  # ~10.5 s -> 0.05 s.
 def day25_compute(size: int, num_steps: int, state: int, logic: np.ndarray) -> int:
   tape = np.full(size, 0)
@@ -2095,7 +2127,8 @@ def day25(s, *, size=100_000):
       pattern = r'(?s)Write the value (.+)\..*to the (.+)\..* state (.+)\.'
       s_write_value, s_move, s_next_state = hh.re_groups(pattern, condition)
       logic_lines.append(
-          (int(s_write_value), {'left': -1, 'right': +1}[s_move], ord(s_next_state) - ord('A')))
+          (int(s_write_value), {'left': -1, 'right': +1}[s_move], ord(s_next_state) - ord('A'))
+      )
   logic = np.array(logic_lines)
   return day25_compute(size, num_steps, state, logic)
 
@@ -2127,17 +2160,28 @@ if 0:  # Compute min execution times over several calls.
 
 # %%
 if 1:  # Look for unwanted pollution of namespace.
-  print(textwrap.fill(' '.join(name for name, value in globals().items() if not (
-      name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS))))
+  print(
+      textwrap.fill(
+          ' '.join(
+              name
+              for name, value in globals().items()
+              if not (name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS)
+          )
+      )
+  )
 
 # %%
 if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
   # Create a new tar.gz file.
-  hh.run(f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'""")
+  hh.run(
+      f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
+  )
 
 # %%
 if 0:  # Look for misspelled words.
-  hh.run(rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true""")
+  hh.run(
+      rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true"""
+  )
 
 # %%
 if 0:  # Lint.

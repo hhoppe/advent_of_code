@@ -91,8 +91,10 @@ PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
 TAR_URL = f'https://github.com/hhoppe/advent_of_code_{YEAR}/raw/main/data/{PROFILE}.tar.gz'
 if 1:
-  hh.run(f"if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&"
-         f" wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi")
+  hh.run(
+      f'if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&'
+      f' wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi'
+  )
 INPUT_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}_input.txt'
 ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
 
@@ -139,8 +141,9 @@ def grid_from_string(s, int_from_ch=None, dtype=int) -> np.ndarray:
 
 
 # %%
-def grid_from_indices(indices, *, background=0, foreground=1, indices_min=None,
-                      indices_max=None, pad=0, dtype=None) -> np.ndarray:
+def grid_from_indices(
+    indices, *, background=0, foreground=1, indices_min=None, indices_max=None, pad=0, dtype=None
+) -> np.ndarray:
   indices = np.asarray(indices)
   assert indices.ndim == 2 and np.issubdtype(indices.dtype, np.integer)
 
@@ -420,21 +423,24 @@ def day4(s, *, part2=False):
     try:
       value, unit = hh.re_groups(r'^(\d+)(cm|in)$', fields['hgt'])
       return bool(
-          1920 <= year('byr') <= 2002 and  # pylint: disable=chained-comparison
-          2010 <= year('iyr') <= 2020 and
-          2020 <= year('eyr') <= 2030 and
-          (unit != 'cm' or 150 <= int(value) <= 193) and
-          (unit != 'in' or 59 <= int(value) <= 76) and
-          re.fullmatch(r'#[0-9a-f]{6}', fields['hcl']) and
-          fields['ecl'] in 'amb blu brn gry grn hzl oth'.split() and
-          re.fullmatch(r'[0-9]{9}', fields['pid']))
+          1920 <= year('byr') <= 2002
+          and 2010 <= year('iyr') <= 2020  # pylint: disable=chained-comparison
+          and 2020 <= year('eyr') <= 2030
+          and (unit != 'cm' or 150 <= int(value) <= 193)
+          and (unit != 'in' or 59 <= int(value) <= 76)
+          and re.fullmatch(r'#[0-9a-f]{6}', fields['hcl'])
+          and fields['ecl'] in 'amb blu brn gry grn hzl oth'.split()
+          and re.fullmatch(r'[0-9]{9}', fields['pid'])
+      )
     except (KeyError, ValueError):
       return False
 
   num_valid = 0
   for passport in passports:
-    fields: dict[str, str] = dict(hh.re_groups(r'^(\w\w\w):(\S+)$', s_field)  # type: ignore[misc]
-                                  for s_field in passport.split())
+    fields: dict[str, str] = dict(
+        hh.re_groups(r'^(\w\w\w):(\S+)$', s_field)  # type: ignore[misc]
+        for s_field in passport.split()
+    )
     num_valid += part2_valid(fields) if part2 else part1_valid(fields)
 
   return num_valid
@@ -467,6 +473,7 @@ puzzle = advent.puzzle(day=5)
 def day5_seat_id(line):
   return int(line.translate(str.maketrans('FBLR', '0101')), base=2)
 
+
 check_eq(day5_seat_id('FBFBBFFRLR'), 357)
 check_eq(day5_seat_id('BFFFBBFRRR'), 567)
 check_eq(day5_seat_id('FFFBBBFRRR'), 119)
@@ -475,6 +482,7 @@ check_eq(day5_seat_id('BBFFBBFRLL'), 820)
 
 def day5(s):
   return max(day5_seat_id(line) for line in s.split())
+
 
 puzzle.verify(1, day5)  # ~1 ms.
 
@@ -491,6 +499,7 @@ def day5_visualize_transposed_seat_grid(s):
     print('\n'.join(''.join('.#'[e] for e in row) for row in grid.T))
   media.show_image(grid.T == 1, border=True, width=600)
 
+
 day5_visualize_transposed_seat_grid(puzzle.input)
 
 
@@ -498,15 +507,15 @@ day5_visualize_transposed_seat_grid(puzzle.input)
 def day5a_part2(s):  # Using regular expression search.
   seat_ids = [day5_seat_id(line) for line in s.split()]
   occupied = ''.join('01'[seat_id in seat_ids] for seat_id in range(128 * 8))
-  seat_id, = [match.start() for match in re.finditer('(?<=1)0(?=1)', occupied)]
+  (seat_id,) = [match.start() for match in re.finditer('(?<=1)0(?=1)', occupied)]
   return seat_id
+
 
 puzzle.verify(2, day5a_part2)  # ~11 ms.
 
 
 # %%
 def day5b_part2(s):  # Using string indexing.
-
   def find_all(string, substring, overlapping=False):
     i = string.find(substring)
     while i != -1:
@@ -515,9 +524,10 @@ def day5b_part2(s):  # Using string indexing.
 
   seat_ids = [day5_seat_id(line) for line in s.split()]
   occupied = ''.join('01'[seat_id in seat_ids] for seat_id in range(128 * 8))
-  i, = list(find_all(occupied, '101'))
+  (i,) = list(find_all(occupied, '101'))
   seat_id = i + 1
   return seat_id
+
 
 puzzle.verify(2, day5b_part2)  # ~9 ms.
 
@@ -526,27 +536,30 @@ puzzle.verify(2, day5b_part2)  # ~9 ms.
 def day5c_part2(s):  # Fast, using numpy successive differences of sorted indices.
   seat_ids = np.sort([day5_seat_id(line) for line in s.split()])
   diff = np.diff(seat_ids)
-  (i,), = np.nonzero(diff == 2)
+  ((i,),) = np.nonzero(diff == 2)
   seat_id = seat_ids[i] + 1
   return seat_id
+
 
 puzzle.verify(2, day5c_part2)  # ~2 ms.
 
 
 # %%
 def day5_part2(s):  # Also fast, using numpy subsequence search.
-
   def matching_subsequences(array, sequence):
     array, sequence = np.asarray(array), np.asarray(sequence)
-    return (array[np.arange(len(array) - len(sequence) + 1)[:, None] + np.arange(len(sequence))] ==
-            sequence).all(axis=1)
+    return (
+        array[np.arange(len(array) - len(sequence) + 1)[:, None] + np.arange(len(sequence))]
+        == sequence
+    ).all(axis=1)
 
   seat_ids = [day5_seat_id(line) for line in s.split()]
   occupied = np.full(128 * 8, False)
   occupied[seat_ids] = True
-  (i,), = matching_subsequences(occupied, (1, 0, 1)).nonzero()
+  ((i,),) = matching_subsequences(occupied, (1, 0, 1)).nonzero()
   seat_id = i + 1
   return seat_id
+
 
 puzzle.verify(2, day5_part2)  # ~2 ms.
 
@@ -597,14 +610,17 @@ def day6a_part1(s):  # Long code.
     total += len(union)
   return total
 
+
 check_eq(day6a_part1(s1), 11)
 puzzle.verify(1, day6a_part1)  # ~3 ms.
 
 
 # %%
 def day6b_part1(s):  # Using reduction.
-  return sum(len(functools.reduce(operator.or_, map(set, group.splitlines())))
-             for group in s.split('\n\n'))
+  return sum(
+      len(functools.reduce(operator.or_, map(set, group.splitlines()))) for group in s.split('\n\n')
+  )
+
 
 check_eq(day6b_part1(s1), 11)
 puzzle.verify(1, day6b_part1)  # ~3 ms.
@@ -612,8 +628,8 @@ puzzle.verify(1, day6b_part1)  # ~3 ms.
 
 # %%
 def day6_part1(s):  # Compact, and also fastest.
-  return sum(len(set(group.replace('\n', '')))
-             for group in s.split('\n\n'))
+  return sum(len(set(group.replace('\n', ''))) for group in s.split('\n\n'))
+
 
 check_eq(day6_part1(s1), 11)
 puzzle.verify(1, day6_part1)  # ~1 ms.
@@ -624,8 +640,11 @@ puzzle.verify(1, day6_part1)  # ~1 ms.
 
 # %%
 def day6a_part2(s):  # Using reduction.
-  return sum(len(functools.reduce(operator.and_, map(set, group.splitlines())))
-             for group in s.split('\n\n'))
+  return sum(
+      len(functools.reduce(operator.and_, map(set, group.splitlines())))
+      for group in s.split('\n\n')
+  )
+
 
 check_eq(day6a_part2(s1), 6)
 puzzle.verify(2, day6a_part2)  # ~3 ms.
@@ -633,8 +652,8 @@ puzzle.verify(2, day6a_part2)  # ~3 ms.
 
 # %%
 def day6_part2(s):  # Compact and same speed.
-  return sum(len(set.intersection(*map(set, group.splitlines())))
-             for group in s.split('\n\n'))
+  return sum(len(set.intersection(*map(set, group.splitlines()))) for group in s.split('\n\n'))
+
 
 check_eq(day6_part2(s1), 6)
 puzzle.verify(2, day6_part2)  # ~3 ms.
@@ -701,6 +720,7 @@ def day7a_part1(s, *, query='shiny gold'):  # Compact and fast with caching.
 
   return sum(valid(bag) for bag in contents)
 
+
 check_eq(day7a_part1(s1), 4)
 puzzle.verify(1, day7a_part1)  # ~3 ms.  (~240 ms without lru_cache)
 
@@ -724,6 +744,7 @@ def day7_part1(s, *, query='shiny gold'):  # Fast too.
 
   return len(valid)
 
+
 check_eq(day7_part1(s1), 4)
 puzzle.verify(1, day7_part1)  # ~3 ms.
 
@@ -741,6 +762,7 @@ def day7_part2(s, *, query='shiny gold'):
     return sum(n * (count_inside(b) + 1) for b, n in contents[bag].items())
 
   return count_inside(query)
+
 
 check_eq(day7_part2(s1), 32)
 check_eq(day7_part2(s2), 126)
@@ -776,7 +798,6 @@ acc +6
 
 # %%
 def day8(s, *, part2=False):
-
   def run_program(ops):
     pc = 0
     acc = 0
@@ -863,11 +884,10 @@ def day9(s, *, last_n=25, part2=False):
 
   def has_pair(l, total):
     # return any(a + b == total for a, b in itertools.combinations(l, 2))
-    return any(total - l[i] in l[i + 1:] for i in range(len(l)))
+    return any(total - l[i] in l[i + 1 :] for i in range(len(l)))
 
   def first_number_not_sum_of_pair_in_last_n(n):
-    return next(l[i] for i in range(n, len(l))
-                if not has_pair(l[i - n:i], l[i]))
+    return next(l[i] for i in range(n, len(l)) if not has_pair(l[i - n : i], l[i]))
 
   invalid_number = first_number_not_sum_of_pair_in_last_n(last_n)
   if not part2:
@@ -883,7 +903,7 @@ def day9(s, *, last_n=25, part2=False):
       end_value = value + total
       j = bisect.bisect_left(accum, end_value)
       if j != len(accum) and accum[j] == end_value:
-        return l[i + 1:j + 1]
+        return l[i + 1 : j + 1]
     return None
 
   sequence = find_subsequence_summing_to(invalid_number)
@@ -968,6 +988,7 @@ def day10_part1(s):
   counter = collections.Counter(np.diff([0] + l + [l[-1] + 3]))
   return counter[1] * counter[3]
 
+
 check_eq(day10_part1(s1), 7 * 5)
 check_eq(day10_part1(s2), 22 * 10)
 puzzle.verify(1, day10_part1)  # ~0 ms.  66 * 32.
@@ -983,7 +1004,6 @@ puzzle.verify(1, day10_part1)  # ~0 ms.  66 * 32.
 # Because the voltages differences are just 1 or 3, we can simply count the
 # length of the sequences of value 1, and derive a closed-form number for each
 # sequence.
-
 def day10a_part2(s):
   diff = np.diff([0] + sorted(map(int, s.split())))
   lengths_of_ones = map(len, re.findall('1+', ''.join(map(str, diff))))
@@ -993,6 +1013,7 @@ def day10a_part2(s):
     return 0 if n < 0 else 1 if n < 2 else f(n - 1) + f(n - 2) + f(n - 3)
 
   return math.prod(map(f, lengths_of_ones))
+
 
 check_eq(day10a_part2(s1), 8)
 check_eq(day10a_part2(s2), 19208)
@@ -1010,6 +1031,7 @@ def day10b_part2(s):
         npaths[j] += npaths[i]
   return npaths[-1]
 
+
 check_eq(day10b_part2(s1), 8)
 check_eq(day10b_part2(s2), 19208)
 puzzle.verify(2, day10b_part2)  # ~0 ms.
@@ -1021,9 +1043,9 @@ def day10_part2(s):
   l = [0] + sorted(map(int, s.split()))
   npaths = [1]
   for i in range(1, len(l)):
-    npaths.append(sum(npaths[j] for j in range(-4, 0)
-                      if i + j >= 0 and l[i] - l[i + j] < 4))
+    npaths.append(sum(npaths[j] for j in range(-4, 0) if i + j >= 0 and l[i] - l[i + j] < 4))
   return npaths[-1]
+
 
 check_eq(day10_part2(s1), 8)
 check_eq(day10_part2(s2), 19208)
@@ -1070,7 +1092,6 @@ L.LLLLL.LL
 # %%
 # Relatively fast non-numba solution, which maintains neighbor counts.
 # It becomes faster with numba enabled, but not as fast as the next solution.
-
 def day11a(s, *, part2=False):
   # -1 is EMPTY, 0..8 is FREE+neighbor_count, 10..18 is OCCUPIED+neighbor_count
   int_from_ch = {'.': -1, 'L': 0, '#': 10}
@@ -1080,7 +1101,6 @@ def day11a(s, *, part2=False):
   NEIGHBORS = tuple(set(itertools.product((-1, 0, 1), repeat=2)) - {(0, 0)})
 
   def evolve(grid):
-
     def impact_neighbor_counts(y0, x0, delta):
       for dy, dx in NEIGHBORS:
         y, x = y0 + dy, x0 + dx
@@ -1120,7 +1140,6 @@ if not using_numba:  # Best non-numba solutions.
 
 # %%
 # More naive solution, but faster when using numba.
-
 @numba.njit(parallel=True)
 def day11_evolve(grid, neighbors, part2):
   shape = grid.shape
@@ -1402,8 +1421,13 @@ def day13_part2(s):  # Using built-in modular inverses and general Chinese Remai
     mod_prod = math.prod(moduli)
     other_mods = [mod_prod // mod for mod in moduli]
     inverses = [pow(other_mod, -1, mod=mod) for other_mod, mod in zip(other_mods, moduli)]
-    return sum(inverse * other_mod * value
-               for inverse, other_mod, value in zip(inverses, other_mods, values)) % mod_prod
+    return (
+        sum(
+            inverse * other_mod * value
+            for inverse, other_mod, value in zip(inverses, other_mods, values)
+        )
+        % mod_prod
+    )
 
   return solve_mod_congruences(remainders, moduli)
 
@@ -1540,7 +1564,6 @@ day15a_part2 = functools.partial(day15a, num_turns=30_000_000)
 
 # %%
 def day15b(s, *, num_turns=2020):  # Faster, using List.
-
   def func(initial_sequence, num_turns):
     last_turn = [-1] * num_turns
     for turn in range(min(num_turns, len(initial_sequence))):
@@ -1570,7 +1593,6 @@ if not using_numba:
 
 # %%
 # Faster, using np.array and numba.
-
 @numba.njit
 def day15_func(initial_sequence, num_turns):
   last_turn = np.full(num_turns, -1, np.int32)
@@ -1656,7 +1678,6 @@ nearby tickets:
 
 # %%
 def day16(s, *, part2=False):
-
   def read_rules_and_tickets(s):
     s_rules, s_my_ticket, s_nearby = s.split('\n\n')
 
@@ -1666,7 +1687,7 @@ def day16(s, *, part2=False):
         ranges = ranges.split(' or ')
         yield name, [tuple(map(int, range.split('-'))) for range in ranges]
 
-    line, = s_my_ticket.splitlines()[1:]
+    (line,) = s_my_ticket.splitlines()[1:]
     my_ticket = list(map(int, line.split(',')))
 
     def read_tickets():
@@ -1683,18 +1704,27 @@ def day16(s, *, part2=False):
   rules = dict(read_rules())
 
   if not part2:
-    return sum(value for fields in read_tickets() for value in fields
-               if not value_ok_for_some_rule(value, rules))
+    return sum(
+        value
+        for fields in read_tickets()
+        for value in fields
+        if not value_ok_for_some_rule(value, rules)
+    )
 
-  valid_tickets = [fields for fields in read_tickets()
-                   if all(value_ok_for_some_rule(value, rules) for value in fields)]
+  valid_tickets = [
+      fields
+      for fields in read_tickets()
+      if all(value_ok_for_some_rule(value, rules) for value in fields)
+  ]
   num_rules, num_fields = len(rules), len(valid_tickets[0])
   check_eq(num_rules, num_fields)
 
   def is_compatible(rule, field_index):
     ranges = rules[rule]
-    return all(any(range[0] <= ticket[field_index] <= range[1] for range in ranges)
-               for ticket in valid_tickets)
+    return all(
+        any(range[0] <= ticket[field_index] <= range[1] for range in ranges)
+        for ticket in valid_tickets
+    )
 
   grid = np.empty((num_rules, num_fields), bool)
   # Computational bottleneck; could let rules.values() be array and use numba.
@@ -1707,7 +1737,7 @@ def day16(s, *, part2=False):
   row_sums = grid.sum(axis=1)
   while row_sums.any():
     row = np.nonzero(row_sums == 1)[0][0]
-    (col,), = np.nonzero(grid[row] == 1)
+    ((col,),) = np.nonzero(grid[row] == 1)
     rule = list_rules[row]
     column_of_rule[rule] = col
     row_sums -= grid[:, col]
@@ -1753,7 +1783,8 @@ def day17a(s, *, num_cycles=6, dim=3):  # Slower.
   lines = s.splitlines()
   indices = {
       (0,) * (dim - 2) + (y, x)
-      for y, line in enumerate(lines) for x, ch in enumerate(line)
+      for y, line in enumerate(lines)
+      for x, ch in enumerate(line)
       if ch == '#'
   }
   offsets = set(itertools.product((-1, 0, 1), repeat=dim)) - {(0,) * dim}
@@ -1783,7 +1814,8 @@ def day17(s, *, num_cycles=6, dim=3):  # Faster.
   lines = s.splitlines()
   indices = {
       (0,) * (dim - 2) + (y, x)
-      for y, line in enumerate(lines) for x, ch in enumerate(line)
+      for y, line in enumerate(lines)
+      for x, ch in enumerate(line)
       if ch == '#'
   }
   offsets = set(itertools.product((-1, 0, 1), repeat=dim)) - {(0,) * dim}
@@ -1804,9 +1836,13 @@ def day17(s, *, num_cycles=6, dim=3):  # Faster.
     # Adapted from collections.Counter() algorithm in
     # https://github.com/norvig/pytudes/blob/master/ipynb/Advent-2020.ipynb
     neighbor_counts = collections.Counter(
-        more_itertools.flatten(neighbors(index) for index in indices))
-    indices = {index for index, count in neighbor_counts.items()
-               if count == 3 or (count == 2 and index in indices)}
+        more_itertools.flatten(neighbors(index) for index in indices)
+    )
+    indices = {
+        index
+        for index, count in neighbor_counts.items()
+        if count == 3 or (count == 2 and index in indices)
+    }
 
   return len(indices)
 
@@ -1823,6 +1859,7 @@ puzzle.verify(2, day17_part2)  # ~200 ms.
 def day17_show_num_active_in_each_generation_for_2d_3d_4d():
   for dim in range(2, 5):
     print(dim, [day17(puzzle.input, num_cycles=num_cycles, dim=dim) for num_cycles in range(6)])
+
 
 if 0:
   day17_show_num_active_in_each_generation_for_2d_3d_4d()
@@ -1844,9 +1881,7 @@ puzzle = advent.puzzle(day=18)
 
 # %%
 def day18a(strings, *, part2=False):  # Slower, more readable.
-
   def evaluate_line(s):
-
     def parse_term(i):
       if s[i] == '(':
         value, i = parse_sequence(i + 1)
@@ -1878,6 +1913,7 @@ def day18a(strings, *, part2=False):  # Slower, more readable.
 
   return sum(evaluate_line(s) for s in strings.splitlines())
 
+
 puzzle.verify(1, day18a)  # ~50 ms.
 
 day18a_part2 = functools.partial(day18a, part2=True)
@@ -1886,9 +1922,7 @@ puzzle.verify(2, day18a_part2)  # ~55 ms.
 
 # %%
 def day18(strings, *, part2=False):  # Compact and faster.
-
   def evaluate_line(s: str) -> int:
-
     def eval_term(i: int) -> tuple[int, int]:
       return eval_seq(i + 1, eat=1) if s[i] == '(' else (int(s[i]), i + 1)
 
@@ -2017,8 +2051,10 @@ def day19a(s, *, part2=False):  # Compact.
     expansions = rules[symbols[0]]
     if expansions[0] == '"':
       return expansions[1] == text[0] and valid_expansion(symbols[1:], text[1:])
-    return any(valid_expansion(expansion.split() + symbols[1:], text)
-               for expansion in expansions.split(' | '))
+    return any(
+        valid_expansion(expansion.split() + symbols[1:], text)
+        for expansion in expansions.split(' | ')
+    )
 
   return sum(valid_expansion(['0'], text) for text in section2.splitlines())
 
@@ -2035,8 +2071,9 @@ puzzle.verify(2, day19a_part2)  # ~500 ms.
 def day19(s, *, part2=False):  # Faster.
   section1, section2 = s.split('\n\n')
   rules = {
-      int(symbol): (rhs[1] if rhs[0] == '"' else
-                    tuple(tuple(map(int, s.split())) for s in rhs.split(' | ')))
+      int(symbol): (
+          rhs[1] if rhs[0] == '"' else tuple(tuple(map(int, s.split())) for s in rhs.split(' | '))
+      )
       for line in section1.splitlines()
       for symbol, rhs in (line.split(': '),)
   }
@@ -2197,8 +2234,7 @@ Tile 3079:
 
 # %%
 def day20(s, *, part2=False, visualize=False):
-  tiles = {int(t[5:9]): grid_from_string(t[11:])
-           for t in s.rstrip('\n').split('\n\n')}
+  tiles = {int(t[5:9]): grid_from_string(t[11:]) for t in s.rstrip('\n').split('\n\n')}
   n = math.isqrt(len(tiles))
 
   if visualize:
@@ -2214,8 +2250,15 @@ def day20(s, *, part2=False, visualize=False):
     # return rotate(tile, rotation)[0]  # equivalent but slower
     tile = tile if rotation < 4 else tile[::-1]
     rotation = rotation % 4
-    return (tile[0] if rotation == 0 else tile[:, -1] if rotation == 1 else
-            tile[-1, ::-1] if rotation == 2 else tile[::-1, 0])
+    return (
+        tile[0]
+        if rotation == 0
+        else tile[:, -1]
+        if rotation == 1
+        else tile[-1, ::-1]
+        if rotation == 2
+        else tile[::-1, 0]
+    )
 
   # List of (index, rotation) for up to 2 tiles whose top row matches the key.
   edge_list = collections.defaultdict(list)
@@ -2224,8 +2267,9 @@ def day20(s, *, part2=False, visualize=False):
       edge_list[tuple(top_row(tile, rotation))].append((index, rotation))
 
   def is_corner(tile):  # A corner tile has 2 unique edges.
-    return sum(len(edge_list[tuple(top_row(tile, rotation))]) == 1
-               for rotation in rotations[:4]) == 2
+    return (
+        sum(len(edge_list[tuple(top_row(tile, rotation))]) == 1 for rotation in rotations[:4]) == 2
+    )
 
   corners = [index for index, tile in tiles.items() if is_corner(tile)]
   assert len(corners) == 4  # Exactly four tiles must be at the corners.
@@ -2235,14 +2279,19 @@ def day20(s, *, part2=False, visualize=False):
   # Place a first corner in the grid upper-left and determine its rotation.
   index = corners[0]
   tile = tiles[index]
-  rotation, _ = (rotation for rotation in rotations  # 2 solutions due to flip
-                 if (len(edge_list[tuple(rotate(tile, rotation)[0])]) == 1 and
-                     len(edge_list[tuple(rotate(tile, rotation)[:, 0])]) == 1))
+  rotation, _ = (
+      rotation
+      for rotation in rotations  # 2 solutions due to flip
+      if (
+          len(edge_list[tuple(rotate(tile, rotation)[0])]) == 1
+          and len(edge_list[tuple(rotate(tile, rotation)[:, 0])]) == 1
+      )
+  )
   layout = np.empty((n, n), object)
   layout[0, 0] = index, rotation
 
   def find(not_index, rot, desired):
-    "Returns (index, rotation) of tile with top row matching desired after rot."
+    'Returns (index, rotation) of tile with top row matching desired after rot.'
     l = edge_list[tuple(desired)]
     index, rotation = next(((index, rotation) for index, rotation in l if index != not_index))
     return index, (rotation + rot) % 4 + rotation // 4 * 4
@@ -2282,12 +2331,13 @@ def day20(s, *, part2=False, visualize=False):
       pattern_indices = pattern_view.nonzero()
       pattern_indices_1d = np.ravel_multi_index(pattern_indices, grid.shape)
       for y, x in np.ndindex(*(np.array(grid.shape) - pattern_view.shape)):
-        subgrid_view_1d = grid_view_1d[y * grid.shape[1] + x:]
+        subgrid_view_1d = grid_view_1d[y * grid.shape[1] + x :]
         if np.all(subgrid_view_1d[pattern_indices_1d] != '.'):
           subgrid_view_1d[pattern_indices_1d] = 'O'
 
   else:  # fastest, using 2d correlation
     import scipy.signal
+
     pattern_uint8 = pattern.astype(np.uint8)
     grid_uint8 = (grid == '#').astype(np.uint8)
     for rotation in rotations:
@@ -2348,7 +2398,6 @@ sqjhc mxmxvkd sbzzf (contains fish)
 
 # %%
 def day21(s, *, part2=False):
-
   def foods():
     for line in s.splitlines():
       ingredients, allergens = line[:-1].split(' (contains ')
@@ -2422,8 +2471,7 @@ Player 2:
 
 # %%
 def day22_part1(s):
-  hands = [collections.deque(map(int, s2.splitlines()[1:]))
-           for s2 in s.split('\n\n')]
+  hands = [collections.deque(map(int, s2.splitlines()[1:])) for s2 in s.split('\n\n')]
 
   while hands[0] and hands[1]:
     cards = hands[0].popleft(), hands[1].popleft()
@@ -2442,7 +2490,6 @@ puzzle.verify(1, day22_part1)  # ~0 ms.
 
 # %%
 def day22a_part2(s):  # Slower code using deque.
-
   def combat(hands):  # Returns (hands, winner)
     visited = set()
     while hands[0] and hands[1]:
@@ -2452,16 +2499,17 @@ def day22a_part2(s):  # Slower code using deque.
       visited.add(state)
       cards = hands[0].popleft(), hands[1].popleft()
       if len(hands[0]) >= cards[0] and len(hands[1]) >= cards[1]:
-        _, winner = combat([collections.deque(list(hands[0])[:cards[0]]),
-                            collections.deque(list(hands[1])[:cards[1]])])
+        _, winner = combat([
+            collections.deque(list(hands[0])[: cards[0]]),
+            collections.deque(list(hands[1])[: cards[1]]),
+        ])
       else:
         winner = 0 if cards[0] > cards[1] else 1
       hands[winner].extend([cards[winner], cards[1 - winner]])
 
     return hands, 0 if hands[0] else 1
 
-  hands = [collections.deque(map(int, s2.splitlines()[1:]))
-           for s2 in s.split('\n\n')]
+  hands = [collections.deque(map(int, s2.splitlines()[1:])) for s2 in s.split('\n\n')]
   hands, winner = combat(hands)
   return sum((i + 1) * card for i, card in enumerate(reversed(hands[winner])))
 
@@ -2483,8 +2531,7 @@ def day22_part2(s):  # Faster code using tuples.
       card0 = hand0[0]
       card1 = hand1[0]
       recurse = len(hand0) > card0 and len(hand1) > card1
-      if (combat(hand0[1:card0 + 1], hand1[1:card1 + 1])[0] if recurse
-          else card0 > card1):
+      if combat(hand0[1 : card0 + 1], hand1[1 : card1 + 1])[0] if recurse else card0 > card1:
         hand0, hand1 = hand0[1:] + (card0, card1), hand1[1:]
         if not hand1:
           break
@@ -2539,10 +2586,10 @@ def day23a(s, *, num_moves=100):  # Using list.
     while destination in extracted3:
       destination = destination - 1 if destination > 1 else len(l)
     dest = l.index(destination)  # bottleneck in part 2!
-    l = l[4:dest + 1] + extracted3 + l[dest + 1:] + [current]
+    l = l[4 : dest + 1] + extracted3 + l[dest + 1 :] + [current]
 
   i = l.index(1)
-  l = l[i + 1:] + l[:i]
+  l = l[i + 1 :] + l[:i]
   return ''.join(map(str, l))
 
 
@@ -2578,7 +2625,6 @@ check_eq(day23b(s1), '67384529')
 
 # %%
 # Code keeping track of next cup label for each cup label:
-
 @numba.njit  # 0.25 s to jit on first invocation
 def day23_func(l, max_num, num_moves, next_cup):
   n = len(next_cup) - 1
@@ -2693,9 +2739,13 @@ def day24(s, *, part2=False, num_days=100, visualize=False):
     if visualize:
       indices_3d.extend((day, y, x) for y, x in indices)
     neighbor_counts = collections.Counter(
-        (y + dy, x + dx) for y, x in indices for dy, dx in tuple_offsets)
-    indices = {index for index, count in neighbor_counts.items()
-               if count == 2 or (count == 1 and index in indices)}
+        (y + dy, x + dx) for y, x in indices for dy, dx in tuple_offsets
+    )
+    indices = {
+        index
+        for index, count in neighbor_counts.items()
+        if count == 2 or (count == 1 and index in indices)
+    }
 
   if visualize:
     video: Any = grid_from_indices(indices_3d, dtype=bool, pad=(0, 2, 2))
@@ -2774,7 +2824,6 @@ puzzle.verify(1, day25a)  # ~1000 ms.
 
 # %%
 def day25(s, *, base=7, mod=20201227):  # Fast.
-
   def pow_mod(base: int, exponent: int, mod: int) -> int:
     """Returns 'base**exponent % mod' using square-multiply algorithm."""
     x = 1
@@ -2832,17 +2881,28 @@ if 0:  # Compute min execution times over several calls.
 
 # %%
 if 1:  # Look for unwanted pollution of namespace.
-  print(textwrap.fill(' '.join(name for name, value in globals().items() if not (
-      name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS))))
+  print(
+      textwrap.fill(
+          ' '.join(
+              name
+              for name, value in globals().items()
+              if not (name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS)
+          )
+      )
+  )
 
 # %%
 if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
   # Create a new tar.gz file.
-  hh.run(f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'""")
+  hh.run(
+      f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
+  )
 
 # %%
 if 0:  # Look for misspelled words.
-  hh.run(rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true""")
+  hh.run(
+      rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true"""
+  )
 
 # %%
 if 0:  # Lint.

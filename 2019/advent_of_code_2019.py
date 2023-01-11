@@ -90,8 +90,10 @@ PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
 TAR_URL = f'https://github.com/hhoppe/advent_of_code_{YEAR}/raw/main/data/{PROFILE}.tar.gz'
 if 1:
-  hh.run(f"if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&"
-         f" wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi")
+  hh.run(
+      f'if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&'
+      f' wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi'
+  )
 INPUT_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}_input.txt'
 ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
 
@@ -131,7 +133,6 @@ _ORIGINAL_GLOBALS = list(globals())
 
 # %%
 # Also called `IntCode` Machine in the puzzles.
-
 class Machine:
 
   def __init__(self):
@@ -153,6 +154,7 @@ class Machine:
     if using_numba:
       return NumbaMachine(*args, **kwargs)
     return PyMachine(*args, **kwargs)
+
 
 # %%
 class PyMachine(Machine):
@@ -183,7 +185,7 @@ class PyMachine(Machine):
       self.mem[i] = value
 
     def address(i):
-      mode = (code // (10**(i + 1))) % 10
+      mode = (code // (10 ** (i + 1))) % 10
       if mode == 0:  # position mode
         return self.mem[self._pc + i]
       if mode == 2:  # relative mode
@@ -191,7 +193,7 @@ class PyMachine(Machine):
       raise RuntimeError(f'Unrecognized lhs mode {mode})')
 
     def operand(i):
-      mode = (code // (10**(i + 1))) % 10
+      mode = (code // (10 ** (i + 1))) % 10
       if mode in (0, 2):
         return read(address(i))
       if mode == 1:  # immediate mode
@@ -230,7 +232,6 @@ class PyMachine(Machine):
       raise RuntimeError(f'Unrecognized opcode {opcode} (pc={self._pc})')
 
   def run_until_need_input(self, input: list[int]) -> list[int]:
-
     def next_opcode_is_input():
       return self.mem[self._pc] == 3
 
@@ -266,6 +267,7 @@ def test_machine_py():
   check_eq(mem_after_machine_run('2,4,4,5,99,0'), '2,4,4,5,99,9801')  # 99 * 99
   check_eq(mem_after_machine_run('1,1,1,4,99,5,6,0,99'), '30,1,1,4,2,5,6,0,99')
 
+
 test_machine_py()
 
 
@@ -275,8 +277,9 @@ class NumbaMachine(Machine):
   def __init__(self, s, *, mem_extend=10_000):
     super().__init__()
     # Preallocate extra memory because we do not grow it as in PyMachine.
-    self.mem = np.concatenate((np.array(list(map(int, s.split(',')))),
-                               np.zeros(mem_extend, np.int64)))
+    self.mem = np.concatenate(
+        (np.array(list(map(int, s.split(',')))), np.zeros(mem_extend, np.int64))
+    )
 
   @staticmethod
   @numba.njit
@@ -298,14 +301,14 @@ class NumbaMachine(Machine):
         mem[i] = value
 
       def address(i):
-        mode = (code // (10**(i + 1))) % 10
+        mode = (code // (10 ** (i + 1))) % 10
         if mode == 0:  # position mode
           return mem[pc + i]
         assert mode == 2  # relative mode
         return relative_base + mem[pc + i]
 
       def operand(i):
-        mode = (code // (10**(i + 1))) % 10
+        mode = (code // (10 ** (i + 1))) % 10
         if mode in (0, 2):
           return read(address(i))
         assert mode == 1  # immediate mode
@@ -348,7 +351,8 @@ class NumbaMachine(Machine):
   def run_until_need_input(self, input: list[int]) -> list[int]:
     assert not self.terminated
     self._pc, self._relative_base, self.terminated, output = self._run(
-        self.mem, self._pc, self._relative_base, np.array(input, np.int64))
+        self.mem, self._pc, self._relative_base, np.array(input, np.int64)
+    )
     return output
 
   def run_fully(self, input: list[int] | None = None) -> list[int]:
@@ -417,7 +421,6 @@ puzzle = advent.puzzle(day=1)
 
 # %%
 def day1(s, *, part2=False):
-
   def get_fuel(mass):
     return max(mass // 3 - 2, 0)
 
@@ -461,7 +464,6 @@ puzzle = advent.puzzle(day=2)
 
 # %%
 def day2a(s, *, part2=False):  # Original implementation before Machine.
-
   def day2_machine_op(s, a=12, b=2):
     l = list(map(int, s.split(',')))
     l[1] = a
@@ -496,7 +498,6 @@ puzzle.verify(2, day2a_part2)  # ~175 ms.
 
 # %%
 def day2(s, *, part2=False):  # Now using Machine class.
-
   def day2_machine_op(s, a=12, b=2):
     machine = Machine.make(s)
     machine.mem[1:3] = a, b
@@ -598,7 +599,6 @@ check_eq(day3a_part1(s1), 6)  # [[-5  6] [-3  3]]
 
 # %%
 def day3b(s, *, part2=False):  # Using a sparse map on 2D positions.
-
   def rasterize(path: str):
     dyx_from_move = dict(L=(0, -1), R=(0, +1), U=(-1, 0), D=(+1, 0))
     yx = 0, 0
@@ -644,7 +644,6 @@ puzzle.verify(2, day3b_part2)  # ~230 ms.
 
 # %%
 # Using numba to operate on dict is slow.
-
 @numba.njit
 def day3_rasterize(path):
   y, x = 0, 0
@@ -663,8 +662,9 @@ def day3(s, *, part2=False):
   path1, path2 = s.splitlines()
   dyx_from_move = dict(L=(0, -1), R=(0, +1), U=(-1, 0), D=(+1, 0))
   counts1, counts2 = [
-      day3_rasterize(np.array([[*dyx_from_move[move[:1]], int(move[1:])]
-                               for move in path.split(',')]))
+      day3_rasterize(
+          np.array([[*dyx_from_move[move[:1]], int(move[1:])] for move in path.split(',')])
+      )
       for path in [path1, path2]
   ]
 
@@ -728,8 +728,7 @@ def day4(s, *, part2=False):  # Recursive search with pruning.
 
   def have_exactly_two_adjacent(t):
     e = (-1, *t, -1)
-    return any(a != b and b == c and c != d
-               for a, b, c, d in zip(e, e[1:], e[2:], e[3:]))
+    return any(a != b and b == c and c != d for a, b, c, d in zip(e, e[1:], e[2:], e[3:]))
 
   def recurse(base):
     count = 0
@@ -738,8 +737,7 @@ def day4(s, *, part2=False):  # Recursive search with pruning.
       if (*t, 10) < lower or t > upper:
         continue
       if len(t) == 6:
-        count += (have_exactly_two_adjacent(t) if part2
-                  else two_adjacent_are_same(t))
+        count += have_exactly_two_adjacent(t) if part2 else two_adjacent_are_same(t)
       else:
         count += recurse(t)
     return count
@@ -789,6 +787,7 @@ def day5_test():
     expected = 999 if input < 8 else 1000 if input == 8 else 1001
     check_eq(Machine.make(s).run_fully([input]), [expected])
 
+
 day5_test()
 
 
@@ -823,7 +822,6 @@ puzzle = advent.puzzle(day=6)
 
 # %%
 def day6(s, *, part2=False, source='YOU', destination='SAN'):
-
   def get_orbit_parents(s):
     parents = {}
     for entry in s.split():
@@ -882,12 +880,11 @@ puzzle = advent.puzzle(day=7)
 
 # %%
 def day7_part1(s, *, return_all=False):
-
   def get_thrust(s, phases):
     check_eq(sorted(phases), list(range(5)))
     value = 0
     for i in range(5):
-      value, = Machine.make(s).run_fully([phases[i], value])
+      (value,) = Machine.make(s).run_fully([phases[i], value])
     return value
 
   all_phases = itertools.permutations(range(5))
@@ -910,7 +907,6 @@ puzzle.verify(1, day7_part1)  # ~80 ms.
 
 # %%
 def day7_part2(s, *, return_all=False):
-
   def get_thrust2(phases):
     check_eq(sorted(phases), list(range(5, 10)))
     machines = [Machine.make(s) for _ in range(5)]
@@ -919,7 +915,7 @@ def day7_part2(s, *, return_all=False):
       for i in range(5):
         machine = machines[i]
         input = ([phases[i]] if step == 0 else []) + [value]
-        value, = machine.run_until_need_input(input)
+        (value,) = machine.run_until_need_input(input)
       terminated = [machines[i].terminated for i in range(5)]
       if any(terminated):
         assert all(terminated)
@@ -1027,14 +1023,16 @@ def day9_test():
   s = '104,1125899906842624,99'
   check_eq(Machine.make(s).run_fully()[0], 1125899906842624)
 
+
 day9_test()
 
 
 # %%
 def day9(s, *, part2=False):
   input = 2 if part2 else 1
-  output, = Machine.make(s).run_fully([input])
+  (output,) = Machine.make(s).run_fully([input])
   return output
+
 
 puzzle.verify(1, day9)  # ~1 ms.
 
@@ -1064,7 +1062,9 @@ s1 = """\
   #####
   ....#
   ...##
-""".replace(' ', '')
+""".replace(
+    ' ', ''
+)
 
 s2 = """\
   .#....#####...#..
@@ -1072,7 +1072,9 @@ s2 = """\
   ##...#...#.#####.
   ..#.....#...###..
   ..#.#.....#....##
-""".replace(' ', '')
+""".replace(
+    ' ', ''
+)
 
 s3 = """\
   .#..##.###...#######
@@ -1095,7 +1097,9 @@ s3 = """\
   .#.#.###########.###
   #.#.#.#####.####.###
   ###.##.####.##.#..##
-""".replace(' ', '')
+""".replace(
+    ' ', ''
+)
 
 
 # %%
@@ -1193,7 +1197,6 @@ puzzle = advent.puzzle(day=11)
 
 # %%
 def day11(s, *, part2=False, visualize_nth=0):
-
   class Painter:
 
     def __init__(self, visualize_nth=0):
@@ -1207,16 +1210,15 @@ def day11(s, *, part2=False, visualize_nth=0):
 
     def paint_color(self, color):
       self.painted[self.yx] = color
-      if self.visualize_nth and (self.num_paints < self.visualize_nth or
-                                 self.num_paints % self.visualize_nth == 0):
-        self.tyx_white.update((self.num_frames, *yx)
-                              for yx, value in self.painted.items() if value)
+      if self.visualize_nth and (
+          self.num_paints < self.visualize_nth or self.num_paints % self.visualize_nth == 0
+      ):
+        self.tyx_white.update((self.num_frames, *yx) for yx, value in self.painted.items() if value)
         self.num_frames += 1
       self.num_paints += 1
 
     def advance(self, turn):  # 0=left, 1=right
-      self.dyx = ((self.dyx[1], -self.dyx[0]) if turn else
-                  (-self.dyx[1], self.dyx[0]))
+      self.dyx = (self.dyx[1], -self.dyx[0]) if turn else (-self.dyx[1], self.dyx[0])
       self.yx = self.yx[0] + self.dyx[0], self.yx[1] + self.dyx[1]
 
     def current_color(self):
@@ -1329,8 +1331,10 @@ def day12(s, *, num_steps=1000, verbose=False):
     if verbose:
       print(f'After {step + 1} steps:')
       for p, v in zip(position, velocity):
-        print(f'pos=<x={p[0]:3}, y={p[1]:3}, z={p[2]:3}>, '
-              f'vel=<x={v[0]:3}, y={v[1]:3}, z={v[2]:3}>')
+        print(
+            f'pos=<x={p[0]:3}, y={p[1]:3}, z={p[2]:3}>, '
+            f'vel=<x={v[0]:3}, y={v[1]:3}, z={v[2]:3}>'
+        )
 
   potential = abs(position).sum(axis=-1)
   kinetic = abs(velocity).sum(axis=-1)
@@ -1561,7 +1565,6 @@ s5 = """\
 
 # %%
 def day14(s, *, fuel=1):
-
   def parse_recipes(s):
     """Returns {output: (quantity_output, Counter(inputs)}."""
 
@@ -1575,7 +1578,7 @@ def day14(s, *, fuel=1):
       s_input, s_output = hh.re_groups(r'^([^=]+) => (\d+ \w+)$', line)
       input_counters = (element_quantity(s) for s in s_input.split(', '))
       input_counter = functools.reduce(lambda a, b: a + b, input_counters)
-      (output_element, quantity_output), = element_quantity(s_output).items()
+      ((output_element, quantity_output),) = element_quantity(s_output).items()
       recipes[output_element] = quantity_output, input_counter
     return recipes
 
@@ -1608,7 +1611,6 @@ puzzle.verify(1, day14)  # ~2 ms.
 
 # %%
 def day14_part2(s, *, debug=False):
-
   def ore_from_fuel(fuel):
     return day14(s, fuel=fuel)
 
@@ -1617,6 +1619,7 @@ def day14_part2(s, *, debug=False):
   if debug:
     assert ore_bound - 1_000_000 <= ore_from_fuel(fuel) < ore_bound
   return fuel
+
 
 puzzle.verify(2, day14_part2)  # ~43 ms.
 _ = day14_part2(puzzle.input, debug=True)
@@ -1663,8 +1666,9 @@ class Day15ExploreMaze:
 
     while to_visit:
       yx = to_visit.popleft()
-      if ((until == 'destination' and yx == self.destination) or
-          (until == 'unknown' and yx not in self.grid)):
+      if (until == 'destination' and yx == self.destination) or (
+          until == 'unknown' and yx not in self.grid
+      ):
         path = [yx]
         while yx in previous:
           yx = previous[yx]
@@ -1682,7 +1686,7 @@ class Day15ExploreMaze:
   def advance_to(self, yx):
     diff = yx[0] - self.current_yx[0], yx[1] - self.current_yx[1]
     command = self.COMMAND_FOR_MOVEMENT[diff]
-    result, = self.machine.run_until_need_input([command])
+    (result,) = self.machine.run_until_need_input([command])
     assert 0 <= result <= 2
     if result == 0:  # wall
       assert yx not in self.grid
@@ -1771,6 +1775,7 @@ class Day15ExploreMaze:
 def day15(s):
   return Day15ExploreMaze(s).compute()
 
+
 puzzle.verify(1, day15)  # ~32 ms.
 
 # %%
@@ -1780,6 +1785,7 @@ _ = Day15ExploreMaze(puzzle.input).compute(visualize=True)
 # %%
 def day15_part2(s):
   return Day15ExploreMaze(s).farthest_distance_from_destination()
+
 
 puzzle.verify(2, day15_part2)  # ~36 ms.
 
@@ -1806,7 +1812,6 @@ s1 = '12345678'
 
 # %%
 def day16_part1(s, *, num_phases=100, debug=False):
-
   def get_fft_pattern(n, i):
     pattern: Iterable[int] = (0, 1, 0, -1)
     pattern = itertools.cycle(pattern)
@@ -1854,6 +1859,7 @@ def day16_test():
     trailing = len(input) * 10_000 - index
     print(f'{index=:<8} {frac=:#.4} {trailing=}')
 
+
 if 0:
   day16_test()
 
@@ -1879,8 +1885,8 @@ def day16_fft_transform2_helper(l, num_phases=100):
       # l[i] = total = (l[i] + total) % 10
       l[i] = total = mod10[l[i] + total]
 
-def day16_part2(s, *, repeat_input=10_000):
 
+def day16_part2(s, *, repeat_input=10_000):
   def fft_transform2_helper(l, num_phases=100):
     for phase in range(num_phases):
       np.cumsum(l[::-1], out=l[::-1])
@@ -1970,12 +1976,14 @@ s1 = """\
 # %%
 def day17_parse_scaffold_grid(s):
   grid = hh.grid_from_string(s, {'.': 0, '#': 1, '^': 2})
-  start, = zip(*np.nonzero(grid == 2))
+  (start,) = zip(*np.nonzero(grid == 2))
   return grid, start
+
 
 def day17_test():
   grid, start = day17_parse_scaffold_grid(s1)
   print(grid, start)
+
 
 if 0:
   day17_test()
@@ -1983,14 +1991,15 @@ if 0:
 
 # %%
 def day17_part1(s):
-
   def find_intersections(s):
     grid, unused_start = day17_parse_scaffold_grid(s)
     intersections = []
     for y in range(1, grid.shape[0] - 1):
       for x in range(1, grid.shape[1] - 1):
+
         def f(y, x):
           return grid[y, x] != 0
+
         if f(y, x) and f(y, x - 1) and f(y, x + 1) and f(y - 1, x) and f(y + 1, x):
           intersections.append((y, x))
 
@@ -2030,19 +2039,26 @@ s2 = """\
 
 # %%
 def day17_part2(s, *, visualize=False):
-
   def get_robot_input(s):
-
     def compute_commands(s):
       grid, start = day17_parse_scaffold_grid(s)
       yx = start
       dyx = -1, 0  # initial direction is up ('^')
 
-      def is_scaffold(yx): return grid[yx] == 1
-      def inbounds(yx): return all(0 <= yx[i] < grid.shape[i] for i in range(2))
-      def inbound_scaffold(yx): return inbounds(yx) and is_scaffold(yx)
-      def turn_left(dyx): return -dyx[1], dyx[0]
-      def turn_right(dyx): return dyx[1], -dyx[0]
+      def is_scaffold(yx):
+        return grid[yx] == 1
+
+      def inbounds(yx):
+        return all(0 <= yx[i] < grid.shape[i] for i in range(2))
+
+      def inbound_scaffold(yx):
+        return inbounds(yx) and is_scaffold(yx)
+
+      def turn_left(dyx):
+        return -dyx[1], dyx[0]
+
+      def turn_right(dyx):
+        return dyx[1], -dyx[0]
 
       assert not is_scaffold(tuple(np.array(yx) + dyx))
       commands = []
@@ -2072,8 +2088,9 @@ def day17_part2(s, *, visualize=False):
         commands.append('L' if left_ok else 'R')
       return commands
 
-    check_eq(','.join(compute_commands(s2)),
-             'R,8,R,8,R,4,R,4,R,8,L,6,L,2,R,4,R,4,R,8,R,8,R,8,L,6,L,2')
+    check_eq(
+        ','.join(compute_commands(s2)), 'R,8,R,8,R,4,R,4,R,8,L,6,L,2,R,4,R,4,R,8,R,8,R,8,L,6,L,2'
+    )
 
     puzzle_s = ''.join(map(chr, Machine.make(s).run_fully()))
     commands = compute_commands(puzzle_s)
@@ -2099,8 +2116,8 @@ def day17_part2(s, *, visualize=False):
       hh.show(s_functions, s_routine)
 
     s_video_feed = 'n'
-    return list(more_itertools.flatten(list(map(ord, s + '\n'))
-                                       for s in ([s_routine] + s_functions + [s_video_feed])))
+    it = (list(map(ord, s + '\n')) for s in ([s_routine] + s_functions + [s_video_feed]))
+    return list(more_itertools.flatten(it))
 
   robot_input = get_robot_input(s)
   machine = Machine.make(s)
@@ -2227,9 +2244,15 @@ s14 = """\
 
 # %%
 def day18a(s):  # Most compact, for part 1 only
-  def is_key(ch): return ch.islower() or ch == '@'
-  def is_door(ch): return ch.isupper()
-  def key_for_door(ch): return ch.lower()
+  def is_key(ch):
+    return ch.islower() or ch == '@'
+
+  def is_door(ch):
+    return ch.isupper()
+
+  def key_for_door(ch):
+    return ch.lower()
+
   grid = hh.grid_from_string(s)
   yx_of_key = {ch: yx for yx, ch in np.ndenumerate(grid) if is_key(ch)}
   current_key = '@'
@@ -2258,15 +2281,20 @@ def day18a(s):  # Most compact, for part 1 only
 
   @functools.lru_cache(maxsize=None)
   def eligible_paths(current_key, keys):  # Returns [(distance, key)].
-    return [(d, key) for key, d, needed in possible_paths(current_key)
-            if key not in keys and needed.issubset(keys)]
+    return [
+        (d, key)
+        for key, d, needed in possible_paths(current_key)
+        if key not in keys and needed.issubset(keys)
+    ]
 
   @functools.lru_cache(maxsize=None)
   def explore(current_key, keys):  # Returns distance.
     if len(keys) == len(yx_of_key):
       return 0
-    return min(path_distance + explore(key, keys.union(key))
-               for path_distance, key in eligible_paths(current_key, keys))
+    return min(
+        path_distance + explore(key, keys.union(key))
+        for path_distance, key in eligible_paths(current_key, keys)
+    )
 
   return explore(current_key, frozenset(current_key))
 
@@ -2281,19 +2309,26 @@ puzzle.verify(1, day18a)  # ~1100 ms.
 
 # %%
 def day18(s, *, part2=False, visualize=False, fps=50, size=4, speed=1, tail=1):
-  def is_key(ch): return ch.islower() or ch in '0123'
-  def is_door(ch): return ch.isupper()
-  def key_for_door(ch): return ch.lower()
+  def is_key(ch):
+    return ch.islower() or ch in '0123'
+
+  def is_door(ch):
+    return ch.isupper()
+
+  def key_for_door(ch):
+    return ch.lower()
+
   grid = hh.grid_from_string(s)
   if part2 and np.sum(grid == '@') == 1:
-    (y, x), = np.argwhere(grid == '@')
-    assert np.all(grid[[y, y, y-1, y+1], [x-1, x+1, x, x]] == '.')
-    grid[[y, y, y, y-1, y+1], [x, x-1, x+1, x, x]] = '#'
-    grid[[y-1, y-1, y+1, y+1], [x-1, x+1, x-1, x+1]] = '@'
+    ((y, x),) = np.argwhere(grid == '@')
+    assert np.all(grid[[y, y, y - 1, y + 1], [x - 1, x + 1, x, x]] == '.')
+    grid[[y, y, y, y - 1, y + 1], [x, x - 1, x + 1, x, x]] = '#'
+    grid[[y - 1, y - 1, y + 1, y + 1], [x - 1, x + 1, x - 1, x + 1]] = '@'
   current_keys = tuple(str(i) for i in range(np.sum(grid == '@')))
   grid[grid == '@'] = current_keys
   yx_of_key: dict[str, tuple[int, int]] = {
-      ch: yx for yx, ch in np.ndenumerate(grid) if is_key(ch)}  # type: ignore[misc]
+      ch: yx for yx, ch in np.ndenumerate(grid) if is_key(ch)  # type: ignore[misc]
+  }
 
   @functools.lru_cache(maxsize=None)
   def possible_paths(current_key):  # Returns {key: (distance, needed, path)}.
@@ -2327,8 +2362,7 @@ def day18(s, *, part2=False, visualize=False, fps=50, size=4, speed=1, tail=1):
   @functools.lru_cache(maxsize=None)
   def eligible_paths(current_key, keys):  # Returns [(distance, key)].
     items = possible_paths(current_key).items()
-    return [(d, key) for key, (d, needed, _) in items
-            if key not in keys and needed.issubset(keys)]
+    return [(d, key) for key, (d, needed, _) in items if key not in keys and needed.issubset(keys)]
 
   @functools.lru_cache(maxsize=None)
   def move(current_keys, i, key):
@@ -2354,9 +2388,12 @@ def day18(s, *, part2=False, visualize=False, fps=50, size=4, speed=1, tail=1):
 
   if visualize:
     grid[(grid >= '0') & (grid <= '9')] = '.'
-    cmap = {'.': (240,) * 3, '#': (40,) * 3,
-            **{chr(ch): (255, 0, 0) for ch in range(ord('a'), ord('z') + 1)},
-            **{chr(ch): (0, 180, 0) for ch in range(ord('A'), ord('Z') + 1)}}
+    cmap = {
+        '.': (240,) * 3,
+        '#': (40,) * 3,
+        **{chr(ch): (255, 0, 0) for ch in range(ord('a'), ord('z') + 1)},
+        **{chr(ch): (0, 180, 0) for ch in range(ord('A'), ord('Z') + 1)},
+    }
     images = []
     keys = frozenset(current_keys)
     owned_key_color = 255, 160, 160
@@ -2445,9 +2482,8 @@ puzzle = advent.puzzle(day=19)
 
 # %%
 def day19_part1(s, *, shape=(50, 50), visualize=False):
-
   def in_tractor(y, x):
-    output, = Machine.make(s).run_fully([x, y])
+    (output,) = Machine.make(s).run_fully([x, y])
     assert output in (0, 1)
     return output == 1
 
@@ -2465,9 +2501,8 @@ _ = day19_part1(puzzle.input, visualize=True)
 
 # %%
 def day19_part2(s, *, size=100, visualize=False):
-
   def in_tractor(y, x):
-    output, = Machine.make(s).run_fully([x, y])
+    (output,) = Machine.make(s).run_fully([x, y])
     assert output in (0, 1)
     return output == 1
 
@@ -2546,7 +2581,9 @@ FG..#########.....#  EOL
   ###########.#####  EOL
              Z       EOL
              Z       EOL
-""".replace('EOL', '')
+""".replace(
+    'EOL', ''
+)
 
 s2 = """\
                    A               EOL
@@ -2586,7 +2623,9 @@ YN......#               VT..#....QGEOL
   #########.###.###.#############  EOL
            B   J   C               EOL
            U   P   P               EOL
-""".replace('EOL', '')
+""".replace(
+    'EOL', ''
+)
 
 s3 = """\
              Z L X W       C                 EOL
@@ -2626,7 +2665,9 @@ RE....#.#                           #......RFEOL
   #############.#.#.###.###################  EOL
                A O F   N                     EOL
                A A D   M                     EOL
-""".replace('EOL', '')
+""".replace(
+    'EOL', ''
+)
 
 # %%
 if 0:
@@ -2636,7 +2677,6 @@ if 0:
 
 # %%
 def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
-
   class Maze:
     NEIGHBORS = (0, 1), (1, 0), (0, -1), (-1, 0)
 
@@ -2677,12 +2717,12 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
       assert all(name in self.yx_of_portal[0] for name in ('AA', 'ZZ'))
       assert not any(name in self.yx_of_portal[1] for name in ('AA', 'ZZ'))
       assert len(self.yx_of_portal[0]) == len(self.yx_of_portal[1]) + 2
-      assert not any(self.is_inner_portal(yx)
-                     for yx in self.yx_of_portal[0].values())
+      assert not any(self.is_inner_portal(yx) for yx in self.yx_of_portal[0].values())
       assert all(self.is_inner_portal(yx) for yx in self.yx_of_portal[1].values())
 
       self.portal_portal_path: dict[
-          tuple[int, int], dict[tuple[int, int], list[tuple[int, int]]]] = {}  # [yx][yx2] -> path
+          tuple[int, int], dict[tuple[int, int], list[tuple[int, int]]]
+      ] = {}  # [yx][yx2] -> path
       for unused_inner, d in self.yx_of_portal.items():
         for unused_name, src_yx in d.items():
           self.portal_portal_path[src_yx] = self.compute_portal_paths(src_yx)
@@ -2811,8 +2851,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
       grid = self.grid.copy()
       grid[('A' <= grid) & (grid <= 'Z')] = 'A'
       cmap = {' ': (235,) * 3, '.': (255,) * 3, '#': (30,) * 3, 'A': (40, 40, 255)}
-      image0 = np.array([cmap[e] for e in grid.flat], np.uint8).reshape(
-        *grid.shape, 3)
+      image0 = np.array([cmap[e] for e in grid.flat], np.uint8).reshape(*grid.shape, 3)
 
       def record_image(image):
         images.append(image.repeat(repeat, axis=0).repeat(repeat, axis=1))
@@ -2895,8 +2934,7 @@ puzzle = advent.puzzle(day=21)
 
 
 # %%
-def day21_process_springscript(
-    s, spring_program, verbose=False, command='WALK'):
+def day21_process_springscript(s, spring_program, verbose=False, command='WALK'):
   spring_program = spring_program + command + '\n'
   input = list(map(ord, spring_program))
   output = Machine.make(s).run_fully(input)
@@ -2912,7 +2950,6 @@ def day21_process_springscript(
 # If jumping, the robot lands at cell +4.
 
 # %%
-
 def day21(s):
   # Success: Jump if there is ground at D and any of A,B,C are hole:
   # J = D AND NOT (A AND B AND C)
@@ -2925,62 +2962,95 @@ def day21(s):
   """
   return day21_process_springscript(s, spring_program)
 
+
 puzzle.verify(1, day21)  # ~2 ms.
 
 # %%
 if 1:
+
   def day21_part1_test(*args, **kwargs):
     return day21_process_springscript(puzzle.input, *args, **kwargs)
 
   # Never jump: empty program
-  check_eq(day21_part1_test("""\
-  """), None)
+  check_eq(
+      day21_part1_test(
+          """\
+  """
+      ),
+      None,
+  )
 
   # Always jump: J = NOT J
-  check_eq(day21_part1_test("""\
+  check_eq(
+      day21_part1_test(
+          """\
     NOT J J
-  """), None)
+  """
+      ),
+      None,
+  )
 
   # Wait for the last moment to jump: J = (NOT A)
-  check_eq(day21_part1_test("""\
+  check_eq(
+      day21_part1_test(
+          """\
   NOT A J
-  """), None)
+  """
+      ),
+      None,
+  )
 
   # Jump if there is ground at D (+4): J = D
-  check_eq(day21_part1_test("""\
+  check_eq(
+      day21_part1_test(
+          """\
     NOT D T
     NOT T J
-  """), None)
+  """
+      ),
+      None,
+  )
 
   # Jump if there is ground at D unless both A and B are ground:
   # J = D AND NOT (A AND B)
-  check_eq(day21_part1_test("""\
+  check_eq(
+      day21_part1_test(
+          """\
     OR  A T
     AND B T
     NOT T J
     AND D J
-  """), None)
+  """
+      ),
+      None,
+  )
 
 # %% [markdown]
 # Part 2
 
 # %%
 if 1:
+
   def day21_part2_test(*args, **kwargs):
     kwargs.update(command='RUN')
     return day21_process_springscript(puzzle.input, *args, **kwargs)
+
   # The jump is still +4.  Only the sensor range is different (A-I).
 
   # Previous algorithm: Jump if there is ground at D and any of A,B,C are hole:
   # J = D AND NOT (A AND B AND C)
   check_eq(
-      day21_part2_test("""\
+      day21_part2_test(
+          """\
      OR  A T
      AND B T
      AND C T
      NOT T J
      AND D J
-  """), None)
+  """
+      ),
+      None,
+  )
 
 # %%
 def day21_part2(s):
@@ -2999,6 +3069,7 @@ def day21_part2(s):
     AND T J
   """
   return day21_process_springscript(s, spring_program, command='RUN')
+
 
 puzzle.verify(2, day21_part2)  # ~16 ms with NumbaMachine; ~2400 ms without.
 
@@ -3150,10 +3221,10 @@ class Deck:
       if line == 'deal into new stack':
         deck = deck.deal_into_new_stack()
       elif line.startswith('cut '):
-        n, = hh.re_groups(r'^cut ([\d-]+)', line)
+        (n,) = hh.re_groups(r'^cut ([\d-]+)', line)
         deck = deck.cut_n_cards(int(n))
       elif line.startswith('deal with increment '):
-        n, = hh.re_groups(r'^deal with increment (\d+)', line)
+        (n,) = hh.re_groups(r'^deal with increment (\d+)', line)
         deck = deck.deal_with_increment(int(n))
       else:
         assert line.startswith('Result:')
@@ -3163,7 +3234,7 @@ class Deck:
     deck = self.apply_shuffle(shuffle)
     line = shuffle.splitlines()[-1]
     assert line.startswith('Result:')
-    expected = list(map(int, line[len('Result:'):].split()))
+    expected = list(map(int, line[len('Result:') :].split()))
     check_eq(deck.cards(), expected)
 
 
@@ -3175,8 +3246,11 @@ def day22_test():
   check_eq(deck.deal_with_increment(3).cards(), [0, 7, 4, 1, 8, 5, 2, 9, 6, 3])
   for s in day22_deck10_shuffles:
     Deck(10).verify_shuffle(s)
-  check_eq(Deck(10007).apply_shuffle(puzzle.input).apply_shuffle(puzzle.input),
-           Deck(10007).apply_shuffle(puzzle.input)**2)
+  check_eq(
+      Deck(10007).apply_shuffle(puzzle.input).apply_shuffle(puzzle.input),
+      Deck(10007).apply_shuffle(puzzle.input) ** 2,
+  )
+
 
 day22_test()
 
@@ -3185,8 +3259,9 @@ day22_test()
 def day22(s, *, part2=False):
   deck_size = 119315717514047 if part2 else 10007
   num_shuffles = 101741582076661 if part2 else 1
-  deck = Deck(deck_size).apply_shuffle(s)**num_shuffles
+  deck = Deck(deck_size).apply_shuffle(s) ** num_shuffles
   return deck.card_at_position(2020) if part2 else deck.position_of_card(2019)
+
 
 puzzle.verify(1, day22)  # ~1 ms.
 
@@ -3226,6 +3301,7 @@ def day23(s, *, part2=False, num_machines=50):
       inputs[0].extend(nat_memory)
       previous_nat_memory = nat_memory
 
+
 puzzle.verify(1, day23)  # ~36 ms.
 
 day23_part2 = functools.partial(day23, part2=True)
@@ -3264,6 +3340,7 @@ def day24_part1(s):
     if t in visited:
       return sum(value * 2**i for i, value in enumerate(t))
     visited.add(t)
+
 
 check_eq(day24_part1(s1), 2129920)
 puzzle.verify(1, day24_part1)  # ~1 ms.
@@ -3310,6 +3387,7 @@ def day24_part2(s, *, num_steps=200, visualize=False):
 
   return np.count_nonzero(grid)
 
+
 check_eq(day24_part2(s1, num_steps=10), 99)
 puzzle.verify(2, day24_part2)  # ~36 ms.
 
@@ -3327,8 +3405,7 @@ puzzle = advent.puzzle(day=25)
 
 # %%
 def day25(s, *, num_steps=2000):
-  UNSAFE_ITEMS = {'photons', 'infinite loop', 'giant electromagnet',
-                  'molten lava', 'escape pod'}
+  UNSAFE_ITEMS = {'photons', 'infinite loop', 'giant electromagnet', 'molten lava', 'escape pod'}
   # 'It is suddenly completely dark! You are eaten by a Grue!'
   # 'The giant electromagnet is stuck to you.  You can't move!!'
   # 'The molten lava is way too hot! You melt!'
@@ -3404,17 +3481,28 @@ if 0:  # Compute min execution times over several calls.
 
 # %%
 if 1:  # Look for unwanted pollution of namespace.
-  print(textwrap.fill(' '.join(name for name, value in globals().items() if not (
-      name.startswith(('_', 'day', 'Day')) or name in _ORIGINAL_GLOBALS))))
+  print(
+      textwrap.fill(
+          ' '.join(
+              name
+              for name, value in globals().items()
+              if not (name.startswith(('_', 'day', 'Day')) or name in _ORIGINAL_GLOBALS)
+          )
+      )
+  )
 
 # %%
 if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
   # Create a new tar.gz file.
-  hh.run(f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'""")
+  hh.run(
+      f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
+  )
 
 # %%
 if 0:  # Look for misspelled words.
-  hh.run(rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true""")
+  hh.run(
+      rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true"""
+  )
 
 # %%
 if 0:  # Lint.
