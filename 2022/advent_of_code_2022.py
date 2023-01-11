@@ -177,19 +177,6 @@ check_eq(color_from_hex('#0000ff'), (0.0, 0.0, 1.0))
 
 
 # %%
-def image_from_plt(fig: matplotlib.figure.Figure, supersample: int = 1) -> np.ndarray:
-  """Return an image obtained by rasterizing a matplotlib figure."""
-  with io.BytesIO() as io_buf:
-    # savefig(bbox_inches='tight', pad_inches=0.0) changes dims, so would require format='png'.
-    fig.savefig(io_buf, format='raw', dpi=fig.dpi * supersample)
-    image = np.frombuffer(io_buf.getvalue(), np.uint8).reshape(
-        int(fig.bbox.bounds[3]) * supersample, int(fig.bbox.bounds[2]) * supersample, -1
-    )[..., :3]
-    shape = np.array(image.shape[:2]) // supersample
-    return resampler.resize(image, shape, filter='cubic')
-
-
-# %%
 def image_from_plotly(fig: plotly.graph_objs._figure.Figure, **kwargs: Any) -> np.ndarray:
   """Return an image obtained by rasterizing a plotly figure."""
   return media.decompress_image(fig.to_image(format='png', **kwargs))[..., :3]
@@ -1034,7 +1021,7 @@ def day7v(s):  # Visualization
   node_color = [attr for _, attr in graph.nodes(data='node_color')]
   nx.draw(graph, pos, node_size=150, node_color=node_color, width=0.7)
   fig.tight_layout(pad=0)
-  image = hh.bounding_crop(image_from_plt(fig), (255, 255, 255), margin=5)
+  image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
   media.show_image(image, title='day07', border=True)
   plt.close(fig)
 
@@ -2878,7 +2865,7 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
           ax=ax,
       )
       fig.tight_layout(pad=0)
-      image = hh.bounding_crop(image_from_plt(fig), (255, 255, 255), margin=5)
+      image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
       text = f'Time {time_index + 1:2}'
       hh.overlay_text(image, (5, 400), text, fontsize=20, shape=(18, 110), background=255)
       images.append(image)
@@ -4419,7 +4406,7 @@ def day21v(s, *, simplify=False, directed=True, prog='dot', figsize=(3, 3)) -> n
   node_color = [attr for _, attr in graph.nodes(data='color')]
   nx.draw(graph, with_labels=True, labels=labels, node_color=node_color, pos=pos, ax=ax)
   fig.tight_layout(pad=0)
-  image = hh.bounding_crop(image_from_plt(fig), (255, 255, 255), margin=5)
+  image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
   plt.close(fig)
   return image
 
