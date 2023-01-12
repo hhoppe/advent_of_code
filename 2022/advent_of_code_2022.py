@@ -3840,7 +3840,7 @@ def day19_process(recipes, part2, prune_size):
       u0 = min(r0 * tl + n0, r_0 * tl)
       u1 = min(r1 * tl + n1, r21 * tl)
       u2 = min(r2 * tl + n2, r32 * tl)
-      return u0 * 1 + u1 * r10 + u2 * (r20 + r21 * r10) + n3 * (r30 + r32 * (r20 + r21 + r10))
+      return u0 * 1 + u1 * r10 + u2 * (r20 + r21 * r10) + n3 * (r30 + r32 * (r20 + r21 * r10))
 
     if len(states) > prune_size:
       # non-numba version: states = set(sorted(states, key=estimated_goodness)[len(states) // 2:])
