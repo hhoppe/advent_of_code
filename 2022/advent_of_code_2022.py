@@ -1444,7 +1444,7 @@ def day9b(s, *, part2=False, visualize=False, pad=1, pad0=12, background=(245,) 
       options: Any = dict(boundary='border', gamma='identity', cval=np.array(background) / 255)
       resized = resampler.uniform_resize(cropped, final_shape, filter='trapezoid', **options)
       text = f'Step {step_index:5}'
-      hh.overlay_text(resized, (4, 4), text, fontsize=20, shape=(21, 110), background=background)
+      hh.overlay_text(resized, (6, 3), text, fontsize=20, background=background)
       images.append(resized)
     images = [images[0]] * 5 + images + [images[-1]] * 50
     return images
@@ -2273,7 +2273,7 @@ def day14_drop_sand(grid: np.ndarray, y: int, x: int) -> tuple[int, int, bool]:
   return y, x, True
 
 
-def day14(s, *, part2=False, visualize=False, period=2, acceleration=1000, magnify=2, sand_x=500):
+def day14(s, *, part2=False, visualize=False, period=2, acceleration=18, magnify=2, sand_x=500):
   polys = [np.array(re.findall(r'(\d+),(\d+)', line), int)[:, ::-1] for line in s.splitlines()]
   coords = np.concatenate(polys, axis=0)
   shape = coords.max(0)[0] + 3, 400
@@ -2298,7 +2298,8 @@ def day14(s, *, part2=False, visualize=False, period=2, acceleration=1000, magni
 
   def record_image(index):
     image2 = image[:, 140:-140].repeat(magnify, axis=0).repeat(magnify, axis=1)
-    hh.overlay_text(image2, (8, 170), f'{index:5}', fontsize=18, shape=(18, 50), background=255)
+    text = f'{index:5}'
+    hh.overlay_text(image2, (10, 220), text, fontsize=18, background=255, align='tr')
     images.append(image2)
 
   countdown1, countdown2 = 1, 1
@@ -2334,10 +2335,7 @@ puzzle.verify(2, day14_part2)
 
 # %%
 media.show_video(
-    day14_part2(puzzle.input, visualize=True, period=2, acceleration=18),
-    title='day14',
-    codec='gif',
-    fps=50,
+    day14_part2(puzzle.input, visualize=True), title='day14', codec='gif', fps=50, border=True
 )
 
 # %% [markdown]
@@ -2865,7 +2863,7 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
       fig.tight_layout(pad=0)
       image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
       text = f'Time {time_index + 1:2}'
-      hh.overlay_text(image, (5, 400), text, fontsize=20, shape=(18, 110), background=255)
+      hh.overlay_text(image, (8, 400), text, fontsize=20, background=255)
       images.append(image)
 
     total_flow += sum(rate[valve] for valve in enabled_valves)
@@ -4547,14 +4545,8 @@ def day22(s, *, part2=False, visualize=False, background=(252,) * 3):
             cmap = {' ': background, '.': (244,) * 3, '#': (20, 20, 20), '@': (100, 130, 255)}
             image = np.array([cmap[ch] for ch in grid2.flat], np.uint8).reshape(*grid2.shape, 3)
             image = image.repeat(2, axis=0).repeat(2, axis=1)
-            hh.overlay_text(
-                image,
-                (383, 140),
-                f'Step {num_steps:5}',
-                fontsize=18,
-                shape=(21, 120),
-                background=background,
-            )
+            text = f'Step {num_steps:5}'
+            hh.overlay_text(image, (386, 140), text, fontsize=18, background=background)
             images.append(image)
 
   if visualize:
@@ -4640,14 +4632,8 @@ def day23a(s, *, part2=False, visualize=False, pad=60, background=250):
       yxs = np.array(list(current))
       image[tuple((yxs + (pad, pad)).T)] = 0, 0, 180
       image = image[30:, 35:].repeat(2, axis=0).repeat(2, axis=1)
-      hh.overlay_text(
-          image,
-          (0, 0),
-          f'Round {round_index:4}',
-          fontsize=20,
-          shape=(18, 110),
-          background=background,
-      )
+      text = f'Round {round_index:4}'
+      hh.overlay_text(image, (3, 0), text, fontsize=20, background=background)
       images.append(image)
 
     proposed = {}
@@ -4882,15 +4868,10 @@ def day24a(s, *, part2=False, visualize=False, repeat=3):
       image[y + 1, x + 1] = 255, 0, 0
       image = image.repeat(repeat, axis=0).repeat(repeat, axis=1)
       if image.shape[1] > 200:
-        hh.overlay_text(
-            image,
-            (8, 235),
-            f'Time {time:3}',
-            fontsize=14,
-            shape=(12, 60),
-            background=empty,
-            margin=2,
-        )
+        yx = repeat, image.shape[1] - repeat
+        text = f'Time {time:3}'
+        margin = [[3, 1], [2, 2]]
+        hh.overlay_text(image, yx, text, fontsize=14, background=empty, align='tr', margin=margin)
       images.append(image)
     fps = {4: 5, 35: 50}[grid.shape[0]]
     hold = int(fps * 1.5)
