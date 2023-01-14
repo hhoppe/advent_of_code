@@ -71,6 +71,8 @@ from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
+import matplotlib
+import matplotlib.pyplot as plt
 import mediapy as media
 import more_itertools
 import numpy as np
@@ -2752,6 +2754,22 @@ def day24(s, *, part2=False, num_days=100, visualize=False):
     video = video.repeat(2, axis=1).repeat(2, axis=2)
     video = [video[0]] * 10 + list(video) + [video[-1]] * 10
     media.show_video(video, codec='gif', fps=10)
+
+  if visualize:
+    # See https://stackoverflow.com/a/59042263
+    fig, ax = plt.subplots(figsize=(6, 6), dpi=90)
+    ax.set_aspect('equal')
+    ax.autoscale(True)
+    params = dict(numVertices=6, radius=math.sqrt(1 / 3), edgecolor=None)
+    for sw, e in indices:
+      xy = e - sw / 2, sw * (math.sqrt(3) / 2)
+      hexagon = matplotlib.patches.RegularPolygon(xy, **params)
+      ax.add_patch(hexagon)
+    fig.tight_layout(pad=0)
+    image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
+    media.show_image(image, title='day24', border=False)
+    plt.close(fig)
+
   return len(indices)
 
 

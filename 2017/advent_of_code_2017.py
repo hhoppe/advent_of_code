@@ -713,7 +713,7 @@ puzzle = advent.puzzle(day=11)
 # %%
 def day11(s, *, part2=False):
   steps = s.strip().split(',')
-  MOVES = {'s': (1, 0), 'se': (0, 1), 'n': (-1, 0), 'nw': (0, -1), 'ne': (-1, 1), 'sw': (1, -1)}
+  MOVES = dict(s=(1, 0), se=(0, 1), n=(-1, 0), nw=(0, -1), ne=(-1, 1), sw=(1, -1)}
 
   def hex_radius(y: int, x: int) -> int:
     return max(abs(y), abs(x)) if y * x < 0 else abs(y) + abs(x)
