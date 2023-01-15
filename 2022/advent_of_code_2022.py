@@ -175,7 +175,7 @@ check_eq(color_from_hex('#0000ff'), (0.0, 0.0, 1.0))
 
 
 # %%
-def image_from_plotly(fig: plotly.graph_objs._figure.Figure, **kwargs: Any) -> np.ndarray:
+def image_from_plotly(fig: Any, **kwargs: Any) -> np.ndarray:
   """Return an image obtained by rasterizing a plotly figure."""
   return media.decompress_image(fig.to_image(format='png', **kwargs))[..., :3]
 
@@ -222,9 +222,7 @@ assert np.allclose(vector_slerp([0, 1], [1, 0], 1 / 3), [0.5, math.cos(math.radi
 
 
 # %%
-def wobble_video(
-    fig: plotly.graph_objs._figure.Figure, /, *, amplitude: float = 1.0
-) -> list[np.ndarray]:
+def wobble_video(fig: Any, /, *, amplitude: float = 1.0) -> list[np.ndarray]:
   """Return a looping video from a 3D plotly figure by orbitting the eye position left/right.
 
   Args:
@@ -261,7 +259,7 @@ def wobble_video(
 
 
 # %%
-def tilt_video(fig: plotly.graph_objs._figure.Figure) -> list[np.ndarray]:
+def tilt_video(fig: Any) -> list[np.ndarray]:
   """Return a looping video from a 3D plotly figure by displacing the eye towards `camera.up`."""
   rotation_fractions = [0, 0, 0, 1 / 6, 1 / 2, 5 / 6, 0.999, 0.999, 0.999, 5 / 6, 1 / 2, 1 / 6]
   camera = fig['layout']['scene']['camera']
@@ -870,10 +868,10 @@ puzzle.verify(2, day6_part2)
 # ---
 #
 # - `day7a()`, `day7b()`: The initial implementation is a general solution that builds a
-#  directory structure with file sizes.
+#   directory structure with file sizes.
 #
 # - `day7()`: Only later did I recognize that the input follows the specific pattern corresponding
-#  to a depth-first traversal, so the solution can be greatly simplified.
+#   to a depth-first traversal, so the solution can be greatly simplified.
 
 # %%
 puzzle = advent.puzzle(day=7)
@@ -1840,7 +1838,7 @@ puzzle.verify(2, day11_part2)
 # 3. Convert the characters to integers in the array.
 #
 # 4. Implement the BFS as a separate BFS for each distance unit &mdash; using two queues (current and next),
-#   thereby obviating the need to maintain distance state in the queue.
+#    thereby obviating the need to maintain distance state in the queue.
 #
 # 5. Implement the final algorithm in a `numba`-jitted function; the resulting computation takes just 2 ms.
 #
@@ -3116,7 +3114,7 @@ puzzle.verify(2, day16_part2)
 # 3. FFT-based `scipy.signal.correlate()`, and
 #
 # 4. Subsequence search using the
-#   [Boyer-Moore-Horspool algorithm](https://en.wikipedia.org/wiki/Boyer-Moore-Horspool_algorithm).
+#    [Boyer-Moore-Horspool algorithm](https://en.wikipedia.org/wiki/Boyer-Moore-Horspool_algorithm).
 #
 # For the subsequence size in this problem, method 4 (Boyer-Moore-Horspool search) is fastest.
 
@@ -3354,7 +3352,8 @@ media.show_video(day17_visualize(s1), title='day17', codec='gif', fps=50)
 #
 # - `day18b()`: Use of a 3D array (`np.array([np.roll(grid, ...])`) to access grid neighbors.
 #
-# - `day18w()`: Elegant, compact [solution from mjpieters](https://github.com/mjpieters/adventofcode/blob/master/2022/Day%2018.ipynb)
+# - `day18w()`: Elegant, compact
+#   [solution from mjpieters](https://github.com/mjpieters/adventofcode/blob/master/2022/Day%2018.ipynb)
 #   involving `scipy.ndimage.binary_fill_holes` and `scipy.signal.convolve`.
 #
 # - `day18()`: Incremental march over just the outer surface of the cubes, jitted using `numba`.
@@ -5202,13 +5201,13 @@ if 0:  # Look for misspelled words.
 # %%
 if 0:  # Lint.
   hh.run('echo autopep8; autopep8 -j8 -d .')
+  hh.run('echo pyink; pyink --diff .')
   hh.run('echo mypy; mypy . || true')
   hh.run('echo pylint; pylint -j8 . || true')
   hh.run(
       'echo flake8; flake8 --indent-size=2 --exclude .ipynb_checkpoints'
-      ' --ignore E121,E125,E126,E129,E226,E302,E305,E501,E741,E704,E203,W503,W504'
+      ' --extend-ignore E129,E203,E302,E305,E501,E741'
   )
-  print('All ran.')
 
 # %%
 hh.show_notebook_cell_top_times()
