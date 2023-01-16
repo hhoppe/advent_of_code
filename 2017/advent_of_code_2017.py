@@ -713,7 +713,7 @@ puzzle = advent.puzzle(day=11)
 # %%
 def day11(s, *, part2=False):
   steps = s.strip().split(',')
-  MOVES = dict(s=(1, 0), se=(0, 1), n=(-1, 0), nw=(0, -1), ne=(-1, 1), sw=(1, -1)}
+  MOVES = dict(s=(1, 0), se=(0, 1), n=(-1, 0), nw=(0, -1), ne=(-1, 1), sw=(1, -1))
 
   def hex_radius(y: int, x: int) -> int:
     return max(abs(y), abs(x)) if y * x < 0 else abs(y) + abs(x)
@@ -2175,12 +2175,6 @@ if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
   # Create a new tar.gz file.
   hh.run(
       f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
-  )
-
-# %%
-if 0:  # Look for misspelled words.
-  hh.run(
-      rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true"""
   )
 
 # %%

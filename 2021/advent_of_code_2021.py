@@ -648,8 +648,8 @@ day6_part2 = functools.partial(day6, part2=True)
 puzzle.verify(2, day6_part2)  # ~0 ms.
 
 # %%
-# Looking at progression for single input, to ideally derive closed-form
-# expresssion.  However it looks highly irregular.
+# Looking at progression for single input, to ideally derive a closed-form
+# expression.  However it looks highly irregular.
 def day6_test(s):
   counter = collections.Counter(map(int, s.strip().split(',')))
   for i in range(80):
@@ -3570,7 +3570,7 @@ puzzle.verify(2, day21_part2)  # ~21 ms.
 # The algorithm is as follows.
 # For each new box, we process all of the currently active boxes to subtract any part that overlaps the new box.
 # This subtraction is achieved by subdividing the overlapping box into up to 27 sub-boxes.  Each sub-box is either entirely inside or entirely outside the new box.  We discard it if it is inside.
-# Finally, we add the new box to the active list if its state is "on" (as oppposed to "off").
+# Finally, we add the new box to the active list if its state is "on" (as opposed to "off").
 #
 # To speed up the computation, I explore subdividing each overlapping box into fewer sub-boxes, by considering one axis at a time in a heuristic order based on the box dimensions.
 #
@@ -4293,7 +4293,7 @@ puzzle.verify(2, day22_part2)  # ~80 ms (often slower).
 #
 # 2. **Dijkstra/A\*** search to explore solution in a breadth-first traversal.  This is more complex to implement, but has the benefit that the search stops as soon as the advancing front reaches the end state, hopefully visiting a smaller subset of reachable states.  This solution is also more compatible with `numba`, and finds a solution in ~400 ms.
 #
-# It turns out that A\* does not provide much benefit, at least for my puzzle input.  The reason is that the "heavy" `D` pieces (ending in the rightmost room) move last in the optimal move sequence, wheras A\* encourages moving these pieces first.
+# It turns out that A\* does not provide much benefit, at least for my puzzle input.  The reason is that the "heavy" `D` pieces (ending in the rightmost room) move last in the optimal move sequence, whereas A\* encourages moving these pieces first.
 
 # %%
 puzzle = advent.puzzle(day=23)
@@ -5300,12 +5300,6 @@ if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
   # Create a new tar.gz file.
   hh.run(
       f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
-  )
-
-# %%
-if 0:  # Look for misspelled words.
-  hh.run(
-      rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true"""
   )
 
 # %%

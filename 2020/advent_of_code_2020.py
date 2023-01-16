@@ -347,6 +347,7 @@ puzzle.verify(2, day3_part2)  # ~2 ms.
 puzzle = advent.puzzle(day=4)
 
 # %%
+# spellcheck=off
 s1 = """\
 ecl:gry pid:860033327 eyr:2020 hcl:#fffffd
 byr:1937 iyr:2017 cid:147 hgt:183cm
@@ -395,6 +396,7 @@ eyr:2022
 
 iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719
 """
+# spellcheck=on
 
 
 # %%
@@ -425,8 +427,8 @@ def day4(s, *, part2=False):
     try:
       value, unit = hh.re_groups(r'^(\d+)(cm|in)$', fields['hgt'])
       return bool(
-          1920 <= year('byr') <= 2002
-          and 2010 <= year('iyr') <= 2020  # pylint: disable=chained-comparison
+          1920 <= year('byr') <= 2002  # pylint: disable=chained-comparison
+          and 2010 <= year('iyr') <= 2020
           and 2020 <= year('eyr') <= 2030
           and (unit != 'cm' or 150 <= int(value) <= 193)
           and (unit != 'in' or 59 <= int(value) <= 76)
@@ -461,7 +463,7 @@ puzzle.verify(2, day4_part2)  # ~6 ms.
 # ## Day 5: Free seat in grid
 
 # %% [markdown]
-# Given input lines, each specifiying a seat identified using a binary encoding with symbols **B**ack, **F**ront, **L**eft, **R**ight.
+# Given input lines, each specifying a seat identified using a binary encoding with symbols **B**ack, **F**ront, **L**eft, **R**ight.
 #
 # - Part 1: Determine the maximum seat id.
 #
@@ -472,6 +474,7 @@ puzzle = advent.puzzle(day=5)
 
 
 # %%
+# spellcheck=off
 def day5_seat_id(line):
   return int(line.translate(str.maketrans('FBLR', '0101')), base=2)
 
@@ -480,6 +483,7 @@ check_eq(day5_seat_id('FBFBBFFRLR'), 357)
 check_eq(day5_seat_id('BFFFBBFRRR'), 567)
 check_eq(day5_seat_id('FFFBBBFRRR'), 119)
 check_eq(day5_seat_id('BBFFBBFRLL'), 820)
+# spellcheck=on
 
 
 def day5(s):
@@ -1517,7 +1521,7 @@ puzzle.verify(2, day14_part2)  # ~22 ms.
 # Given an initial sequence of numbers indexed starting at `1`, continue the sequence as follows.
 #
 # The number at index `i` is either
-#   * `0` if the numer at index `i - 1` was not previously seen, or
+#   * `0` if the number at index `i - 1` was not previously seen, or
 #   * `i - 1 - j` if the number at index `i - 1` was previously seen at index `j`.
 #
 # - Part 1: Report the number at index `2020`.
@@ -1638,7 +1642,7 @@ if using_numba:
 # ## Day 16: Match ticket fields and rules
 
 # %% [markdown]
-# Given (1) a set of fields with names and rules on possible value ranges, (2) my ticket with unlabled fields, and (3) a set of other tickets with unlabeled fields:
+# Given (1) a set of fields with names and rules on possible value ranges, (2) my ticket with unlabeled fields, and (3) a set of other tickets with unlabeled fields:
 #
 # - Part 1: Report the number of invalid other tickets, which are those containing a field value that does not satisfy any field rule.
 #
@@ -1871,7 +1875,7 @@ if 0:
 # ## Day 18: Parsing math expression
 
 # %% [markdown]
-# Given a list of mathematical expressions with additions, multiplications, and parantheses, evaluate each expression and report the sum of resulting values.
+# Given a list of mathematical expressions with additions, multiplications, and parentheses, evaluate each expression and report the sum of resulting values.
 #
 # - Part 1: Operators `+` and `*` have equal precedence and are applied left-to-right.
 #
@@ -1974,6 +1978,7 @@ puzzle.verify(2, day18_part2)  # ~6 ms.
 puzzle = advent.puzzle(day=19)
 
 # %%
+# spellcheck=off
 s1 = """\
 0: 4 1 5
 1: 2 3 | 3 2
@@ -2038,6 +2043,7 @@ aaaabbaabbaaaaaaabbbabbbaaabbaabaaa
 babaaabbbaaabaababbaabababaaab
 aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba
 """
+# spellcheck=on
 
 
 # %%
@@ -2697,6 +2703,7 @@ puzzle.verify(2, day23_part2)  # ~400 ms with numba; ~25 s without numba.
 puzzle = advent.puzzle(day=24)
 
 # %%
+# spellcheck=off
 s1 = """\
 sesenwnenenewseeswwswswwnenewsewsw
 neeenesenwnwwswnenewnwwsewnenwseswesw
@@ -2719,6 +2726,7 @@ eneswnwswnwsenenwnwnwwseeswneewsenese
 neswnwewnwnwseenwseesewsenwsweewe
 wseweeenwnesenwwwswnew
 """
+# spellcheck=on
 
 
 # %%
@@ -2914,12 +2922,6 @@ if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
   # Create a new tar.gz file.
   hh.run(
       f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
-  )
-
-# %%
-if 0:  # Look for misspelled words.
-  hh.run(
-      rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true"""
   )
 
 # %%

@@ -3720,12 +3720,6 @@ if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
   )
 
 # %%
-if 0:  # Look for misspelled words.
-  hh.run(
-      rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true"""
-  )
-
-# %%
 if 0:  # Lint.
   hh.run('echo flake8; flake8')
   hh.run('echo mypy; mypy . || true')

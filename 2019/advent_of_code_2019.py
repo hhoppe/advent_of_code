@@ -553,7 +553,7 @@ U98,R91,D20,R16,D67,R40,U7,R15,U6,R7
 
 
 # %%
-def day3a_part1(s):  # Abandonned slow version, using large 2D images.
+def day3a_part1(s):  # Abandoned slow version, using large 2D images.
   shape = 20, 20  # Y, X
   origin = np.array(shape) // 2
 
@@ -1057,7 +1057,7 @@ puzzle = advent.puzzle(day=10)
 
 # %%
 # Indent lines to avoid b/174323966 (Colab ... prefix in multiline string).
-# An alternative is textwarp.dedent() or re.sub(r'(?m)^  ', r'', s).
+# An alternative is textwrap.dedent() or re.sub(r'(?m)^  ', r'', s).
 s1 = """\
   .#..#
   .....
@@ -1498,6 +1498,7 @@ _ = day13_part2(puzzle.input, visualize=True)
 puzzle = advent.puzzle(day=14)
 
 # %%
+# spellcheck=off
 s1 = """\
 10 ORE => 10 A
 1 ORE => 1 B
@@ -1563,6 +1564,7 @@ s5 = """\
 7 XCVML => 6 RJRHP
 5 BHXH, 4 VRPVC => 5 LTCX
 """
+# spellcheck=on
 
 
 # %%
@@ -3503,12 +3505,6 @@ if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
   # Create a new tar.gz file.
   hh.run(
       f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
-  )
-
-# %%
-if 0:  # Look for misspelled words.
-  hh.run(
-      rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true"""
   )
 
 # %%

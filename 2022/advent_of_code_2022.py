@@ -223,7 +223,7 @@ assert np.allclose(vector_slerp([0, 1], [1, 0], 1 / 3), [0.5, math.cos(math.radi
 
 # %%
 def wobble_video(fig: Any, /, *, amplitude: float = 1.0) -> list[np.ndarray]:
-  """Return a looping video from a 3D plotly figure by orbitting the eye position left/right.
+  """Return a looping video from a 3D plotly figure by orbiting the eye position left/right.
 
   Args:
     fig: A `plotly` figure containing a 3D scene.
@@ -459,6 +459,7 @@ puzzle.verify(2, day2_part2)
 puzzle = advent.puzzle(day=3)
 
 # %%
+# spellcheck=off
 s1 = """\
 vJrwpWtwJgWrhcsFMMfFFhFp
 jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
@@ -467,6 +468,7 @@ wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
 ttgJtRGJQctTZtZT
 CrZsJsPPZsGzwwsLwLmpwMDw
 """
+# spellcheck=on
 
 
 # %%
@@ -553,7 +555,7 @@ puzzle.verify(2, day3_part2)
 #
 # - `day4c()`: A call to the `perl` command-line tool, which is surprisingly compact thanks to its
 #   command-line flags: `-lane` which enables **l**ine processing, **a**uto splitting into fields `@F`,
-#   **n**on-printing loop over lines, and **e**valution of the next command-line argument.
+#   **n**on-printing loop over lines, and **e**valuation of the next command-line argument.
 #
 # - `day4()`: A straightforward efficient solution using inequality tests for intervals.
 
@@ -775,6 +777,7 @@ puzzle = advent.puzzle(day=6)
 
 
 # %%
+# spellcheck=off
 def day6_part1_tests(solver):
   check_eq(solver('mjqjpqmgbljsphdztnvjfqwrcgsmlb'), 7)
   check_eq(solver('bvwbjplbgvbhsrlpgdmjqwftvncz'), 5)
@@ -789,6 +792,9 @@ def day6_part2_tests(solver):
   check_eq(solver('nppdvjthqldpwncqszvftbrmjlhg'), 23)
   check_eq(solver('nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg'), 29)
   check_eq(solver('zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw'), 26)
+
+
+# spellcheck=on
 
 
 # %%
@@ -4450,7 +4456,7 @@ else:
 #
 # Representing adjacencies in the 2D cube face unfolding of Part 2 is a tedious task.
 #
-# Some solution techniques tackle the general problem of suppporting any planar unfolding (e.g.,
+# Some solution techniques tackle the general problem of supporting any planar unfolding (e.g.,
 # [here](https://www.reddit.com/r/adventofcode/comments/zsct8w/comment/j18dzaa)
 # and [here](https://github.com/mjpieters/adventofcode/blob/master/2022/Day%2022.ipynb)).
 #
@@ -5190,12 +5196,6 @@ if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
       f"""cd /mnt/c/hh/tmp && mkdir -p '{PROFILE}' &&
       cp -p ~/.config/aocd/'{PROFILE.replace("_", " ")}'/{YEAR}*[rt].txt '{PROFILE}' &&
       tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
-  )
-
-# %%
-if 0:  # Look for misspelled words.
-  hh.run(
-      rf"""cat advent_of_code_{YEAR}.py | perl -pe "s@https?:/.*?[)> ]@@g; s/_/ /g; s/'/ /g; s/\\\\n//g;" | spell | sort -u || true"""
   )
 
 # %%
