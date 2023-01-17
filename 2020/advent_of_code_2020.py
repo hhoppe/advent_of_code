@@ -131,38 +131,6 @@ check_eq = hh.check_eq
 _ORIGINAL_GLOBALS = list(globals())
 
 
-# %%
-def grid_from_string(s, int_from_ch=None, dtype=int) -> np.ndarray:
-  grid = np.array([list(line) for line in s.splitlines()])
-  if int_from_ch:
-    lookup = np.zeros(256, dtype)
-    for ch, value in int_from_ch.items():
-      lookup[ord(ch)] = value
-    grid = lookup[grid.view(np.int32)]
-  return grid
-
-
-# %%
-def grid_from_indices(
-    indices, *, background=0, foreground=1, indices_min=None, indices_max=None, pad=0, dtype=None
-) -> np.ndarray:
-  indices = np.asarray(indices)
-  assert indices.ndim == 2 and np.issubdtype(indices.dtype, np.integer)
-
-  def get_min_or_max_bound(f, x) -> np.ndarray:
-    return f(indices, axis=0) if x is None else np.full(indices.shape[1], x)
-
-  i_min = get_min_or_max_bound(np.min, indices_min)
-  i_max = get_min_or_max_bound(np.max, indices_max)
-  a_pad = np.asarray(pad)
-  shape = i_max - i_min + 2 * a_pad + 1
-  offset = -i_min + a_pad
-  grid = np.full(shape, background, dtype)
-  indices += offset
-  grid[tuple(np.moveaxis(indices, -1, 0))] = foreground
-  return grid
-
-
 # %% [markdown]
 # <a name="day1"></a>
 # ## Day 1: Find summing numbers
@@ -315,7 +283,7 @@ puzzle.verify(2, day3a_part2)  # ~3 ms.
 # %%
 def day3(s, *, part2=False):  # Faster.
   dyxs = ((1, 1), (1, 3), (1, 5), (1, 7), (2, 1)) if part2 else ((1, 3),)
-  grid = grid_from_string(s)
+  grid = hh.grid_from_string(s)
 
   def get_count(dy, dx):
     y = np.arange(0, grid.shape[0], dy)
@@ -1078,7 +1046,7 @@ puzzle.verify(2, day10_part2)  # ~0 ms.
 puzzle = advent.puzzle(day=11)
 
 # %%
-media.show_image(grid_from_string(puzzle.input) == 'L', border=True, width=250)
+media.show_image(hh.grid_from_string(puzzle.input) == 'L', border=True, width=250)
 
 # %%
 s1 = """\
@@ -1101,7 +1069,7 @@ L.LLLLL.LL
 def day11a(s, *, part2=False):
   # -1 is EMPTY, 0..8 is FREE+neighbor_count, 10..18 is OCCUPIED+neighbor_count
   int_from_ch = {'.': -1, 'L': 0, '#': 10}
-  grid = grid_from_string(s, int_from_ch)
+  grid = hh.grid_from_string(s, int_from_ch)
   # Surprisingly, the default array dtype (here, np.int64) is the fastest.
   shape = grid.shape
   NEIGHBORS = tuple(set(itertools.product((-1, 0, 1), repeat=2)) - {(0, 0)})
@@ -1175,7 +1143,7 @@ def day11_evolve(grid, neighbors, part2):
 
 def day11(s, *, part2=False, return_video=False):
   int_from_ch = {'.': 0, 'L': 1, '#': 2}
-  grid = grid_from_string(s, int_from_ch)
+  grid = hh.grid_from_string(s, int_from_ch)
   neighbors = tuple(set(itertools.product((-1, 0, 1), repeat=2)) - {(0, 0)})
   OCCUPIED = 2
 
@@ -2242,7 +2210,7 @@ Tile 3079:
 
 # %%
 def day20(s, *, part2=False, visualize=False):
-  tiles = {int(t[5:9]): grid_from_string(t[11:]) for t in s.rstrip('\n').split('\n\n')}
+  tiles = {int(t[5:9]): hh.grid_from_string(t[11:]) for t in s.rstrip('\n').split('\n\n')}
   n = math.isqrt(len(tiles))
 
   if visualize:
@@ -2758,7 +2726,7 @@ def day24(s, *, part2=False, num_days=100, visualize=False):
     }
 
   if visualize:
-    video: Any = grid_from_indices(indices_3d, dtype=bool, pad=(0, 2, 2))
+    video: Any = hh.grid_from_indices(indices_3d, dtype=bool, pad=(0, 2, 2))
     video = video.repeat(2, axis=1).repeat(2, axis=2)
     video = [video[0]] * 10 + list(video) + [video[-1]] * 10
     media.show_video(video, codec='gif', fps=10)
