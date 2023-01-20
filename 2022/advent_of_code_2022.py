@@ -105,8 +105,9 @@ PROFILE = 'google.Hugues_Hoppe.965276'
 TAR_URL = f'https://github.com/hhoppe/advent_of_code/raw/main/{YEAR}/data/{PROFILE}.tar.gz'
 if 1:
   hh.run(
-      f'if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&'
-      f' wget -q {TAR_URL} && tar xzf {PROFILE}.tar.gz); fi'
+      '{ [ -d data ] || mkdir data; } && cd data &&'
+      f' {{ [ -f {PROFILE}.tar.gz ] || wget -q {TAR_URL}; }} &&'
+      f' tar xzf {PROFILE}.tar.gz'
   )
 INPUT_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}_input.txt'
 ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
