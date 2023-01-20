@@ -89,7 +89,7 @@ SHOW_BIG_MEDIA = False
 # (1) To obtain puzzle inputs and answers, we first try these paths/URLs:
 PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
-TAR_URL = f'https://github.com/hhoppe/advent_of_code_{YEAR}/raw/main/data/{PROFILE}.tar.gz'
+TAR_URL = f'https://github.com/hhoppe/advent_of_code/raw/main/{YEAR}/data/{PROFILE}.tar.gz'
 if 1:
   hh.run(
       f'if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&'
@@ -3413,12 +3413,13 @@ puzzle = advent.puzzle(day=25)
 
 
 # %%
-def day25(s, *, num_steps=2000):
+def day25(s, *, num_steps=4000):
   UNSAFE_ITEMS = {'photons', 'infinite loop', 'giant electromagnet', 'molten lava', 'escape pod'}
   # 'It is suddenly completely dark! You are eaten by a Grue!'
   # 'The giant electromagnet is stuck to you.  You can't move!!'
   # 'The molten lava is way too hot! You melt!'
   # 'You're launched into space! Bye!'
+  random.seed(0)
 
   machine = Machine.make(s)
   command = ''

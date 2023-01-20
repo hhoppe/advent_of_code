@@ -91,7 +91,7 @@ YEAR = 2020
 # (1) To obtain puzzle inputs and answers, we first try these paths/URLs:
 PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
-TAR_URL = f'https://github.com/hhoppe/advent_of_code_{YEAR}/raw/main/data/{PROFILE}.tar.gz'
+TAR_URL = f'https://github.com/hhoppe/advent_of_code/raw/main/{YEAR}/data/{PROFILE}.tar.gz'
 if 1:
   hh.run(
       f'if [ ! -d data/{PROFILE} ]; then (mkdir -p data && cd data &&'
