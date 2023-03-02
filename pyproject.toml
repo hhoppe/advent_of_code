@@ -19,17 +19,17 @@ extend-exclude = "\\.ipynb"
 [tool.pylint.main]
 # See pylint options using "pylint --generate-toml-config"
 disable = [
-  "unspecified-encoding", "fixme", "redefined-builtin", "cell-var-from-loop",
-  "using-constant-test", "simplifiable-condition", "import-outside-toplevel", "line-too-long",
-  "too-many-lines", "too-few-public-methods", "too-many-arguments", "too-many-locals",
-  # For advent:
-  "missing-module-docstring", "missing-function-docstring", "redefined-outer-name", "missing-class-docstring",
-  "too-many-branches", "too-many-statements", "multiple-statements", "condition-evals-to-constant",
-  "too-many-return-statements", "too-many-nested-blocks", "too-many-boolean-expressions",
-  "too-many-instance-attributes",
-  # Buggy pylint:
-  "inconsistent-return-statements", "redundant-keyword-arg", "unbalanced-tuple-unpacking",
-  "unnecessary-direct-lambda-call", "undefined-loop-variable",
+    "unspecified-encoding", "fixme", "redefined-builtin", "cell-var-from-loop",
+    "using-constant-test", "simplifiable-condition", "import-outside-toplevel", "line-too-long",
+    "too-many-lines", "too-few-public-methods", "too-many-arguments", "too-many-locals", "use-dict-literal",
+    # For advent:
+    "missing-module-docstring", "missing-function-docstring", "redefined-outer-name", "missing-class-docstring",
+    "too-many-branches", "too-many-statements", "multiple-statements", "condition-evals-to-constant",
+    "too-many-return-statements", "too-many-nested-blocks", "too-many-boolean-expressions",
+    "too-many-instance-attributes",
+    # Buggy pylint:
+    "inconsistent-return-statements", "redundant-keyword-arg", "unbalanced-tuple-unpacking",
+    "unnecessary-direct-lambda-call", "undefined-loop-variable",
 ]
 reports = false
 score = false
