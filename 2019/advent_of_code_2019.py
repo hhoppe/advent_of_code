@@ -134,6 +134,7 @@ _ORIGINAL_GLOBALS = list(globals())
 # %% [markdown]
 # ### `Machine` used in several puzzles
 
+
 # %%
 # Also called `IntCode` Machine in the puzzles.
 class Machine:
@@ -1358,6 +1359,7 @@ puzzle.verify(1, day12)  # ~9 ms.
 # Could there may be some transient behavior at the start of the simulation?  No, all the
 # detected periods start at the initial step=0.
 
+
 # %%
 @numba.njit
 def day12_period_for_1d(initial_position):
@@ -1375,7 +1377,6 @@ def day12_period_for_1d(initial_position):
 
 
 def day12_part2(s):
-
   # ~8 s without numba.
   def period_for_1d(initial_position):
     position = initial_position.copy()
@@ -1427,6 +1428,7 @@ puzzle = advent.puzzle(day=13)
 # 2 is a block tile. Blocks can be broken by the ball.
 # 3 is a horizontal paddle tile. The paddle is indestructible.
 # 4 is a ball tile. The ball moves diagonally and bounces off objects.
+
 
 # %%
 def day13(s):
@@ -1879,6 +1881,7 @@ if 0:
 # the rear of the array.  That is efficient enough!
 # For 500_000 digits and 100 phases, we can afford to have space complexity
 # of 500_000 and time complexity of 50_000_000.
+
 
 # %%
 @numba.njit
@@ -2954,6 +2957,7 @@ def day21_process_springscript(s, spring_program, verbose=False, command='WALK')
 # Both T and J are initially false.
 # If jumping, the robot lands at cell +4.
 
+
 # %%
 def day21(s):
   # Success: Jump if there is ground at D and any of A,B,C are hole:
@@ -3056,6 +3060,7 @@ if 1:
       ),
       None,
   )
+
 
 # %%
 def day21_part2(s):

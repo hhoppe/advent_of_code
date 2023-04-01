@@ -427,6 +427,7 @@ day2a_part2 = functools.partial(day2a, part2=True)
 check_eq(day2a_part2(s1), 12)
 puzzle.verify(2, day2a_part2)
 
+
 # %%
 def day2(s, *, part2=False):  # Using modulo arithmetic.
   total = 0
@@ -493,6 +494,7 @@ puzzle.verify(1, day3a)
 day3a_part2 = functools.partial(day3a, part2=True)
 check_eq(day3a_part2(s1), 70)
 puzzle.verify(2, day3a_part2)
+
 
 # %%
 def day3b(s, *, part2=False):  # Using a generator.
@@ -910,6 +912,7 @@ $ ls
 7214296 k
 """
 
+
 # %%
 def day7a(s, *, part2=False):  # Overly general solution.
   subdirs_of_dir = collections.defaultdict(list)
@@ -1095,6 +1098,7 @@ s1 = """\
 35390
 """
 
+
 # %%
 def day8a_part1(s):  # Slow.
   grid = np.array([list(line) for line in s.splitlines()], int)
@@ -1114,6 +1118,7 @@ def day8a_part1(s):  # Slow.
 
 check_eq(day8a_part1(s1), 21)
 puzzle.verify(1, day8a_part1)
+
 
 # %%
 def day8a_part2(s):  # Slow.
@@ -1250,6 +1255,7 @@ day8w(puzzle.input)
 # %% [markdown]
 # Cached result:<br/>
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day08e.gif"/>
+
 
 # %%
 # Adapted from https://www.reddit.com/r/adventofcode/comments/zfpnka/comment/izd90g1/
@@ -1477,6 +1483,7 @@ if SHOW_BIG_MEDIA:
 # Cached result:<br/>
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day09b.gif"/>
 
+
 # %%
 def day9(s, *, part2=False):  # Faster solution with explicit coordinates and no numpy.
   nodes = [[0, 0] for _ in range(10 if part2 else 2)]
@@ -1674,6 +1681,7 @@ Monkey 3:
 # %%
 # mod = int(np.lcm.reduce([monkey.divisible_by for monkey in monkeys]))
 
+
 # %%
 def day11a(s, *, part2=False):  # Using dataclass.
   @dataclasses.dataclass
@@ -1862,6 +1870,7 @@ accszExk
 acctuvwj
 abdefghi
 """
+
 
 # %%
 def day12a(s, *, part2=False):  # Using `set` for seen nodes.
@@ -2164,6 +2173,7 @@ s1 = """\
 [1,[2,[3,[4,[5,6,0]]]],8,9]
 """
 
+
 # %%
 def day13a(s, *, part2=False):  # Initial code.
   def compare(expr0, expr1) -> int:
@@ -2259,6 +2269,7 @@ s1 = """\
 498,4 -> 498,6 -> 496,6
 503,4 -> 502,4 -> 502,9 -> 494,9
 """
+
 
 # %%
 @numba.njit
@@ -2387,6 +2398,7 @@ Sensor at x=16, y=7: closest beacon is at x=15, y=3
 Sensor at x=14, y=3: closest beacon is at x=15, y=3
 Sensor at x=20, y=1: closest beacon is at x=15, y=3
 """
+
 
 # %%
 # Original post.
@@ -2580,6 +2592,7 @@ day15v(puzzle.input)
 # Cached result:<br/>
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day15b.gif"/>
 
+
 # %%
 # Compact and fast; Part 1 assumes contiguous line covering; Part 2 works in any dimension.
 def day15(s, *, part2=False, y_part1=2_000_000, side_part2=4_000_000):
@@ -2676,6 +2689,7 @@ Valve II has flow rate=0; tunnels lead to valves AA, JJ
 Valve JJ has flow rate=21; tunnel leads to valve II
 """
 
+
 # %%
 def day16a(s, *, part2=False):  # First solution; DFS; no pruning; very slow on Part 2.
   rate, dsts = {}, {}
@@ -2724,6 +2738,7 @@ day16a_part2 = functools.partial(day16a, part2=True)
 check_eq(day16a_part2(s1), 1707)
 # puzzle.verify(2, day16a_part2)  # 178 or 430 s.
 
+
 # %%
 # Noteworthy 20-liner: https://www.reddit.com/r/adventofcode/comments/zn6k1l/comment/j0fti6c/
 def day16b(s, *, part2=False):
@@ -2759,6 +2774,7 @@ puzzle.verify(1, day16b)  # ~0.2 s.
 day16b_part2 = functools.partial(day16b, part2=True)
 check_eq(day16b_part2(s1), 1707)
 # puzzle.verify(2, day16b_part2)  # ~15-18 s.
+
 
 # %%
 # Adapted for visualization.
@@ -2916,6 +2932,7 @@ if SHOW_BIG_MEDIA:  # Slow due to search().
 # Cached result:<br/>
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day16b.gif"/>
 
+
 # %%
 def day16d(s, *, part2=False):  # Heuristically order edges and add branch-and-bound pruning.
   rate, dsts = {}, {}
@@ -2978,6 +2995,7 @@ puzzle.verify(1, day16d)
 day16d_part2 = functools.partial(day16d, part2=True)
 check_eq(day16d_part2(s1), 1707)
 # puzzle.verify(2, day16d_part2)  # ~7.8 or 20 s.
+
 
 # %%
 def day16e(s, *, part2=False):  # Heuristically order edges and add heuristic pruning.
@@ -3130,6 +3148,7 @@ puzzle = advent.puzzle(day=17)
 
 # %%
 s1 = '>>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>'
+
 
 # %%
 def day17a(s, *, part2=False, num=10**12, rocks_in_part2=8_000):
@@ -3388,6 +3407,7 @@ s1 = """\
 2,3,5
 """
 
+
 # %%
 def day18a(s, *, part2=False):  # DFS to fill all exterior cubes.
   cubes = np.array([line.split(',') for line in s.splitlines()], int) + 1
@@ -3440,6 +3460,7 @@ puzzle.verify(2, day18a_part2)
 #     p2 = p + dp
 #     if all(0 <= v < m for v, m in zip(p2, grid.shape)):
 #       yield tuple(p2)
+
 
 # %%
 # Fill all exterior; vectorized neighbors.
@@ -3558,6 +3579,7 @@ day18v(puzzle.input)
 # %% [markdown]
 # Cached result:<br/>
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day18c.gif"/>
+
 
 # %%
 # https://github.com/mjpieters/adventofcode/blob/master/2022/Day%2018.ipynb is super compact,
@@ -3682,6 +3704,7 @@ Blueprint 1: Each ore robot costs 4 ore. Each clay robot costs 2 ore. Each obsid
 Blueprint 2: Each ore robot costs 2 ore. Each clay robot costs 3 ore. Each obsidian robot costs 3 ore and 8 clay. Each geode robot costs 3 ore and 12 obsidian.
 """
 
+
 # %%
 def day19_parse_recipe(line):
   a = np.full((4, 4), 0)
@@ -3769,6 +3792,7 @@ check_eq(day19a_part2(s1), 56 * 62)
 # BFS with numba; with few rules and naive heuristic.
 # (Prior to using numba, avoiding numpy vectors yielded 10x speedup.)
 
+
 # @numba.njit  # Commented out to speed up notebook evaluation.
 def day19b_process(recipes, part2, prune_size):
   def estimated_goodness(state):
@@ -3819,6 +3843,7 @@ check_eq(day19b(s1), 33)  # bests = [9, 12]
 # day19b_part2 = functools.partial(day19b, part2=True)
 # check_eq(day19b_part2(s1), 56 * 62)
 # puzzle.verify(2, day19b_part2)  # bests = [58, 10, 23]; ~0.5 s.
+
 
 # %%
 # Improved BFS; see
@@ -3942,6 +3967,7 @@ s1 = """\
 4
 """
 
+
 # %%
 def day20a(s, *, part2=False):  # Slow, using a single list.
   values = list(map(int, s.splitlines()))
@@ -3972,6 +3998,7 @@ check_eq(day20a(s1), 3)
 day20a_part2 = functools.partial(day20a, part2=True)
 check_eq(day20a_part2(s1), 1623178306)
 # puzzle.verify(2, day20a_part2)  # ~8.5 s.
+
 
 # %%
 def day20b(s, *, part2=False):  # Faster (15x) using two lists.
@@ -4135,6 +4162,7 @@ lgvd: ljgn * ptdq
 drzm: hmdt - zczc
 hmdt: 32
 """
+
 
 # %%
 def day21a(s, *, part2=False):  # Brute-force assignments.
@@ -4489,6 +4517,7 @@ s1 = """\
 10R5L5R10L4R5L5
 """
 
+
 # %%
 def day22_wrap_on_cube(shape, y, x, dy, dx):
   row = {(0, 1): 0, (0, -1): 1, (1, 0): 2, (-1, 0): 3}[dy, dx]
@@ -4683,6 +4712,7 @@ if SHOW_BIG_MEDIA:  # Slow simulation.
 # Cached result:<br/>
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day23.gif"/>
 
+
 # %%
 # Fast numba version.  2D index (y, x) encoded as 1D index yx.
 # Particular choice of stride affects numba hash performance.
@@ -4812,6 +4842,7 @@ s1 = """\
 # %%
 # Solutions: [time1 = 18, time2 = 41, time3 = 54], [time1 = 225, time2 = 463, time3 = 711].
 
+
 # %%
 # Single queue; `previous` dict; find shortest path.
 def day24a(s, *, part2=False, visualize=False, repeat=3):
@@ -4909,6 +4940,7 @@ if SHOW_BIG_MEDIA:
 # Cached result:<br/>
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day24c.gif"/>
 
+
 # %%
 # Numba; use `active` set for each time step; use max_time.
 @numba.njit
@@ -4958,6 +4990,7 @@ puzzle.verify(1, day24b)
 day24b_part2 = functools.partial(day24b, part2=True)
 check_eq(day24b_part2(s1), 54)
 puzzle.verify(2, day24b_part2)
+
 
 # %%
 # Numba; use `active` set for each time step; use prune_size.
@@ -5055,6 +5088,7 @@ s1 = """\
 122
 """
 
+
 # %%
 def day25a(s):
   def from_snafu(text):
@@ -5083,6 +5117,7 @@ def day25a(s):
 check_eq(day25a(s1), '2=-1=0')
 puzzle.verify(1, day25a)
 
+
 # %%
 def day25b(s):
   def from_snafu(text):
@@ -5104,6 +5139,7 @@ def day25b(s):
 
 check_eq(day25b(s1), '2=-1=0')
 puzzle.verify(1, day25b)
+
 
 # %%
 def day25c(s):

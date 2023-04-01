@@ -381,6 +381,7 @@ iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719
 # pid (Passport ID) - a nine-digit number, including leading zeroes.
 # cid (Country ID) - ignored, missing or not.
 
+
 # %%
 def day4(s, *, part2=False):
   passports = s.split('\n\n')
@@ -464,6 +465,7 @@ puzzle.verify(1, day5)  # ~1 ms.
 
 # %% [markdown]
 # Part 2
+
 
 # %%
 def day5_visualize_transposed_seat_grid(s):
@@ -575,6 +577,7 @@ b
 # %% [markdown]
 # Part 1
 
+
 # %%
 def day6a_part1(s):  # Long code.
   total = 0
@@ -612,6 +615,7 @@ puzzle.verify(1, day6_part1)  # ~1 ms.
 
 # %% [markdown]
 # Part 2
+
 
 # %%
 def day6a_part2(s):  # Using reduction.
@@ -726,6 +730,7 @@ puzzle.verify(1, day7_part1)  # ~3 ms.
 
 # %% [markdown]
 # Part 2
+
 
 # %%
 def day7_part2(s, *, query='shiny gold'):
@@ -975,6 +980,7 @@ puzzle.verify(1, day10_part1)  # ~0 ms.  66 * 32.
 # %%
 # Observation: when there is a separation of 3 units, the problem decouples
 # into a product of the solutions of subproblems.
+
 
 # Because the voltages differences are just 1 or 3, we can simply count the
 # length of the sequences of value 1, and derive a closed-form number for each
@@ -1319,6 +1325,7 @@ puzzle.verify(1, day13_part1)  # ~0 ms.
 #  r % b2 = r2
 # We can apply the Chinese remainder theorem using the extended GCD algorithm.
 
+
 # %%
 def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
   """Finds the greatest common divisor using the extended Euclidean algorithm.
@@ -1537,6 +1544,7 @@ puzzle.verify(1, day15a)  # ~1 ms.
 day15a_part2 = functools.partial(day15a, num_turns=30_000_000)
 # puzzle.verify(2, day15a_part2)  # Slow; ~15 s.
 
+
 # %%
 def day15b(s, *, num_turns=2020):  # Faster, using List.
   def func(initial_sequence, num_turns):
@@ -1752,6 +1760,7 @@ s1 = """\
 
 # %%
 # Both of the solutions below work in arbitrary dimension!
+
 
 # %%
 def day17a(s, *, num_cycles=6, dim=3):  # Slower.
@@ -2465,6 +2474,7 @@ puzzle.verify(1, day22_part1)  # ~0 ms.
 # %% [markdown]
 # Part 2
 
+
 # %%
 def day22a_part2(s):  # Slower code using deque.
   def combat(hands):  # Returns (hands, winner)
@@ -2494,9 +2504,9 @@ def day22a_part2(s):  # Slower code using deque.
 check_eq(day22a_part2(s1), 291)
 # puzzle.verify(2, day22a_part2)  # ~1750 ms.
 
+
 # %%
 def day22_part2(s):  # Faster code using tuples.
-
   # @functools.lru_cache(maxsize=None)  # It makes no difference.
   def combat(hand0, hand1):
     visited = set()

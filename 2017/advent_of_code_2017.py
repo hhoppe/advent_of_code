@@ -122,6 +122,7 @@ _ORIGINAL_GLOBALS = list(globals())
 # %%
 puzzle = advent.puzzle(day=1)
 
+
 # %%
 def day1(s, *, part2=False):
   digits = [int(ch) for ch in s.strip()]
@@ -210,6 +211,7 @@ puzzle.verify(2, day2_part2)
 
 # %%
 puzzle = advent.puzzle(day=3)
+
 
 # %%
 def day3_spiral_yx():
@@ -599,6 +601,7 @@ puzzle.verify(2, day8_part2)
 # %%
 puzzle = advent.puzzle(day=9)
 
+
 # %%
 def day9(s, *, part2=False):
   s = re.sub(r'!.', '', s.strip())
@@ -710,6 +713,7 @@ puzzle.verify(2, day10_part2)
 
 # %%
 puzzle = advent.puzzle(day=11)
+
 
 # %%
 def day11(s, *, part2=False):
@@ -954,6 +958,7 @@ puzzle.verify(2, day13_part2)  # ~0.005 s.
 # %%
 puzzle = advent.puzzle(day=14)
 
+
 # %%
 def day14a(s, *, part2=False):  # Slower version.
   s = s.strip()
@@ -1138,6 +1143,7 @@ puzzle.verify(2, day15_part2)
 # %%
 puzzle = advent.puzzle(day=16)
 
+
 # %%
 def day16a_part1(s, *, num=16):  # Simpler version supporting only Part 1.
   state = [chr(ord('a') + i) for i in range(num)]
@@ -1222,6 +1228,7 @@ puzzle.verify(2, day16_part2)
 
 # %%
 puzzle = advent.puzzle(day=17)
+
 
 # %%
 @numba.njit  # ~2.6 s -> ~0.16 s.
@@ -1704,6 +1711,7 @@ puzzle.verify(2, day22_part2)
 
 # %%
 puzzle = advent.puzzle(day=23)
+
 
 # %%
 def day23(s, *, part2=False):

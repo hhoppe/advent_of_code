@@ -648,6 +648,7 @@ puzzle.verify(1, day6)  # ~0 ms.
 day6_part2 = functools.partial(day6, part2=True)
 puzzle.verify(2, day6_part2)  # ~0 ms.
 
+
 # %%
 # Looking at progression for single input, to ideally derive a closed-form
 # expression.  However it looks highly irregular.
@@ -1919,6 +1920,7 @@ day15b_part2 = functools.partial(day15b, part2=True)
 check_eq(day15b_part2(s1), 315)
 # puzzle.verify(2, day15b_part2)  # ~1850 ms.
 
+
 # %%
 # Fastest: several opposing sweeps, but can fail.
 @numba.njit
@@ -1962,6 +1964,7 @@ check_eq(day15c(s1), 40)
 day15c_part2 = functools.partial(day15c, part2=True)
 check_eq(day15c_part2(s1), 315)
 # puzzle.verify(2, day15c_part2)  # ~27 ms.  (Commented because it could fail.)
+
 
 # %%
 # Padded, numba, visualization.
@@ -2474,6 +2477,7 @@ day18a_part2 = functools.partial(day18a, part2=True)
 check_eq(day18a_part2(s5), 3993)
 # puzzle.verify(2, day18a_part2)  # ~4100 ms.
 
+
 # %%
 def day18b(s, *, part2=False, return_snail=False):  # Explode all in the same pass.
   def parse_snail(line):
@@ -2905,6 +2909,7 @@ day19a_part2 = functools.partial(day19a, part2=True)
 check_eq(day19a_part2(s1), 3621)
 # puzzle.verify(2, day19a_part2)  # ~35 s.
 
+
 # %%
 def day19_encode_3d(point):
   """Packs three 21-bit signed integers into a 64-bit int."""
@@ -2972,6 +2977,7 @@ day19b_part2 = functools.partial(day19b, part2=True)
 check_eq(day19b_part2(s1), 3621)
 # puzzle.verify(2, day19b_part2)  # ~11.6 s
 
+
 # %%
 def day19c(s, *, part2=False):  # Brute-force np.isin() with encoded points.
   scanners = [
@@ -3029,6 +3035,7 @@ day19c_part2 = functools.partial(day19c, part2=True)
 check_eq(day19c_part2(s1), 3621)
 # puzzle.verify(2, day19c_part2)  # ~3.5 s.
 
+
 # %%
 def day19(s, *, part2=False):  # Fast.
   scanners = []  # 33 scanners, each seeing 25-27 points.
@@ -3072,9 +3079,9 @@ def day19(s, *, part2=False):  # Fast.
       continue  # Already joined.
     intersection = all_signature_sets[i] & all_signature_sets[j]
 
-    match_count: collections.defaultdict[int, collections.defaultdict[int, int]] = (
-        collections.defaultdict(lambda: collections.defaultdict(int))
-    )
+    match_count: collections.defaultdict[
+        int, collections.defaultdict[int, int]
+    ] = collections.defaultdict(lambda: collections.defaultdict(int))
     for encoding, indices_i in all_signatures[i].items():
       if encoding in intersection:
         indices_j = all_signatures[j][encoding]
@@ -3222,6 +3229,7 @@ puzzle.verify(1, day20a)  # ~165 ms.
 day20a_part2 = functools.partial(day20a, part2=True)
 check_eq(day20a_part2(s1), 3351)
 # puzzle.verify(2, day20a_part2)  # Slow; ~10 s.
+
 
 # %%
 def day20b(s, *, part2=False):  # Most compact and fast.
@@ -3510,6 +3518,7 @@ media.show_image(day21d_part2(puzzle.input, visualize=True), border=True)
 # If the winning score is increased from 21 to 100, there is still a 5% edge
 # in starting first with the best position.
 # media.show_image(day21d_part2(puzzle.input, win_score=100, visualize=True))
+
 
 # %%
 # Fastest, using numba.
@@ -4168,6 +4177,7 @@ check_eq(day22e_part2(s3), 2758514936282235)
 puzzle.verify(2, day22e_part2)  # ~330 ms vs. previous ~380 ms.
 # It looks like the overhead of maintaining the Kdtree is too great.
 
+
 # %%
 # Mangled numba version of day22d; fastest.
 @numba.njit
@@ -4389,6 +4399,7 @@ day23a_part2 = functools.partial(day23a, part2=True)
 # check_eq(day23a_part2(s1), 44169)  # ~5.1 s.
 # puzzle.verify(2, day23a_part2)  # ~4.8 s.
 
+
 # %%
 def day23b(s, *, part2=False, visualize=False):  # With visualization.
   lines = s.splitlines()
@@ -4528,6 +4539,7 @@ day23b_part2 = functools.partial(day23b, part2=True)
 
 _ = day23b_part2(puzzle.input, visualize=True)  # ~5.0 s.
 
+
 # %%
 def day23c(s, *, part2=False):  # Dijkstra or A* search.
   lines = s.splitlines()
@@ -4631,6 +4643,7 @@ puzzle.verify(1, day23c)  # ~0.8s with A*  (~2.8 s with Dijkstra).
 day23c_part2 = functools.partial(day23c, part2=True)
 # check_eq(day23c_part2(s1), 44169)  # ~4.9 s with A*  (~11 s with Dijkstra).
 # puzzle.verify(2, day23c_part2)  # ~6.0 s with A*  (~5.2 s with Dijkstra).
+
 
 # %%
 # Dijkstra/A*, but mangled to support numba.
@@ -5205,6 +5218,7 @@ if SHOW_BIG_MEDIA:
 # %% [markdown]
 # Cached result:<br/>
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day25.gif"/>
+
 
 # %%
 # Fastest: active sets and numba.

@@ -138,6 +138,7 @@ _ORIGINAL_GLOBALS = list(globals())
 # %% [markdown]
 # ### `Machine` used in several puzzles
 
+
 # %%
 @dataclasses.dataclass
 class Machine:
@@ -503,6 +504,7 @@ day5a_part2 = functools.partial(day5a, part2=True)
 check_eq(day5a_part2('dabAcCaCBAcCcaDA'), 4)
 # puzzle.verify(2, day5a_part2)  # ~80 s.
 
+
 # %%
 # Faster, using stack and numba.
 @numba.njit
@@ -840,6 +842,7 @@ puzzle.verify(1, day9a)  # ~20 ms.
 day9a_part2 = functools.partial(day9a, part2=True)
 # puzzle.verify(2, day9a_part2)  # ~2000 ms.
 
+
 # %%
 def day9b(s, *, part2=False):  # Slightly faster with quick inner loop.
   pattern = r'^(\d+) players; last marble is worth (\d+) points$'
@@ -882,6 +885,7 @@ puzzle.verify(1, day9b)  # ~17 ms.
 
 day9b_part2 = functools.partial(day9b, part2=True)
 # puzzle.verify(2, day9b_part2)  # ~1800 ms.
+
 
 # %%
 # Fastest.  Singly-linked list is sufficient!
@@ -1496,6 +1500,7 @@ check_eq(day14a_part2('92510'), 18)
 check_eq(day14a_part2('59414'), 2018)
 # puzzle.verify(2, day14a_part2)  # ~30 s.
 
+
 # %%
 # Fast Part 2 using numba.
 @numba.njit
@@ -2108,6 +2113,7 @@ check_eq(day15a_part2(s14), 1140)
 
 # puzzle.verify(2, day15a_part2)  # ~1600 ms.
 
+
 # %%
 def day15_part2(s, *, visualize=False):  # Faster bisection search.
   current = 10
@@ -2508,6 +2514,7 @@ seti 9 0 5
 # def func_equivalent2(a, f):
 #   a += sum(factors(f))
 
+
 # %%
 def day19(s, *, part2=False, verbose=False):
   def factors(n):
@@ -2820,6 +2827,7 @@ if 0:
 #       continue
 #     d //= 256
 
+
 # %%
 def day21_test():
   def simulate(max_count=10_000_000, verbose=False):
@@ -2880,6 +2888,7 @@ def day21_test():
 
 
 # day21_test()
+
 
 # %%
 def day21(s, *, part2=False):
@@ -2953,6 +2962,7 @@ target: 10,10
 # I first try the useful graph library `networkx`, comparing the simple Dijkstra algorithm and the `A*` algorithm.  The `A*` algorithm is actually slower, which makes sense because the search domain is a rather tight box bounding the source and target locations.
 #
 # I obtain faster results using a manual implementation of the Dijkstra algorithm.  This is expected because the `networkx` data structure has overhead due to its many nested `dict` elements.
+
 
 # %%
 # https://www.reddit.com/r/adventofcode/comments/a8i1cy/comment/ecazvbe
@@ -3304,6 +3314,7 @@ puzzle.verify(1, day23a)  # ~30 ms.
 day23a_part2 = functools.partial(day23a, part2=True)
 check_eq(day23a_part2(s2), 36)
 # puzzle.verify(2, day23a_part2)  # ~2000 ms.
+
 
 # %%
 def day23b(s, *, part2=False):
