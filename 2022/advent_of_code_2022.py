@@ -3980,8 +3980,8 @@ def day20a(s, *, part2=False):  # Slow, using a single list.
   num_mixes = 10 if part2 else 1
   for _ in range(num_mixes):
     for original_index in range(n):
-      # index, = [i for i, t in enumerate(a) if t[1] == original_index]  # Slowest.
-      # index, = [i for i, (_, value) in enumerate(a) if value == original_index]  # Slow.
+      # (index,) = [i for i, t in enumerate(a) if t[1] == original_index]  # Slowest.
+      # (index,) = [i for i, (_, value) in enumerate(a) if value == original_index]  # Slow.
       (index,) = [i for i in range(n) if a[i][1] == original_index]  # Fast.
       value = a[index][0]
       t = a.pop(index)
