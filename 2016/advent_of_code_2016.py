@@ -66,10 +66,10 @@ SHOW_BIG_MEDIA = False
 
 # %%
 # (1) To obtain puzzle inputs and answers, we first try these paths/URLs:
-# PROFILE = 'google.Hugues_Hoppe.965276'
-PROFILE = 'github.hhoppe.1452460'
+PROFILE = 'google.Hugues_Hoppe.965276'
+# PROFILE = 'github.hhoppe.1452460'
 TAR_URL = f'https://github.com/hhoppe/advent_of_code/raw/main/{YEAR}/data/{PROFILE}.tar.gz'
-if 0:
+if 1:
   hh.run(
       '{ [ -d data ] || mkdir data; } && cd data &&'
       f' {{ [ -f {PROFILE}.tar.gz ] || wget -q {TAR_URL}; }} &&'
@@ -80,7 +80,7 @@ ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
 
 # %%
 # (2) If URL is not found, we may try adventofcode.com using a session cookie:
-if 1:
+if 0:
   # # !rm -f ~/.config/aocd/token*; mkdir -p ~/.config/aocd; echo 53616... >~/.config/aocd/token
   # where "53616..." is the session cookie from "adventofcode.com" (valid 1 month).
   hh.run('pip install -q advent-of-code-data')  # https://github.com/wimglenn/advent-of-code-data
@@ -354,6 +354,7 @@ puzzle = advent.puzzle(day=5)
 
 # %%
 def day5a(s, *, part2=False):  # Compact but slow serial solution.
+  s = s.strip()
   password = ['_'] * 8 if part2 else []
   for index in itertools.count():
     hashed = hashlib.md5((s + str(index)).encode()).hexdigest()
@@ -395,6 +396,7 @@ def day5_find_zero_hashes(s, start, stop):
 
 
 def day5(s, *, part2=False):
+  s = s.strip()
   password = ['_'] * 8 if part2 else []
   group_size = 2_000_000 if part2 else 500_000
 
@@ -625,6 +627,7 @@ puzzle = advent.puzzle(day=9)
 
 # %%
 def day9(s, *, part2=False):
+  s = s.strip()
   size = 0
   index = 0
   while index < len(s):
@@ -1095,6 +1098,8 @@ def day14_find_triplet(hash: str) -> str:
 
 # %%
 def day14a(s, *, part2=False):
+  s = s.strip()
+
   def get_hash(index: int) -> str:
     hash = hashlib.md5((s + str(index)).encode()).hexdigest()
     if part2:
@@ -1132,6 +1137,8 @@ def day14_get_part2_hash(s: str) -> str:
 
 
 def day14_part2(s):
+  s = s.strip()
+
   with multiprocessing.Pool() as pool:
     hashes: list[str] = []
 
@@ -1218,6 +1225,7 @@ puzzle = advent.puzzle(day=16)
 
 # %%
 def day16(s, *, length=272):
+  s = s.strip()
   complement_digits = str.maketrans('01', '10')
 
   while len(s) < length:
@@ -1251,6 +1259,7 @@ puzzle = advent.puzzle(day=17)
 
 # %%
 def day17(s, *, part2=False):
+  s = s.strip()
   door_map = [(-1, 0, 'U'), (1, 0, 'D'), (0, -1, 'L'), (0, 1, 'R')]
 
   if not part2:
@@ -1309,6 +1318,7 @@ puzzle = advent.puzzle(day=18)
 
 # %%
 def day18a(s, *, num_rows=40):  # Using string manipulation.
+  s = s.strip()
   assert all(ch in '.^' for ch in s), s
   num_safe = 0
   for _ in range(num_rows):
@@ -1331,7 +1341,7 @@ if 0:
 
 # %%
 def day18b(s, *, num_rows=40):  # Using numpy.
-  state = np.array([False] + [ch == '^' for ch in s] + [False])
+  state = np.array([False] + [ch == '^' for ch in s.strip()] + [False])
   num_safe = 0
   for _ in range(num_rows):
     num_safe += np.sum(~state[1:-1])
@@ -1363,7 +1373,7 @@ def day18_process(state, num_rows):
 
 
 def day18(s, *, num_rows=40):
-  state = np.array([False] + [ch == '^' for ch in s] + [False])
+  state = np.array([False] + [ch == '^' for ch in s.strip()] + [False])
   return day18_process(state, num_rows)
 
 
@@ -2100,7 +2110,7 @@ if 1:  # Look for unwanted pollution of namespace.
   )
 
 # %%
-if 1:  # Lint.
+if 0:  # Lint.
   hh.run('echo pyink; pyink --diff .')
   hh.run('echo autopep8; autopep8 -j8 -d .')
   hh.run('echo mypy; mypy . || true')
