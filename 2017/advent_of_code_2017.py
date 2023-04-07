@@ -514,7 +514,7 @@ def day7(s, *, part2=False):
     root = nodes[0]
     return root
 
-  @functools.lru_cache(None)
+  @functools.cache
   def tower_weight(node: str) -> int:
     return weights[node] + sum(tower_weight(child) for child in graph[node])
 
@@ -1199,7 +1199,7 @@ def day16(s, *, num=16, num_permutations=1):
     # Invert permutation using https://stackoverflow.com/a/11649931.
     return ''.join(chr(perm_sym[i] + ord('a')) for i in np.argsort(perm_pos))
 
-  @functools.lru_cache(None)
+  @functools.cache
   def compose(num_permutations: int) -> tuple[list[int], list[int]]:
     if num_permutations == 1:
       return perm_sym, perm_pos

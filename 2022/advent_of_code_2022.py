@@ -2698,7 +2698,7 @@ def day16a(s, *, part2=False):  # First solution; DFS; no pruning; very slow on 
     rate[node] = int(s_rate)
   assert rate['AA'] == 0  # Stated in problem.
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def possible_paths(node):  # BFS to return [(node2, time) if rate[node2] > 0].
     queue = collections.deque([(0, node)])
     result = {}
@@ -2754,7 +2754,7 @@ def day16b(s, *, part2=False):
   for k, i, j in itertools.product(V, V, V):  # Floyd-Warshall.
     D[i, j] = min(D[i, j], D[i, k] + D[k, j])
 
-  @functools.lru_cache(None)
+  @functools.cache
   def search(t, u='AA', vs=frozenset(F), e=False):
     return max(
         [
@@ -2799,11 +2799,11 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
           queue.append((dist + 1, node2))
     return distance, prev
 
-  @functools.lru_cache(None)
+  @functools.cache
   def valve_distance(node):
     return {node2: dist for node2, dist in distance_and_prev(node)[0].items() if rate[node2] > 0}
 
-  @functools.lru_cache(None)
+  @functools.cache
   def search(t, u=start, vs=frozenset(valves), e=False):
     return max(
         [
@@ -2941,7 +2941,7 @@ def day16d(s, *, part2=False):  # Heuristically order edges and add branch-and-b
     rate[node] = int(s_rate)
   best_benefit_found = 0
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def possible_paths(node):  # BFS to return [(node2, time) if rate[node2] > 0].
     queue = collections.deque([(0, node)])
     result = {}
@@ -3005,7 +3005,7 @@ def day16e(s, *, part2=False):  # Heuristically order edges and add heuristic pr
     rate[node] = int(s_rate)
   best_benefit_found = 0
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def possible_paths(node):  # BFS to return [(node2, time) if rate[node2] > 0].
     queue = collections.deque([(0, node)])
     result = {}
@@ -3066,7 +3066,7 @@ def day16(s, *, part2=False):
   best_benefit_found = 0
   best_nodes_found = set()
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def possible_paths(node):  # BFS to return {node2: time if rate[node2] > 0}.
     queue = collections.deque([(0, node)])
     result = {}

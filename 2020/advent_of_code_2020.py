@@ -693,7 +693,7 @@ def day7a_part1(s, *, query='shiny gold'):  # Compact and fast with caching.
   """Returns number of bag colors that can eventually contain >=1 query bag."""
   contents = day7_bag_contents(s)
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def valid(bag):
     return any(inner == query or valid(inner) for inner in contents[bag])
 
@@ -737,7 +737,7 @@ def day7_part2(s, *, query='shiny gold'):
   """Returns total number of individual bags required inside a query bag."""
   contents = day7_bag_contents(s)  # computational bottleneck
 
-  # @functools.lru_cache(maxsize=None)  # Unnecessary.
+  # @functools.cache  # Unnecessary.
   def count_inside(bag):
     return sum(n * (count_inside(b) + 1) for b, n in contents[bag].items())
 
@@ -2507,7 +2507,7 @@ check_eq(day22a_part2(s1), 291)
 
 # %%
 def day22_part2(s):  # Faster code using tuples.
-  # @functools.lru_cache(maxsize=None)  # It makes no difference.
+  # @functools.cache  # It makes no difference.
   def combat(hand0, hand1):
     visited = set()
     while True:

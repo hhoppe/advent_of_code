@@ -751,7 +751,7 @@ The fourth floor contains nothing relevant.
 
 
 # %%
-def day11a(s, *, part2=False):
+def day11a(s, *, part2=False):  # BFS with queue.
   initial_contents: list[set[str]] = [set() for _ in range(4)]
   for floor, line in enumerate(s.splitlines()):
     if 'nothing relevant' not in line:
@@ -804,7 +804,7 @@ day11a_part2 = functools.partial(day11a, part2=True)
 
 
 # %%
-@functools.lru_cache(maxsize=None)  # 1_126 entries for part1; 14_612 for part2.
+@functools.cache  # 1_126 entries for part1; 14_612 for part2.
 def day11_disallowed(items: frozenset[str]) -> bool:
   found_upper, lone_lower = False, False
   for item in items:
@@ -816,7 +816,7 @@ def day11_disallowed(items: frozenset[str]) -> bool:
 
 
 # %%
-def day11(s, *, part2=False):  # Slightly faster.
+def day11(s, *, part2=False):  # BFS with two lists; frozensets; pruned search.
   initial_contents: list[set[str]] = [set() for _ in range(4)]
   for floor, line in enumerate(s.splitlines()):
     if 'nothing relevant' not in line:
@@ -828,33 +828,48 @@ def day11(s, *, part2=False):  # Slightly faster.
   all_contents = frozenset(set.union(*initial_contents))
   end_state: Any = 3, (frozenset(), frozenset(), frozenset(), all_contents)
 
-  seen = {start_state}
-  queue = collections.deque([(start_state, 0)])
+  def estimated_goodness(state: Any) -> int:
+    unused_floor, contents = state
+    return -(len(contents[0]) * 3 + len(contents[1]) * 2 + len(contents[2]) * 1)
 
-  while queue:
-    (floor, contents), distance = queue.popleft()
-    for floor2 in (floor + offset for offset in [-1, 1] if 0 <= floor + offset < 4):
-      for items in more_itertools.flatten(
-          itertools.combinations(contents[floor], n) for n in [1, 2]
-      ):
-        set_items = frozenset(items)
-        if day11_disallowed(set_items):
-          continue
-        leftover = contents[floor] - set_items
-        if day11_disallowed(leftover):
-          continue
-        newgroup = contents[floor2] | set_items
-        if day11_disallowed(newgroup):
-          continue
-        contents2 = list(contents)
-        contents2[floor] = leftover
-        contents2[floor2] = newgroup
-        state2 = floor2, tuple(contents2)
-        if state2 not in seen:
-          seen.add(state2)
-          if state2 == end_state:
-            return distance + 1
-          queue.append((state2, distance + 1))
+  seen = {start_state}
+  states = [start_state]
+  distance = 0
+  prune_size = 8_000 if part2 else 50  # Not very effective in Part 2.
+
+  while states:
+    states2 = []
+
+    for state in states:
+      if state == end_state:
+        return distance
+      floor, contents = state
+      for floor2 in (floor + offset for offset in [-1, 1] if 0 <= floor + offset < 4):
+        for items in more_itertools.flatten(
+            itertools.combinations(contents[floor], n) for n in [1, 2]
+        ):
+          set_items = frozenset(items)
+          if day11_disallowed(set_items):
+            continue
+          leftover = contents[floor] - set_items
+          if day11_disallowed(leftover):
+            continue
+          newgroup = contents[floor2] | set_items
+          if day11_disallowed(newgroup):
+            continue
+          contents2 = list(contents)
+          contents2[floor] = leftover
+          contents2[floor2] = newgroup
+          state2 = floor2, tuple(contents2)
+          if state2 not in seen:
+            seen.add(state2)
+            states2.append(state2)
+
+    states = states2
+    if len(states) > prune_size:
+      states = sorted(states, key=estimated_goodness)[-prune_size:]
+    distance += 1
+    # hh.show(distance, len(states))  # Bell-shaped, max at 13_000 in Part1, 240_000 in Part 2.
 
 
 check_eq(day11(s1), 11)
@@ -862,7 +877,7 @@ puzzle.verify(1, day11)  # ~1.5 s.
 
 day11_part2 = functools.partial(day11, part2=True)
 # (Note that Part 2 applied to sample `s1` has no solution.)
-if 0:
+if 1:
   puzzle.verify(2, day11_part2)  # ~134 s.
 
 # %%

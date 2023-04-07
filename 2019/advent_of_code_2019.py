@@ -2265,7 +2265,7 @@ def day18a(s):  # Most compact, for part 1 only
   yx_of_key = {ch: yx for yx, ch in np.ndenumerate(grid) if is_key(ch)}
   current_key = '@'
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def possible_paths(current_key):  # Returns [(key, distance, needed)].
     yx = yx_of_key[current_key]
     needed: list[str] = []
@@ -2287,7 +2287,7 @@ def day18a(s):  # Most compact, for part 1 only
           to_visit.append((distance + 1, yx2, needed))
     return result
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def eligible_paths(current_key, keys):  # Returns [(distance, key)].
     return [
         (d, key)
@@ -2295,7 +2295,7 @@ def day18a(s):  # Most compact, for part 1 only
         if key not in keys and needed.issubset(keys)
     ]
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def explore(current_key, keys):  # Returns distance.
     if len(keys) == len(yx_of_key):
       return 0
@@ -2338,7 +2338,7 @@ def day18(s, *, part2=False, visualize=False, fps=50, size=4, speed=1, tail=1):
       ch: yx for yx, ch in np.ndenumerate(grid) if is_key(ch)  # type: ignore[misc]
   }
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def possible_paths(current_key):  # Returns {key: (distance, needed, path)}.
     yx = yx_of_key[current_key]
     needed: list[str] = []
@@ -2367,18 +2367,18 @@ def day18(s, *, part2=False, visualize=False, fps=50, size=4, speed=1, tail=1):
           to_visit.append((distance + 1, yx2, needed))
     return result
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def eligible_paths(current_key, keys):  # Returns [(distance, key)].
     items = possible_paths(current_key).items()
     return [(d, key) for key, (d, needed, _) in items if key not in keys and needed.issubset(keys)]
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def move(current_keys, i, key):
     t = list(current_keys)
     t[i] = key
     return tuple(t)
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def explore(current_keys, keys):  # Returns (distance, index_key, next_key).
     if len(keys) == len(yx_of_key):
       return 0, '', ''

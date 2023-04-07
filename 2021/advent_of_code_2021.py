@@ -856,7 +856,7 @@ def day8b_part2(s):  # Faster; cache a translation table for each permutation.
   lookup = {frozenset(k): str(v) for k, v in day8_lookup().items()}
   total = 0
 
-  @functools.lru_cache(maxsize=None)  # (@functools.cache in Python 3.9)
+  @functools.cache
   def digit_mapper(permutation):
     translation = str.maketrans('abcdefg', ''.join(permutation))
     return lambda segs: lookup.get(frozenset(segs.translate(translation)), None)
@@ -1369,7 +1369,7 @@ def day11(s, *, part2=False, visualize=False):  # Fastest, using flat array.
   total = 0
   images = []
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def neighbors(index):
     y, x = divmod(index, width)
     result = []
@@ -1435,7 +1435,7 @@ _ = day11_part2(puzzle.input, visualize=True)
 # The approach is a simple **exhaustive recursive search** where the current state contains
 # `[current_node, nodes_already_visited, has_a_node_been_visited_twice]`.
 #
-# The search is accelerated 20x times by **caching** the intermediate results using `@functools.lru_cache(maxsize=None)`.  This requires representing `nodes_already_visited` by a `frozenset` (which is hashable) instead of a `set` (which is not hashable).
+# The search is accelerated 20x times by **caching** the intermediate results using `@functools.cache`.  This requires representing `nodes_already_visited` by a `frozenset` (which is hashable) instead of a `set` (which is not hashable).
 
 # %%
 puzzle = advent.puzzle(day=12)
@@ -1517,7 +1517,7 @@ def day12(s, *, part2=False):  # Much faster using lru_cache and frozenset.
     graph[a].append(b)
     graph[b].append(a)
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def recurse(node, visited, seen_twice):
     count = 0
     for node2 in graph[node]:
@@ -3309,7 +3309,7 @@ _ = day20_part2(puzzle.input, visualize=True)
 #
 # For Part 2, I explored two different approaches:
 #
-# 1. Exhaustive **depth-first search**, accelerated by caching of computed values using `functools.lru_cache()`.
+# 1. Exhaustive **depth-first search**, accelerated by caching of computed values using `functools.cache`.
 #
 # 2. **Dynamic programming** over a 4D grid, where the axes are [`pos0`, `pos1`, `score0`, `score1`].
 #
@@ -3362,7 +3362,7 @@ def day21a_part2(s):  # Simple 3 "for" loops and caching.
   lines = s.splitlines()
   pos = [int(lines[0][27:]), int(lines[1][27:])]
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def compute(pos0, pos1, score0, score1):
     wins0 = wins1 = 0
     for roll0a in range(1, 4):
@@ -3387,7 +3387,7 @@ puzzle.verify(2, day21a_part2)  # ~240 ms.
 
 
 # %%
-def day21b_part2(s):  # Avoiding functools.lru_cache().
+def day21b_part2(s):  # Avoiding functools.cache
   lines = s.splitlines()
   pos = [int(lines[0][27:]), int(lines[1][27:])]
   die_sum_distribution = collections.Counter(
@@ -3454,7 +3454,7 @@ def day21d_part2(s, *, win_score=21, visualize=False):  # Most compact.
       collections.Counter(sum(die) for die in itertools.product([1, 2, 3], repeat=3)).items()
   )
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def compute(pos0, pos1, score0, score1):
     wins0 = wins1 = 0
     for total, count in die_sum_distribution:
@@ -4300,7 +4300,7 @@ puzzle.verify(2, day22_part2)  # ~80 ms (often slower).
 #
 # I explored two approaches:
 #
-# 1. **Exhaustive** exploration of state moves (using **depth-first search**) to compute the minimum cost from the current state to the end state, with `functools.lru_cache` to cache the obtained cost values.  This solution takes about 5 seconds.
+# 1. **Exhaustive** exploration of state moves (using **depth-first search**) to compute the minimum cost from the current state to the end state, with `functools.cache` to cache the obtained cost values.  This solution takes about 5 seconds.
 #
 # 2. **Dijkstra/A\*** search to explore solution in a breadth-first traversal.  This is more complex to implement, but has the benefit that the search stops as soon as the advancing front reaches the end state, hopefully visiting a smaller subset of reachable states.  This solution is also more compatible with `numba`, and finds a solution in ~400 ms.
 #
@@ -4331,7 +4331,7 @@ def day23a(s, *, part2=False):  # Compact.
   end_state = tuple(['.'] * 7 + list('ABCD') * nrows)
   cost_for_id = {'A': 1, 'B': 10, 'C': 100, 'D': 1000}
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def compute_cost(state):
     if state == end_state:
       return 0
@@ -4466,7 +4466,7 @@ def day23b(s, *, part2=False, visualize=False):  # With visualization.
     state2[i1] = id
     return tuple(state2)
 
-  @functools.lru_cache(maxsize=None)
+  @functools.cache
   def explore(state):  # Returns (cost, i0, i1) for best move.
     if state == end_state:
       return 0, 0, 0
