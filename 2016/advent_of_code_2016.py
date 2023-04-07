@@ -832,6 +832,7 @@ def day11(s, *, part2=False):  # BFS with two lists; frozensets; pruned search.
     unused_floor, contents = state
     return -(len(contents[0]) * 3 + len(contents[1]) * 2 + len(contents[2]) * 1)
 
+  hh.show(estimated_goodness(start_state))
   seen = {start_state}
   states = [start_state]
   distance = 0
