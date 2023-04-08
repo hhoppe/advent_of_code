@@ -3768,7 +3768,7 @@ def day19a_process(recipes, part2):
       compute_max_geodes(r0 + 1, r1, r2, nn0, nn1, nn2, n3, tl - dt)
 
   compute_max_geodes(1, 0, 0, 0, 0, 0, 0, 32 if part2 else 24)
-  # hh.analyze_lru_caches(locals())  # It reveals a low cache hit rate.
+  # hh.analyze_functools_caches(locals())  # It reveals a low cache hit rate.
   return best_num_geodes
 
 

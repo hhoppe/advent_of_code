@@ -816,7 +816,7 @@ def day11_disallowed(items: frozenset[str]) -> bool:
 
 
 # %%
-def day11(s, *, part2=False):  # BFS with two lists; frozensets; pruned search.
+def day11(s, *, part2=False, visualize=False):  # BFS with two lists; frozensets; pruned search.
   initial_contents: list[set[str]] = [set() for _ in range(4)]
   for floor, line in enumerate(s.splitlines()):
     if 'nothing relevant' not in line:
@@ -824,28 +824,47 @@ def day11(s, *, part2=False):  # BFS with two lists; frozensets; pruned search.
         name2 = re.split(r' |-', name)[1]
         initial_contents[floor].add(name2.upper() if 'generator' in name else name2)
   initial_contents[0] |= set('elerium ELERIUM dilithium DILITHIUM'.split() if part2 else [])
-  start_state = 0, tuple(frozenset(set_) for set_ in initial_contents)
   all_contents = frozenset(set.union(*initial_contents))
+  start_state = 0, tuple(frozenset(set_) for set_ in initial_contents)
   end_state: Any = 3, (frozenset(), frozenset(), frozenset(), all_contents)
+
+  def show_visualization() -> None:
+    sorted_contents = sorted(sorted(more_itertools.flatten(initial_contents)), key=str.lower)
+    images = []
+    state = end_state
+    while state:
+      _, contents = state
+      image = np.full((4, len(sorted_contents) * 3 // 2 - 1, 3), 245, 'uint8')
+      for floor2, contents2 in enumerate(contents):
+        for content in contents2:
+          index = sorted_contents.index(content)
+          image[floor2, index + index // 2] = (150, 150, 255) if index % 2 else (80, 80, 255)
+      images.append(image[::-1].repeat(12, axis=0).repeat(12, axis=1))
+      state = prev[state]
+    images = images[::-1]
+    images = [images[0]] * 5 + images + [images[-1]] * 5
+    media.show_video(images, codec='gif', border=True, fps=3)
 
   def estimated_goodness(state: Any) -> int:
     unused_floor, contents = state
     return -(len(contents[0]) * 3 + len(contents[1]) * 2 + len(contents[2]) * 1)
 
-  hh.show(estimated_goodness(start_state))
-  seen = {start_state}
+  # hh.show(-estimated_goodness(start_state))
+  prune_size = 8_000 if part2 else 50  # Not very effective in Part 2.
+  prev = {start_state: None}
   states = [start_state]
   distance = 0
-  prune_size = 8_000 if part2 else 50  # Not very effective in Part 2.
 
   while states:
     states2 = []
 
     for state in states:
       if state == end_state:
+        if visualize:
+          show_visualization()
         return distance
       floor, contents = state
-      for floor2 in (floor + offset for offset in [-1, 1] if 0 <= floor + offset < 4):
+      for floor2 in (floor + offset for offset in [1, -1] if 0 <= floor + offset < 4):
         for items in more_itertools.flatten(
             itertools.combinations(contents[floor], n) for n in [1, 2]
         ):
@@ -862,8 +881,8 @@ def day11(s, *, part2=False):  # BFS with two lists; frozensets; pruned search.
           contents2[floor] = leftover
           contents2[floor2] = newgroup
           state2 = floor2, tuple(contents2)
-          if state2 not in seen:
-            seen.add(state2)
+          if state2 not in prev:
+            prev[state2] = state
             states2.append(state2)
 
     states = states2
@@ -874,15 +893,19 @@ def day11(s, *, part2=False):  # BFS with two lists; frozensets; pruned search.
 
 
 check_eq(day11(s1), 11)
-puzzle.verify(1, day11)  # ~1.5 s.
+puzzle.verify(1, day11)  # ~0.04 s.
 
 day11_part2 = functools.partial(day11, part2=True)
-# (Note that Part 2 applied to sample `s1` has no solution.)
 if 1:
-  puzzle.verify(2, day11_part2)  # ~134 s.
+  puzzle.verify(2, day11_part2)  # ~8 s (~122 s without pruning).
 
 # %%
-# hh.analyze_lru_caches(globals())
+_ = day11(s1, visualize=True)
+_ = day11(puzzle.input, part2=False, visualize=True)
+# _ = day11(puzzle.input, part2=True, visualize=True)
+
+# %%
+# hh.analyze_functools_caches(globals())
 
 # %%
 # hh.prun(lambda: day11(puzzle.input), top=10)
