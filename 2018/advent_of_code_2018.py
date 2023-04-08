@@ -1323,7 +1323,7 @@ def day13(s, *, part2=False, verbose=False, visualize=False):
   check_eq(text_from_grid(), s.rstrip('\n'))
 
   if visualize:
-    cmap = {' ': (250,) * 3, '+': (140, 140, 140), **{ch: (180,) * 3 for ch in r'|-\/'}}
+    cmap = {' ': (250,) * 3, '+': (140, 140, 140)} | {ch: (180,) * 3 for ch in r'|-\/'}
     image0 = np.array([cmap[e] for e in grid.flat], np.uint8).reshape(*grid.shape, 3)
 
   images = []
@@ -2650,7 +2650,7 @@ def day20(s, *, part2=False, visualize=False):
     def symbols_from_doors():
       map1 = {(y * 2 + 1, x * 2): '-' for y, x in doors_s}
       map2 = {(y * 2, x * 2 + 1): '|' for y, x in doors_e}
-      return {**map1, **map2, (0, 0): 'X'}
+      return map1 | map2 | {(0, 0): 'X'}
 
     print(hh.string_from_grid(hh.grid_from_indices(symbols_from_doors(), background='.')))
 

@@ -26,7 +26,7 @@ disable = [
   "missing-module-docstring", "missing-function-docstring", "redefined-outer-name", "missing-class-docstring",
   "too-many-branches", "too-many-statements", "multiple-statements", "condition-evals-to-constant",
   "too-many-return-statements", "too-many-nested-blocks", "too-many-boolean-expressions",
-  "too-many-instance-attributes",
+  "too-many-instance-attributes", "use-dict-literal",
   # Buggy pylint:
   "inconsistent-return-statements", "redundant-keyword-arg", "unbalanced-tuple-unpacking",
   "unnecessary-direct-lambda-call", "undefined-loop-variable",

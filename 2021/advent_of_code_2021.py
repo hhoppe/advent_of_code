@@ -2286,11 +2286,11 @@ def day17(s, *, part2=False, visualize=False):
   x1, x2, y1, y2 = parse.parse('target area: x={:d}..{:d}, y={:d}..{:d}', s.strip()).fixed
   winners, highest = day17_simulations(x1, x2, y1, y2)
   if visualize:
-    yx_map = {
-        (0, 0): (0, 200, 0),
-        **{yx: (255, 100, 100) for yx in winners},
-        **{(y, x): (100, 100, 255) for y in range(y1, y2 + 1) for x in range(x1, x2 + 1)},
-    }
+    yx_map = (
+        {(0, 0): (0, 200, 0)}
+        | {yx: (255, 100, 100) for yx in winners}
+        | {(y, x): (100, 100, 255) for y in range(y1, y2 + 1) for x in range(x1, x2 + 1)}
+    )
     image = hh.grid_from_indices(yx_map, background=(250,) * 3, pad=1, dtype=np.uint8)[::-1]
     media.show_image(image, border=True, height=min(image.shape[0] * 2, 500))
   return len(winners) if part2 else highest

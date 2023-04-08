@@ -2396,12 +2396,11 @@ def day18(s, *, part2=False, visualize=False, fps=50, size=4, speed=1, tail=1):
 
   if visualize:
     grid[(grid >= '0') & (grid <= '9')] = '.'
-    cmap = {
-        '.': (240,) * 3,
-        '#': (40,) * 3,
-        **{chr(ch): (255, 0, 0) for ch in range(ord('a'), ord('z') + 1)},
-        **{chr(ch): (0, 180, 0) for ch in range(ord('A'), ord('Z') + 1)},
-    }
+    cmap = (
+        {'.': (240,) * 3, '#': (40,) * 3}
+        | {chr(ch): (255, 0, 0) for ch in range(ord('a'), ord('z') + 1)}
+        | {chr(ch): (0, 180, 0) for ch in range(ord('A'), ord('Z') + 1)}
+    )
     images = []
     keys = frozenset(current_keys)
     owned_key_color = 255, 160, 160
