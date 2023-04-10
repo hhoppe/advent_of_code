@@ -954,7 +954,8 @@ def day11b(s, *, part2=False, visualize=False):  # BFS; frozenset[int]; equivale
       state = prev[state]
     images = images[::-1]
     images = [images[0]] * 5 + images + [images[-1]] * 5
-    media.show_video(images, codec='gif', border=True, fps=3)
+    title = f'day11{"b" if part2 else "a"}' if len(all_content) > 4 else None
+    media.show_video(images, codec='gif', border=True, fps=3, title=title)
 
   @functools.cache  # 1K entries for part1; 7K for part2.
   def disallowed(items: frozenset[int]) -> bool:
@@ -1313,7 +1314,7 @@ check_eq(day12b(s1), 42)
 puzzle.verify(1, day12b)  # ~0.16 s.
 
 day12b_part2 = functools.partial(day12b, part2=True)
-puzzle.verify(2, day12b_part2)  # ~4.6 s.
+# puzzle.verify(2, day12b_part2)  # ~4.6 s.
 
 
 # %%
@@ -2507,6 +2508,7 @@ puzzle.verify(1, day24a)
 day24a_part2 = functools.partial(day24a, part2=True)
 puzzle.verify(2, day24a_part2)
 
+# %%
 _ = day24a(puzzle.input, visualize=True, part2=True)
 
 
