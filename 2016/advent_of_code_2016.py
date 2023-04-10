@@ -1203,10 +1203,6 @@ dec a
 """
 
 # %%
-if sys.version_info >= (3, 10):  # Using match/case.
-  # pylint: disable-next=exec-used
-  exec(
-      """
 def day12a(s, *, part2=False):
   instructions = [line.split() for line in s.splitlines()]
   registers = collections.defaultdict(int)
@@ -1235,13 +1231,12 @@ def day12a(s, *, part2=False):
   assert set(registers) <= set('abcd')
   return registers['a']
 
+
 check_eq(day12a(s1), 42)
 puzzle.verify(1, day12a)  # ~0.2 s.
 
 day12a_part2 = functools.partial(day12a, part2=True)
 # puzzle.verify(2, day12a_part2)  # ~5.5 s.
-  """
-  )
 
 
 # %%
