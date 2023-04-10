@@ -9,17 +9,24 @@ completed in April 2023.
 
 We explore both "compact" and "fast" code versions, along with data visualizations.
 
-<!--For the fast solutions, the cumulative time across all 25 puzzles is less than 1 s on my PC.<br/>
-(Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)-->
+For the fast solutions, the cumulative time across all 25 puzzles is less than 4 s on my PC.<br/>
+(Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)<br/>
+It seems difficult to further speed up the solutions because a key bottleneck is successive calls to MD5 hashing.
 
-Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`):
+Here are some visualization results:
 
-<!--
 <p>
-<a href="#day14">day14</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day14.png" width="256"> &emsp;
-<a href="#day22">day22</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day22.png" width="363">
+<a href="#day1">day1</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day1a.gif" width="256"> &emsp;
+<a href="#day8">day8</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day8a.gif" width="300">
 </p>
 <p>
-<a href="#day21">day21</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day21.png" width="867">
+<a href="#day11">day11</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day11a.gif" width="140"> &emsp;
+  <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day11b.gif" width="190">
 </p>
--->
+<p>
+<a href="#day13">day13</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day13a.gif" width="256"> &emsp;
+<a href="#day18">day18</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day18.png" width="200">
+</p>
+<p>
+<a href="#day24">day24</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day24.gif" width="640">
+</p>

@@ -136,18 +136,18 @@ _ORIGINAL_GLOBALS = list(globals())
 
 
 # %% [markdown]
-# ### `Machine` used in several puzzles
+# ### `_Machine` used in several puzzles
 
 
 # %%
 @dataclasses.dataclass
-class Machine:
+class _Machine:
   """Abstract machine used in several puzzles."""
 
   num_registers: int = 6
   registers: list[int] = dataclasses.field(default_factory=list)
   ip_register: int | None = None
-  instructions: list[Machine.Instruction] = dataclasses.field(default_factory=list)
+  instructions: list[_Machine.Instruction] = dataclasses.field(default_factory=list)
   ip: int = 0
 
   @dataclasses.dataclass
@@ -2179,7 +2179,7 @@ After:  [3, 2, 2, 1]
 # %%
 def day16(s, *, part2=False):
   s1, s2 = s.split('\n\n\n\n')
-  machine = Machine(num_registers=4)
+  machine = _Machine(num_registers=4)
   num_operations = len(machine.operations)
   candidates = {op: set(range(num_operations)) for op in machine.operations}
   num_compatible_with_3_or_more = 0
@@ -2216,7 +2216,7 @@ def day16(s, *, part2=False):
   if 0:
     print(operation_from_opcode)
 
-  machine = Machine(num_registers=4)
+  machine = _Machine(num_registers=4)
   for line in s2.splitlines():
     codes = list(map(int, line.split()))
     check_eq(len(codes), 4)
@@ -2525,7 +2525,7 @@ def day19(s, *, part2=False, verbose=False):
         result |= {i, div}
     return result
 
-  machine = Machine()
+  machine = _Machine()
   machine.read_instructions(s)
   optimize = len(machine.instructions) > 10
   if optimize:
@@ -2892,7 +2892,7 @@ def day21_test():
 
 # %%
 def day21(s, *, part2=False):
-  machine = Machine()
+  machine = _Machine()
   machine.read_instructions(s)
 
   def gen_sequence():

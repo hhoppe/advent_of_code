@@ -7,14 +7,31 @@
 # Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2016/advent_of_code_2016.ipynb)
 # by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to the
 # [2016 Advent of Code puzzles](https://adventofcode.com/2016),
-# completed in December 2022.
+# completed in April 2023.
 #
 # We explore both "compact" and "fast" code versions, along with data visualizations.
 #
-# For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is less than 1 s on my PC.<br/>
-# (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)
+# For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is less than 4 s on my PC.<br/>
+# (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)<br/>
+# It seems difficult to further speed up the solutions because a key bottleneck is successive calls to MD5 hashing.
 #
-# Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`):
+# Here are some visualization results:
+#
+# <p>
+# <a href="#day1">day1</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day1a.gif" width="256"> &emsp;
+# <a href="#day8">day8</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day8a.gif" width="300">
+# </p>
+# <p>
+# <a href="#day11">day11</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day11a.gif" width="140"> &emsp;
+#   <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day11b.gif" width="190">
+# </p>
+# <p>
+# <a href="#day13">day13</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day13a.gif" width="256"> &emsp;
+# <a href="#day18">day18</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day18.png" width="200">
+# </p>
+# <p>
+# <a href="#day24">day24</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2016/results/day24.gif" width="640">
+# </p>
 
 # %% [markdown]
 # <a name="preamble"></a>
@@ -33,6 +50,7 @@ from __future__ import annotations
 import collections
 from collections.abc import Callable, Iterable, Iterator
 import dataclasses
+import enum
 import functools
 import hashlib
 import heapq
@@ -40,6 +58,7 @@ import itertools
 import math
 import multiprocessing
 import os
+import pathlib
 import re
 import sys
 import textwrap
@@ -63,6 +82,8 @@ hh.start_timing_notebook_cells()
 # %%
 YEAR = 2016
 SHOW_BIG_MEDIA = False
+if pathlib.Path('results').is_dir():
+  media.set_show_save_dir('results')
 
 # %%
 # (1) To obtain puzzle inputs and answers, we first try these paths/URLs:
@@ -108,6 +129,37 @@ hh.adjust_jupyterlab_markdown_width()
 # %%
 check_eq = hh.check_eq
 _ORIGINAL_GLOBALS = list(globals())
+
+# %%
+# CPython has two implementations of MD5 hashing (https://stackoverflow.com/a/60254866):
+# - https://github.com/python/cpython/blob/main/Modules/_hashopenssl.c (hashlib) and
+# - https://github.com/python/cpython/blob/main/Modules/md5module.c (_md5).
+# # %timeit hashlib.md5(b"hello world")  # ~145 ns.
+# import _md5
+# # %timeit _md5.md5(b"hello world")  # ~55 ns.
+
+
+def _get_md5() -> Any:
+  try:
+    import _md5
+
+    return _md5.md5
+
+  except ModuleNotFoundError:
+    return hashlib.md5
+
+
+# %% [markdown]
+# Note:
+# The MD5 algorithm encodes a message by operating on 64-byte chunks.
+# It pads the message to a 64-byte chunk by encoding the message length in the last 4-5 bytes.
+# Therefore, for small messages (< 64 bytes), there is no opportunity to reuse *any* work across
+# different messages with the same prefix &mdash;
+# the MD5 library does not actually start hashing until the `digest()` call.
+# The function hashlib.md5().copy() is only beneficial for some minor class initialization overhead.
+
+# %% [markdown]
+# Note: I get the same puzzle input for both my profiles on the following days: 04, 07, 12, 13.
 
 # %% [markdown]
 # <a name="day1"></a>
@@ -155,6 +207,55 @@ puzzle.verify(1, day1)
 day1_part2 = functools.partial(day1, part2=True)
 check_eq(day1_part2('R8, R4, R4, R8'), 4)
 puzzle.verify(2, day1_part2)
+
+
+# %%
+def day1_visualize(s, *, repeat=2):
+  y, x = 0, 0  # Origin.
+  dy, dx = -1, 0  # Up.
+  points_list = []
+  distances = []
+  for op in s.split(', '):
+    if op[0] == 'L':
+      dy, dx = -dx, dy
+    elif op[0] == 'R':
+      dy, dx = dx, -dy
+    distance = int(op[1:])
+    for _ in range(distance):
+      y, x = y + dy, x + dx
+      points_list.append([y, x])
+      distances.append(distance)
+
+  points = np.array(points_list)
+  shape = points.ptp(axis=0) + 3
+  points_min = points.min(axis=0)
+  image = np.full((*shape, 3), 245, np.uint8)
+  images = []
+  visited = set()
+  first_intersection = True
+  time = 0.0
+
+  for point, distance in zip(points, distances):
+    yx = tuple(point - points_min + 1)
+    image[yx][[0, 1]] //= 2
+    if yx in visited and first_intersection:
+      first_intersection = False
+      y, x = yx
+      image[y - 1 : y + 2, x - 1 : x + 2] = 255, 0, 0
+    visited.add(yx)
+    time += 1.0 if distance < 10 else 0.2
+    if time >= 1.0:
+      images.append(image.repeat(repeat, axis=0).repeat(repeat, axis=1))
+      time -= 1.0
+
+  y, x = yx
+  image[y - 1 : y + 2, x - 1 : x + 2] = 0, 230, 0
+  images.append(image.repeat(repeat, axis=0).repeat(repeat, axis=1))
+  images = [images[0]] * 50 + images + [images[-1]] * 100
+  media.show_video(images, codec='gif', fps=50, title='day1a')
+
+
+day1_visualize(puzzle.input)
 
 # %% [markdown]
 # <a name="day2"></a>
@@ -354,10 +455,11 @@ puzzle = advent.puzzle(day=5)
 
 # %%
 def day5a(s, *, part2=False):  # Compact but slow serial solution.
+  md5 = _get_md5()
   s = s.strip()
   password = ['_'] * 8 if part2 else []
   for index in itertools.count():
-    hashed = hashlib.md5((s + str(index)).encode()).hexdigest()
+    hashed = md5((s + str(index)).encode()).hexdigest()
     if hashed[:5] == '00000':
       if part2:
         position = int(hashed[5], 16)
@@ -372,23 +474,25 @@ def day5a(s, *, part2=False):  # Compact but slow serial solution.
 
 
 # check_eq(day5a('abc'), '18f47a30')
-# puzzle.verify(1, day5a)  # ~5.3 s.
+# puzzle.verify(1, day5a)  # ~3.7 s using _md5 (~5.3 s using hashlib).
 
 day5a_part2 = functools.partial(day5a, part2=True)
 # check_eq(day5a_part2('abc'), '05ace8e3')
-# puzzle.verify(2, day5a_part2)  # ~16.5 s.
+# puzzle.verify(2, day5a_part2)  # ~10.5 s using _md5 (~16.5 s using hashlib).
 
 # %%
-# Faster multiprocessing solution; also, small speedups using hasher.copy() and digest().
+# Faster multiprocessing solution; also, small speedup using digest() rather than hexdigest().
 
 
-# Multiprocessing requires that this function be pickled, so it must be in top module scope.
+# Multiprocessing requires that this function be pickled, so it must be in the top module scope.
 def day5_find_zero_hashes(s, start, stop):
+  md5 = _get_md5()
   results = []
-  hasher = hashlib.md5(s.encode())
+  # hasher = md5(s.encode())
   for index in range(start, stop):
-    hasher2 = hasher.copy()
-    hasher2.update(str(index).encode())
+    # hasher2 = hasher.copy()
+    # hasher2.update(str(index).encode())
+    hasher2 = md5((s + str(index)).encode())
     digest = hasher2.digest()
     if digest[:2] == b'\0\0' and digest.hex()[4] == '0':
       results.append(index)
@@ -397,6 +501,7 @@ def day5_find_zero_hashes(s, start, stop):
 
 def day5(s, *, part2=False):
   s = s.strip()
+  md5 = _get_md5()
   password = ['_'] * 8 if part2 else []
   group_size = 2_000_000 if part2 else 500_000
 
@@ -411,7 +516,7 @@ def day5(s, *, part2=False):
         start = stop
       results = pool.starmap(day5_find_zero_hashes, args)
       for index in more_itertools.flatten(results):
-        hashed = hashlib.md5((s + str(index)).encode()).hexdigest()
+        hashed = md5((s + str(index)).encode()).hexdigest()
         check_eq(hashed[:5], '00000')
         if part2:
           position = int(hashed[5], 16)
@@ -425,12 +530,12 @@ def day5(s, *, part2=False):
             return ''.join(password)
 
 
-# check_eq(day5('abc'), '18f47a30')
-puzzle.verify(1, day5)  # ~0.5 s.
+check_eq(day5('abc'), '18f47a30')
+puzzle.verify(1, day5)  # ~0.4 s using _md5 (~0.5 s using hashlib).
 
 day5_part2 = functools.partial(day5, part2=True)
 # check_eq(day5_part2('abc'), '05ace8e3')
-puzzle.verify(2, day5_part2)  # ~1.25 s.
+puzzle.verify(2, day5_part2)  # ~1.0 s using _md5 (~1.25 s using hashlib).
 
 # %% [markdown]
 # <a name="day6"></a>
@@ -585,8 +690,9 @@ rotate column x=1 by 1
 
 
 # %%
-def day8(s, *, part2=False, shape=(6, 50)):
+def day8(s, *, part2=False, shape=(6, 50), visualize=False, repeat=8):
   grid = np.full(shape, '.')
+  images = []
   for line in s.splitlines():
     if 'rect' in line:
       width, height = map(int, line.split()[1].split('x'))
@@ -599,10 +705,22 @@ def day8(s, *, part2=False, shape=(6, 50)):
       else:  # 'column' in s1.
         grid[:, index] = np.roll(grid[:, index], rotation)
 
-  if part2:
-    s3 = '\n'.join(''.join(ch for ch in line) for line in grid)
+    if visualize:
+      image = np.full((*grid.shape, 3), 255, np.uint8)
+      image[grid == '#'] = 0
+      image = hh.pad_array(image, 1, (230,) * 3)
+      images.append(image.repeat(repeat, axis=0).repeat(repeat, axis=1))
+
+  s3 = '\n'.join(''.join(ch for ch in line) for line in grid)
+
+  if visualize:
     hh.display_html(s3.replace('.', '⬜').replace('#', '⬛').replace('\n', '<br/>'))
+    images = [images[0]] * 15 + images + [images[-1]] * 40
+    media.show_video(images, codec='gif', fps=20, title='day8a')
+
+  if part2:
     return advent_of_code_ocr.convert_6(s3)
+
   return np.count_nonzero(grid == '#')
 
 
@@ -611,6 +729,9 @@ puzzle.verify(1, day8)
 
 day8_part2 = functools.partial(day8, part2=True)
 puzzle.verify(2, day8_part2)
+
+# %%
+_ = day8(puzzle.input, visualize=True)
 
 # %% [markdown]
 # <a name="day9"></a>
@@ -751,7 +872,7 @@ The fourth floor contains nothing relevant.
 
 
 # %%
-def day11a(s, *, part2=False):  # BFS with queue.
+def day11a(s, *, part2=False):  # Simplest but slow; BFS with queue; set[str]; unpruned.
   initial_contents: list[set[str]] = [set() for _ in range(4)]
   for floor, line in enumerate(s.splitlines()):
     if 'nothing relevant' not in line:
@@ -796,7 +917,7 @@ def day11a(s, *, part2=False):  # BFS with queue.
 
 
 check_eq(day11a(s1), 11)
-puzzle.verify(1, day11a)  # ~5.6 s.
+# puzzle.verify(1, day11a)  # ~5.6 s.
 
 day11a_part2 = functools.partial(day11a, part2=True)
 # (Note that Part 2 applied to sample `s1` has no solution.)
@@ -804,54 +925,61 @@ day11a_part2 = functools.partial(day11a, part2=True)
 
 
 # %%
-@functools.cache  # 1_126 entries for part1; 14_612 for part2.
-def day11_disallowed(items: frozenset[str]) -> bool:
-  found_upper, lone_lower = False, False
-  for item in items:
-    if item.isupper():
-      found_upper = True
-    elif item.upper() not in items:
-      lone_lower = True
-  return found_upper and lone_lower
-
-
-# %%
-def day11(s, *, part2=False, visualize=False):  # BFS with two lists; frozensets; pruned search.
-  initial_contents: list[set[str]] = [set() for _ in range(4)]
+def day11b(s, *, part2=False, visualize=False):  # BFS; frozenset[int]; equivalency; pruned search.
+  names = sorted(re.findall(r'(\w+) generator', s))
+  initial_contents: list[list[int]] = [[] for _ in range(4)]
   for floor, line in enumerate(s.splitlines()):
-    if 'nothing relevant' not in line:
-      for name in re.split(r',? and |, ', line[:-1].split(' contains ')[1]):
-        name2 = re.split(r' |-', name)[1]
-        initial_contents[floor].add(name2.upper() if 'generator' in name else name2)
-  initial_contents[0] |= set('elerium ELERIUM dilithium DILITHIUM'.split() if part2 else [])
-  all_contents = frozenset(set.union(*initial_contents))
+    generator_names = re.findall(r'(\w+) generator', line)
+    initial_contents[floor].extend(1 + names.index(name) for name in generator_names)
+    chip_names = re.findall(r'(\w+)-compatible', line)
+    initial_contents[floor].extend(-1 - names.index(name) for name in chip_names)
+  if part2:
+    initial_contents[0].extend([1 + len(names), -1 - len(names)])
+    initial_contents[0].extend([2 + len(names), -2 - len(names)])
+  all_content = frozenset(more_itertools.flatten(initial_contents))
   start_state = 0, tuple(frozenset(set_) for set_ in initial_contents)
-  end_state: Any = 3, (frozenset(), frozenset(), frozenset(), all_contents)
+  end_state: Any = 3, (frozenset(), frozenset(), frozenset(), all_content)
 
   def show_visualization() -> None:
-    sorted_contents = sorted(sorted(more_itertools.flatten(initial_contents)), key=str.lower)
     images = []
     state = end_state
     while state:
       _, contents = state
-      image = np.full((4, len(sorted_contents) * 3 // 2 - 1, 3), 245, 'uint8')
-      for floor2, contents2 in enumerate(contents):
-        for content in contents2:
-          index = sorted_contents.index(content)
-          image[floor2, index + index // 2] = (150, 150, 255) if index % 2 else (80, 80, 255)
+      image = np.full((4, len(all_content) * 3 // 2 - 1, 3), 245, 'uint8')
+      for floor, content in enumerate(contents):
+        for index in content:
+          color = (150, 150, 255) if index < 0 else (80, 80, 255)
+          image[floor, (abs(index) - 1) * 3 + (index < 0)] = color
       images.append(image[::-1].repeat(12, axis=0).repeat(12, axis=1))
       state = prev[state]
     images = images[::-1]
     images = [images[0]] * 5 + images + [images[-1]] * 5
     media.show_video(images, codec='gif', border=True, fps=3)
 
+  @functools.cache  # 1K entries for part1; 7K for part2.
+  def disallowed(items: frozenset[int]) -> bool:
+    return any(item > 0 for item in items) and any(-item not in items for item in items if item < 0)
+
+  @functools.cache  # 200 entries for part1; 600 for part2.
+  def candidate_items(content: frozenset[int]) -> tuple[tuple[int, ...], ...]:
+    return tuple(more_itertools.flatten(itertools.combinations(content, n) for n in [1, 2]))
+
   def estimated_goodness(state: Any) -> int:
     unused_floor, contents = state
     return -(len(contents[0]) * 3 + len(contents[1]) * 2 + len(contents[2]) * 1)
 
-  # hh.show(-estimated_goodness(start_state))
-  prune_size = 8_000 if part2 else 50  # Not very effective in Part 2.
-  prev = {start_state: None}
+  @functools.cache  # 300 entries for part1; 1800 for part2.
+  def encode1(content: frozenset[int]) -> tuple[int, int]:
+    return sum(1 for index in content if index > 0), sum(1 for index in content if index < 0)
+
+  def encode(state: Any) -> Any:
+    """Account for the fact that only the counts of gens and chips on each floor matters."""
+    floor, c = state
+    return floor, encode1(c[0]), encode1(c[1]), encode1(c[2]), encode1(c[3])
+
+  prune_size = 50
+  seen: Any = {encode(start_state)}
+  prev: Any = {start_state: None}
   states = [start_state]
   distance = 0
 
@@ -862,26 +990,24 @@ def day11(s, *, part2=False, visualize=False):  # BFS with two lists; frozensets
       if state == end_state:
         if visualize:
           show_visualization()
+        # hh.analyze_functools_caches(locals())
         return distance
       floor, contents = state
       for floor2 in (floor + offset for offset in [1, -1] if 0 <= floor + offset < 4):
-        for items in more_itertools.flatten(
-            itertools.combinations(contents[floor], n) for n in [1, 2]
-        ):
-          set_items = frozenset(items)
-          if day11_disallowed(set_items):
+        for items in candidate_items(contents[floor]):
+          leftover = contents[floor].difference(items)
+          if disallowed(leftover):
             continue
-          leftover = contents[floor] - set_items
-          if day11_disallowed(leftover):
-            continue
-          newgroup = contents[floor2] | set_items
-          if day11_disallowed(newgroup):
+          newgroup = contents[floor2].union(items)
+          if disallowed(newgroup):
             continue
           contents2 = list(contents)
           contents2[floor] = leftover
           contents2[floor2] = newgroup
           state2 = floor2, tuple(contents2)
-          if state2 not in prev:
+          encoded_state2 = encode(state2)
+          if encoded_state2 not in seen:
+            seen.add(encoded_state2)
             prev[state2] = state
             states2.append(state2)
 
@@ -892,23 +1018,166 @@ def day11(s, *, part2=False, visualize=False):  # BFS with two lists; frozensets
     # hh.show(distance, len(states))  # Bell-shaped, max at 13_000 in Part1, 240_000 in Part 2.
 
 
+check_eq(day11b(s1), 11)
+puzzle.verify(1, day11b)
+
+day11b_part2 = functools.partial(day11b, part2=True)
+puzzle.verify(2, day11b_part2)
+
+# %%
+_ = day11b(s1, visualize=True)
+_ = day11b(puzzle.input, part2=False, visualize=True)
+_ = day11b(puzzle.input, part2=True, visualize=True)
+
+# %%
+# hh.prun(lambda: day11b(puzzle.input, part2=True), top=10)
+
+
+# %%
+# use Dijkstra/A* instead of pruned BFS?
+
+
+# %%
+def day11c(s, *, part2=False):  # BFS; list of floors; equivalency; unpruned.
+  # Inspired from https://github.com/narimiran/advent_of_code_2016/blob/master/python/day_11.py
+  # The approach is to assume that two *valid* states are interchangeable if they have the same
+  # number of generators and chips on corresponding floors.
+  names = sorted(re.findall(r'(\w+) generator', s))
+  lines = s.splitlines()
+  gens = [next(f for f, l in enumerate(lines) if f'{name} generator' in l) for name in names]
+  chips = [next(f for f, l in enumerate(lines) if f'{name}-compatible' in l) for name in names]
+  if part2:
+    gens, chips = [0, 0] + gens, [0, 0] + chips
+  num = len(gens)
+  positions = gens + chips
+  seen = set()
+
+  def consider(positions: list[int], floor: int, queue: Any) -> None:
+    gens, chips = positions[:num], positions[num:]
+    if any(chip != gen and chip in gens for gen, chip in zip(gens, chips)):
+      return
+    hash_ = tuple((gens.count(i), chips.count(i)) for i in range(4)) + (floor,)
+    if hash_ not in seen:
+      seen.add(hash_)
+      queue.append((positions.copy(), floor))
+
+  queue: list[tuple[list[int], int]] = []
+  consider(positions, 0, queue)
+  steps = 0
+
+  while queue:
+    queue2: list[tuple[list[int], int]] = []
+
+    for positions, floor in queue:
+      if all(position == 3 for position in positions):
+        return steps
+
+      for index1, position1 in enumerate(positions):
+        if position1 == floor:
+          for floor2 in [floor + 1, floor - 1]:
+            if 0 <= floor2 < 4:
+              positions[index1] = floor2
+              consider(positions, floor2, queue2)
+              for index2, position2 in enumerate(positions[index1 + 1 :], index1 + 1):
+                if position2 == floor:
+                  positions[index2] = floor2
+                  consider(positions, floor2, queue2)
+                  positions[index2] = floor
+              positions[index1] = floor
+
+    queue = queue2
+    steps += 1
+
+  raise AssertionError
+
+
+check_eq(day11c(s1), 11)
+puzzle.verify(1, day11c)
+
+day11c_part2 = functools.partial(day11c, part2=True)
+puzzle.verify(2, day11c_part2)
+
+
+# %%
+# Same but faster using numba -- we must omit the convenient list and generator comprehensions.
+@numba.njit
+def day11_compute(positions0: np.ndarray) -> int:
+  # Inspired from https://github.com/narimiran/advent_of_code_2016/blob/master/python/day_11.py
+  positions = list(positions0)
+  num = len(positions) // 2
+  seen = set()
+
+  def is_solved(positions: list[int]) -> bool:
+    for position in positions:
+      if position != 3:
+        return False
+    return True
+
+  def consider(positions: list[int], floor: int, queue: Any) -> None:
+    gens, chips = positions[:num], positions[num:]
+    for index in range(num):
+      gen, chip = positions[index], positions[index + num]
+      if chip != gen:
+        for index2 in range(num):
+          if chip == positions[index2]:
+            return
+    hash_ = (
+        (gens.count(0), gens.count(1), gens.count(2), gens.count(3))
+        + (chips.count(0), chips.count(1), chips.count(2), chips.count(3))
+        + (floor,)
+    )
+    if hash_ not in seen:
+      seen.add(hash_)
+      queue.append((positions.copy(), floor))
+
+  queue: list[tuple[list[int], int]] = []
+  consider(positions, 0, queue)
+  steps = 0
+
+  while queue:
+    queue2: list[tuple[list[int], int]] = []
+
+    for positions, floor in queue:
+      if is_solved(positions):
+        return steps
+
+      for index1, position1 in enumerate(positions):
+        if position1 == floor:
+          for floor2 in [floor + 1, floor - 1]:
+            if 0 <= floor2 < 4:
+              positions[index1] = floor2
+              consider(positions, floor2, queue2)
+              for index2, position2 in enumerate(positions[index1 + 1 :], index1 + 1):
+                if position2 == floor:
+                  positions[index2] = floor2
+                  consider(positions, floor2, queue2)
+                  positions[index2] = floor
+              positions[index1] = floor
+
+    queue = queue2
+    steps += 1
+
+  raise AssertionError
+
+
+def day11(s, *, part2=False):
+  names = sorted(re.findall(r'(\w+) generator', s))
+  lines = s.splitlines()
+  gens = [next(f for f, l in enumerate(lines) if f'{name} generator' in l) for name in names]
+  chips = [next(f for f, l in enumerate(lines) if f'{name}-compatible' in l) for name in names]
+  if part2:
+    gens, chips = [0, 0] + gens, [0, 0] + chips
+  positions = gens + chips
+  return day11_compute(np.array(positions))
+
+
 check_eq(day11(s1), 11)
-puzzle.verify(1, day11)  # ~0.04 s.
+_ = day11(s1)  # For numba compilation on particular tuple length.
+puzzle.verify(1, day11)  # ~0.007 s
 
 day11_part2 = functools.partial(day11, part2=True)
-if 1:
-  puzzle.verify(2, day11_part2)  # ~8 s (~122 s without pruning).
-
-# %%
-_ = day11(s1, visualize=True)
-_ = day11(puzzle.input, part2=False, visualize=True)
-# _ = day11(puzzle.input, part2=True, visualize=True)
-
-# %%
-# hh.analyze_functools_caches(globals())
-
-# %%
-# hh.prun(lambda: day11(puzzle.input), top=10)
+_ = day11(puzzle.input)  # For numba compilation on particular tuple length.
+puzzle.verify(2, day11_part2)  # ~0.037 s
 
 # %% [markdown]
 # <a name="day12"></a>
@@ -975,7 +1244,7 @@ day12a_part2 = functools.partial(day12a, part2=True)
 
 
 # %%
-def day12(s, *, part2=False):  # Disappointingly not much faster.
+def day12b(s, *, part2=False):  # Disappointingly not much faster.
   registers = [0] * 4
   if part2:
     registers[2] = 1
@@ -985,23 +1254,19 @@ def day12(s, *, part2=False):  # Disappointingly not much faster.
     return 'abcd'.index(operand)
 
   def cpy_reg(src, dst):
-    nonlocal registers
     registers[dst] = registers[src]
 
   def cpy_val(value, dst):
-    nonlocal registers
     registers[dst] = value
 
   def increment(register):
-    nonlocal registers
     registers[register] += 1
 
   def decrement(register):
-    nonlocal registers
     registers[register] -= 1
 
   def jnz_reg(register, offset):
-    nonlocal registers, pc
+    nonlocal pc
     if registers[register] != 0:
       pc += offset - 1
 
@@ -1044,11 +1309,106 @@ def day12(s, *, part2=False):  # Disappointingly not much faster.
   return registers[0]
 
 
-check_eq(day12(s1), 42)
-puzzle.verify(1, day12)  # ~0.16 s.
+check_eq(day12b(s1), 42)
+puzzle.verify(1, day12b)  # ~0.16 s.
+
+day12b_part2 = functools.partial(day12b, part2=True)
+puzzle.verify(2, day12b_part2)  # ~4.6 s.
+
+
+# %%
+def day12(s, *, part2=False):  # Program reimplemented in Python.
+  lines = s.splitlines()
+  param0 = int(hh.re_groups(r'cpy (\d+) d', lines[2])[0])  # e.g., 26
+  param1 = int(hh.re_groups(r'cpy (\d+) c', lines[5])[0])  # e.g., 7
+  param2 = int(hh.re_groups(r'cpy (\d+) c', lines[16])[0])  # e.g., 19
+  param3 = int(hh.re_groups(r'cpy (\d+) d', lines[17])[0])  # e.g., 11
+  a = 1
+  b = 1
+  d = param0
+  if part2:
+    d += param1
+
+  for _ in range(d):
+    c = a
+    a += b
+    b = c
+
+  a += param2 * param3
+  return a
+
+
+puzzle.verify(1, day12)
 
 day12_part2 = functools.partial(day12, part2=True)
-puzzle.verify(2, day12_part2)  # ~4.6 s.
+puzzle.verify(2, day12_part2)
+
+# %%
+# L00 cpy 1 a
+# L01 cpy 1 b
+# L02 cpy 26 d
+# L03 jnz c 2
+# L04 jnz 1 5
+# L05 cpy 7 c
+# L06 inc d
+# L07 dec c
+# L08 jnz c -2
+# L09 cpy a c
+# L10 inc a
+# L11 dec b
+# L12 jnz b -2
+# L13 cpy c b
+# L14 dec d
+# L15 jnz d -6
+# L16 cpy 19 c
+# L17 cpy 11 d
+# L18 inc a
+# L19 dec d
+# L20 jnz d -2
+# L21 dec c
+# L22 jnz c -5
+
+# %%
+# L00 cpy 1 a    # a = 1
+# L01 cpy 1 b    # b = 1
+# L02 cpy 26 d   # d = 26
+
+# L03 jnz c 2    # if c != 0:  # (Part 2)
+# L04 jnz 1 5    #
+
+# L05 cpy 7 c    #   c = 7
+
+#                #   do
+# L06 inc d      #     d += 1
+# L07 dec c      #     c -= 1
+# L08 jnz c -2   #   while c != 0
+
+#                # do
+# L09 cpy a c    #   c = a
+
+#                #   do
+# L10 inc a      #     a += 1
+# L11 dec b      #     b -= 1
+# L12 jnz b -2   #   while b != 0
+
+# L13 cpy c b    #   b = c
+# L14 dec d      #   d -= 1
+# L15 jnz d -6   # while d != 0
+
+# L16 cpy 19 c   # c = 19
+
+#                # do
+# L17 cpy 11 d   #   d = 11
+
+#                #   do
+# L18 inc a      #     a += 1
+# L19 dec d      #     d -= 1
+# L20 jnz d -2   #   while d != 0
+
+# L21 dec c      #   c -= 1
+# L22 jnz c -5   # while c != 0
+
+#                # return a
 
 # %% [markdown]
 # <a name="day13"></a>
@@ -1064,7 +1424,7 @@ puzzle = advent.puzzle(day=13)
 
 
 # %%
-def day13(s, *, part2=False, src_yx=(1, 1), dst_yx=(39, 31), visualize=False):
+def day13a(s, *, part2=False, src_yx=(1, 1), dst_yx=(39, 31)):  # Compact without visualization.
   seed = int(s)
   sentinel = -1, -1
 
@@ -1085,21 +1445,76 @@ def day13(s, *, part2=False, src_yx=(1, 1), dst_yx=(39, 31), visualize=False):
         previous[yx2] = (y, x)
         queue.append((yx2, distance + 1))
 
+  return len(previous) if part2 else distance
+
+
+check_eq(day13a('10', dst_yx=(4, 7)), 11)
+puzzle.verify(1, day13a)
+
+day13a_part2 = functools.partial(day13a, part2=True)
+puzzle.verify(2, day13a_part2)
+
+
+# %%
+def day13(s, *, part2=False, src_yx=(1, 1), dst_yx=(39, 31), visualize=False):
+  seed = int(s)
+  sentinel = -1, -1
+
+  def is_wall(y: int, x: int) -> bool:
+    value = x * x + 3 * x + 2 * x * y + y + y * y + seed
+    return bin(value).count('1') % 2 != 0
+
   if visualize:
+
+    def add_image(image: np.ndarray) -> None:
+      image = np.pad(image, ((1, 0), (1, 0), (0, 0))).repeat(5, axis=0).repeat(5, axis=1)
+      images.append(image)
+
+    images: list[np.ndarray] = []
     shape = 50, 60
-    grid = np.array([not is_wall(y, x) for y, x in np.ndindex(shape)]).reshape(shape)
-    image = media.to_rgb(grid * 0.6, vmin=0, vmax=1)
-    if part2:
-      image[tuple(zip(*previous))] = 1.0, 1.0, 1.0
-    else:
-      image[dst_yx] = 1.0, 0.0, 0.0
+    grid_wall = np.array([is_wall(y, x) for y, x in np.ndindex(shape)]).reshape(shape)
+    image = np.full((*grid_wall.shape, 3), 250, np.uint8)
+    image[grid_wall] = 0
+    image[src_yx] = 0, 255, 0
+    image[dst_yx] = 255, 0, 0
+    add_image(image)
+
+  previous = {src_yx: sentinel}
+  queue = [src_yx]
+  distance = 0
+
+  while queue and not (part2 and distance == 50):
+    queue2 = []
+    found = False
+
+    for y, x in queue:
+      if not part2 and (y, x) == dst_yx:
+        found = True
+        break
+      for dy, dx in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+        yx2 = y2, x2 = y + dy, x + dx
+        if y2 >= 0 and x2 >= 0 and yx2 not in previous and not is_wall(y2, x2):
+          previous[yx2] = (y, x)
+          queue2.append(yx2)
+      if visualize and distance > 0:
+        image[y, x] = 150, 150, 255
+
+    if found:
+      break
+    queue = queue2
+    distance += 1
+    if visualize:
+      add_image(image)
+
+  if visualize:
+    if not part2:
       yx = previous[dst_yx]
       while yx != sentinel:
-        image[yx] = 1.0, 1.0, 1.0
+        image[yx] = 255, 150, 30
         yx = previous[yx]
-    image[src_yx] = 0.0, 1.0, 0.0
-    image = np.pad(image, ((1, 0), (1, 0), (0, 0))).repeat(5, axis=0).repeat(5, axis=1)
-    media.show_image(image)
+    add_image(image)
+    images = [images[0]] * 20 + images + [images[-1]] * 40
+    media.show_video(images, codec='gif', fps=15, title=f'day13{"b" if part2 else "a"}')
 
   return len(previous) if part2 else distance
 
@@ -1110,9 +1525,8 @@ puzzle.verify(1, day13)
 day13_part2 = functools.partial(day13, part2=True)
 puzzle.verify(2, day13_part2)
 
-# %%
-_ = day13(puzzle.input, visualize=True)
-_ = day13_part2(puzzle.input, visualize=True)
+_ = day13(puzzle.input, visualize=True, part2=False)
+_ = day13(puzzle.input, visualize=True, part2=True)
 
 # %% [markdown]
 # <a name="day14"></a>
@@ -1138,12 +1552,13 @@ def day14_find_triplet(hash: str) -> str:
 # %%
 def day14a(s, *, part2=False):
   s = s.strip()
+  md5 = _get_md5()
 
   def get_hash(index: int) -> str:
-    hash = hashlib.md5((s + str(index)).encode()).hexdigest()
+    hash = md5((s + str(index)).encode()).hexdigest()
     if part2:
       for _ in range(2016):
-        hash = hashlib.md5(hash.encode()).hexdigest()
+        hash = md5(hash.encode()).hexdigest()
     return hash
 
   hashes = [get_hash(index) for index in range(1000)]
@@ -1161,17 +1576,18 @@ def day14a(s, *, part2=False):
 check_eq(day14a('abc'), 22728)
 puzzle.verify(1, day14a)
 
-day14_part2a = functools.partial(day14a, part2=True)
-# check_eq(day14a_part2('abc'), 22551)  # ~18 s.
-# puzzle.verify(2, day14a_part2)  # ~17.4 s
+day14a_part2 = functools.partial(day14a, part2=True)
+# check_eq(day14a_part2('abc'), 22551)  # ~10 s.
+# puzzle.verify(2, day14a_part2)  # ~10 s
 
 
 # %%
 # Faster multiprocessing solution.
 def day14_get_part2_hash(s: str) -> str:
-  hash = hashlib.md5(s.encode()).hexdigest()
+  md5 = _get_md5()
+  hash = md5(s.encode()).hexdigest()
   for _ in range(2016):
-    hash = hashlib.md5(hash.encode()).hexdigest()
+    hash = md5(hash.encode()).hexdigest()
   return hash
 
 
@@ -1197,8 +1613,8 @@ def day14_part2(s):
           return index
 
 
-# check_eq(day14_part2('abc'), 22551)  # ~2 s.
-puzzle.verify(2, day14_part2)  # ~1.9 s
+# check_eq(day14_part2('abc'), 22551)  # ~1.2 s.
+puzzle.verify(2, day14_part2)  # ~1.2 s using _md5 (~2.0 s using hashlib).
 
 # %% [markdown]
 # <a name="day15"></a>
@@ -1220,7 +1636,7 @@ Disc #2 has 2 positions; at time=0, it is at position 1.
 
 
 # %%
-def day15(s, *, part2=False):
+def day15a(s, *, part2=False):
   @dataclasses.dataclass
   class Wheel:
     period: int
@@ -1236,11 +1652,41 @@ def day15(s, *, part2=False):
     disc, period, phase = disc + 1, 11, 0
     wheels.append(Wheel(period, (phase + disc) % period))
 
+  # hh.show(math.lcm(*[wheel.period for wheel in wheels]))
   for time in itertools.count():
     if all((time + wheel.phase) % wheel.period == 0 for wheel in wheels):
       return time
 
   return None
+
+
+check_eq(day15a(s1), 5)
+puzzle.verify(1, day15a)
+
+day15a_part2 = functools.partial(day15a, part2=True)
+puzzle.verify(2, day15a_part2)
+
+
+# %%
+def day15(s, *, part2=False):  # Using modular inverses and general Chinese Remainder method.
+  # See `day13_part2()` in Advent Of Code 2020 Day 13:
+  #  https://github.com/hhoppe/advent_of_code/blob/main/2020/advent_of_code_2020.py
+  values, moduli = [], []
+  for line in s.splitlines():
+    pattern = r'Disc #(\d+) has (\d+) positions; at time=0, it is at position (\d+)\.'
+    disc, period, phase = map(int, hh.re_groups(pattern, line))
+    values.append(-(phase + disc) % period)  # Negative because "time % modulus = value".
+    moduli.append(period)
+
+  if part2:
+    disc, period, phase = disc + 1, 11, 0
+    values.append(-(phase + disc) % period)
+    moduli.append(period)
+
+  mod_prod = math.prod(moduli)
+  other_mods = [mod_prod // mod for mod in moduli]
+  inverses = [pow(other_mod, -1, mod=mod) for other_mod, mod in zip(other_mods, moduli)]
+  return sum(i * o * v for i, o, v in zip(inverses, other_mods, values)) % mod_prod
 
 
 check_eq(day15(s1), 5)
@@ -1263,7 +1709,7 @@ puzzle = advent.puzzle(day=16)
 
 
 # %%
-def day16(s, *, length=272):
+def day16a(s, *, length=272):
   s = s.strip()
   complement_digits = str.maketrans('01', '10')
 
@@ -1277,11 +1723,39 @@ def day16(s, *, length=272):
   return s
 
 
+check_eq(day16a('10000', length=20), '01100')
+puzzle.verify(1, day16a)
+
+day16a_part2 = functools.partial(day16a, length=35_651_584)
+puzzle.verify(2, day16a_part2)  # ~1.8 s.
+
+
+# %%
+@numba.njit
+def day16_compute(state: np.ndarray, length: int) -> np.ndarray:
+  while len(state) < length:
+    state = np.concatenate((state, np.array([False]), ~state[::-1]))
+  state = state[:length]
+
+  while len(state) % 2 == 0:
+    for index in range(len(state) // 2):
+      state[index] = state[index * 2] == state[index * 2 + 1]
+    state = state[: len(state) // 2]
+
+  return state
+
+
+def day16(s, *, length=272):
+  state = np.array(list(s.strip())) == '1'
+  state = day16_compute(state, length)
+  return ''.join('01'[int(value)] for value in state)
+
+
 check_eq(day16('10000', length=20), '01100')
 puzzle.verify(1, day16)
 
 day16_part2 = functools.partial(day16, length=35_651_584)
-puzzle.verify(2, day16_part2)
+puzzle.verify(2, day16_part2)  # ~0.06 s.
 
 # %% [markdown]
 # <a name="day17"></a>
@@ -1299,6 +1773,7 @@ puzzle = advent.puzzle(day=17)
 # %%
 def day17(s, *, part2=False):
   s = s.strip()
+  md5 = _get_md5()
   door_map = [(-1, 0, 'U'), (1, 0, 'D'), (0, -1, 'L'), (0, 1, 'R')]
 
   if not part2:
@@ -1307,11 +1782,9 @@ def day17(s, *, part2=False):
       y, x, path = queue.popleft()
       if (y, x) == (3, 3):
         return path
-      hashed = hashlib.md5((s + path).encode()).hexdigest()[:4]
-      is_open_udlr = ['b' <= ch <= 'f' for ch in hashed]
-      for is_open, (dy, dx, step) in zip(is_open_udlr, door_map):
-        y2, x2 = y + dy, x + dx
-        if is_open and 0 <= y2 <= 3 and 0 <= x2 <= 3:
+      hashed = md5((s + path).encode()).hexdigest()[:4]
+      for ch, (dy, dx, step) in zip(hashed, door_map):
+        if 'b' <= ch <= 'f' and 0 <= (y2 := y + dy) <= 3 and 0 <= (x2 := x + dx) <= 3:
           queue.append((y2, x2, path + step))
 
   max_length = 0
@@ -1321,11 +1794,9 @@ def day17(s, *, part2=False):
     if (y, x) == (3, 3):
       max_length = max(max_length, len(path))
       continue
-    hashed = hashlib.md5((s + path).encode()).hexdigest()[:4]
-    is_open_udlr = ['b' <= ch <= 'f' for ch in hashed]
-    for is_open, (dy, dx, step) in zip(is_open_udlr, door_map):
-      y2, x2 = y + dy, x + dx
-      if is_open and 0 <= y2 <= 3 and 0 <= x2 <= 3:
+    hashed = md5((s + path).encode()).hexdigest()[:4]
+    for ch, (dy, dx, step) in zip(hashed, door_map):
+      if 'b' <= ch <= 'f' and 0 <= (y2 := y + dy) <= 3 and 0 <= (x2 := x + dx) <= 3:
         stack.append((y2, x2, path + step))
 
   return max_length
@@ -1394,6 +1865,21 @@ puzzle.verify(1, day18b)
 
 day18b_part2 = functools.partial(day18b, num_rows=400_000)
 puzzle.verify(2, day18b_part2)
+
+
+# %%
+def day18_visualize(s, num_rows=120, repeat=3):  # Visualize.
+  state = np.array([False] + [ch == '^' for ch in s.strip()] + [False])
+  grid = np.empty((num_rows, len(state[1:-1])), bool)
+
+  for row_index in range(num_rows):
+    grid[row_index] = state[1:-1]
+    state[1:-1] = state[2:] ^ state[:-2]
+
+  media.show_image(grid.repeat(repeat, axis=0).repeat(repeat, axis=1), border=True, title='day18')
+
+
+day18_visualize(puzzle.input)
 
 
 # %%
@@ -1534,7 +2020,7 @@ s1 = """\
 
 
 # %%
-def day20_part1(s):  # Fast search over sorted candidates just below disallowed ranges; O(k^2).
+def day20_part1(s):  # Part 1: Search over sorted candidates just below disallowed ranges; O(k^2).
   disallowed = [(l, h + 1) for line in s.splitlines() for l, h in [map(int, line.split('-'))]]
   candidates = sorted(start - 1 for start, _ in disallowed if start > 0)
   for x in candidates:
@@ -1610,7 +2096,7 @@ puzzle.verify(2, day20_part2)
 
 # %% [markdown]
 # <a name="day21"></a>
-# ## Day 21: Successive scrambling of string
+# ## Day 21: Scrambling of string
 
 # %% [markdown]
 # - Part 1: Given the list of scrambling operations in your puzzle input, what is the result of scrambling abcdefgh?
@@ -1785,7 +2271,7 @@ puzzle.verify(2, day22_part2)
 
 # %% [markdown]
 # <a name="day23"></a>
-# ## Day 23: Program with toggle instruction
+# ## Day 23: Self-toggling program
 
 # %% [markdown]
 # - Part 1: Place 7 in register a, run the code.  What is the value left in register a?
@@ -1950,40 +2436,69 @@ s1 = """\
 
 
 # %%
-def day24a(s, *, part2=False):  # Find shortest path over all permutations of nodes.
+def day24a(s, *, part2=False, visualize=False):  # Find shortest path over all node permutations.
   grid = np.array([list(line) for line in s.splitlines()])
   num_nodes = np.max(grid[np.char.isdigit(grid)].astype(int)) + 1
-  node_yx = [tuple(a[0]) for node in range(num_nodes) for a in [np.argwhere(grid == str(node))]]
+  node_yx = [(y, x) for node in range(num_nodes) for y, x in [np.argwhere(grid == str(node))[0]]]
 
   @functools.cache
-  def get_distances(node0: int) -> dict[int, int]:
-    yx = node_yx[node0]
-    queue = collections.deque([(yx, 0)])
-    seen = {yx}
-    distances = {}
+  def get_paths(node0: int) -> dict[int, list[tuple[int, int]]]:
+    # Return shortest paths from node0 to all other nodes.
+    yx0 = node_yx[node0]
+    queue = collections.deque([yx0])
+    prev: dict[tuple[int, int], tuple[int, int]] = {}
+    paths = {}
     while queue:
-      yx, distance = queue.popleft()
-      if grid[yx].isdigit():
-        distances[int(grid[yx])] = distance
+      yx = queue.popleft()
+      if grid[yx].isdigit() and yx != yx0:
+        path = [yx]
+        yxt = yx
+        while (yxt := prev[yxt]) != yx0:
+          path.append(yxt)
+        paths[int(grid[yx])] = path[::-1]
       for dy, dx in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
         yx2 = yx[0] + dy, yx[1] + dx
-        if grid[yx2] != '#' and yx2 not in seen:
-          seen.add(yx2)
-          queue.append((yx2, distance + 1))
-    return distances
+        if grid[yx2] != '#' and yx2 not in prev:
+          prev[yx2] = yx
+          queue.append(yx2)
+    return paths
 
-  def get_distance(node0: int, node1: int) -> int:
-    return get_distances(node0)[node1]
+  def node_distance(node0: int, node1: int) -> int:
+    return len(get_paths(node0)[node1])
 
-  def path_distance(path: Iterable[int]) -> int:
-    return sum(get_distance(node0, node1) for node0, node1 in more_itertools.pairwise(path))
+  def node_sequence_distance(sequence: Iterable[int]) -> int:
+    return sum(node_distance(node0, node1) for node0, node1 in more_itertools.pairwise(sequence))
+
+  def node_sequence(permutation: Iterable[int]) -> list[int]:
+    return [0] + list(permutation) + [0] if part2 else [0] + list(permutation)
+
+  def permutation_distance(permutation: Iterable[int]) -> int:
+    return node_sequence_distance(node_sequence(permutation))
+
+  def permutation_path(permutation: Iterable[int]) -> list[tuple[int, int]]:
+    sequence = node_sequence(permutation)
+    path = [node_yx[sequence[0]]]
+    for node0, node1 in more_itertools.pairwise(sequence):
+      path.extend(get_paths(node0)[node1])
+    return path
 
   permutations = itertools.permutations(range(1, num_nodes))
+  permutation = min(permutations, key=permutation_distance)
 
-  if not part2:
-    return min(path_distance((0,) + path1) for path1 in permutations)
+  if visualize:
+    path = permutation_path(permutation)
+    images = []
+    image = np.full((*grid.shape, 3), 245, np.uint8)
+    image[grid == '#'] = 10
+    image[np.char.isdigit(grid)] = 255, 0, 0
+    for node in path:
+      if not grid[node].isdigit():
+        image[node][[0, 1]] //= 2
+      images.append(image.repeat(4, axis=0).repeat(4, axis=1))
+    images = [images[0]] * 40 + images + [images[-1]] * 100
+    media.show_video(images, codec='gif', fps=50, title='day24')
 
-  return min(path_distance((0,) + path1 + (0,)) for path1 in permutations)
+  return permutation_distance(permutation)
 
 
 check_eq(day24a(s1), 14)
@@ -1992,28 +2507,34 @@ puzzle.verify(1, day24a)
 day24a_part2 = functools.partial(day24a, part2=True)
 puzzle.verify(2, day24a_part2)
 
+_ = day24a(puzzle.input, visualize=True, part2=True)
+
 
 # %%
 def day24(s, *, part2=False):  # Use Dijkstra where the state includes the set of visited nodes.
   grid = np.array([list(line) for line in s.splitlines()])
   num_nodes = np.max(grid[np.char.isdigit(grid)].astype(int)) + 1
-  node_yx = [tuple(a[0]) for node in range(num_nodes) for a in [np.argwhere(grid == str(node))]]
+  node_yx = [(y, x) for node in range(num_nodes) for y, x in [np.argwhere(grid == str(node))[0]]]
 
   @functools.cache
   def get_distances(node0: int) -> dict[int, int]:
     yx = node_yx[node0]
-    queue = collections.deque([(yx, 0)])
+    queue = [yx]
     seen = {yx}
     distances = {}
+    distance = 0
     while queue:
-      yx, distance = queue.popleft()
-      if grid[yx].isdigit():
-        distances[int(grid[yx])] = distance
-      for dy, dx in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
-        yx2 = yx[0] + dy, yx[1] + dx
-        if grid[yx2] != '#' and yx2 not in seen:
-          seen.add(yx2)
-          queue.append((yx2, distance + 1))
+      queue2 = []
+      for yx in queue:
+        if grid[yx].isdigit():
+          distances[int(grid[yx])] = distance
+        for dy, dx in [(1, 0), (-1, 0), (0, 1), (0, -1)]:
+          yx2 = yx[0] + dy, yx[1] + dx
+          if grid[yx2] != '#' and yx2 not in seen:
+            seen.add(yx2)
+            queue2.append(yx2)
+      queue = queue2
+      distance += 1
     return distances
 
   def get_distance(node0: int, node1: int) -> int:
@@ -2064,7 +2585,7 @@ puzzle = advent.puzzle(day=25)
 
 
 # %%
-def day25(s):
+def day25a(s, debug=False):
   instructions = [line.split() for line in s.splitlines()]
 
   def desired_output() -> Iterator[int]:
@@ -2099,21 +2620,103 @@ def day25(s):
     prefix1, prefix2 = itertools.islice(values1, length), itertools.islice(values2, length)
     return all(e1 == e2 for e1, e2 in zip(prefix1, prefix2))
 
-  if 0:
+  if debug:
     for initial_a in range(180, 200):
       output = itertools.islice(compute_output(initial_a), 30)
       s_output = ''.join(str(value) for value in output)
-      print(f'{initial_a:3} {s_output}')
-    raise hh.StopExecution
+      hh.display_html(f'{initial_a:3} {s_output}')
+    return
 
   for initial_a in range(1, 2000):
     if equal_prefix(compute_output(initial_a), desired_output(), 30):
       return initial_a
 
 
-puzzle.verify(1, day25)
-
+puzzle.verify(1, day25a)
 puzzle.verify(2, lambda s: '')
+
+# %%
+_ = day25a(puzzle.input, debug=True)
+
+# %%
+# Using numba.
+Day25Op = enum.IntEnum('Day25Op', ['CPY_REG', 'CPY_VAL', 'INC', 'DEC', 'JNZ_REG', 'JNZ_VAL', 'OUT'])
+
+
+@numba.njit
+def day25_compute(instructions: np.ndarray, initial_a: int) -> Iterator[int]:
+  registers = [initial_a, 0, 0, 0]
+  pc = 0
+  while True:
+    assert 0 <= pc < len(instructions)
+    instruction = instructions[pc]
+    op, args = instruction[0], instruction[1:]
+    if op == Day25Op.CPY_REG:
+      registers[args[1]] = registers[args[0]]
+    elif op == Day25Op.CPY_VAL:
+      registers[args[1]] = args[0]
+    elif op == Day25Op.INC:
+      registers[args[0]] += 1
+    elif op == Day25Op.DEC:
+      registers[args[0]] -= 1
+    elif op == Day25Op.JNZ_REG:
+      if registers[args[0]] != 0:
+        pc += args[1] - 1
+    elif op == Day25Op.JNZ_VAL:
+      if args[0] != 0:
+        pc += args[1] - 1
+    elif op == Day25Op.OUT:
+      yield registers[args[0]]
+    else:
+      raise AssertionError
+    pc += 1
+
+
+def day25(s):
+  def encode(register: str) -> int:
+    return 'abcd'.index(register)
+
+  instructions: list[list[int]] = []
+  for line in s.splitlines():
+    match line.split():
+      case 'cpy', src, dst:
+        if src.isalpha():
+          instructions.append([Day25Op.CPY_REG, encode(src), encode(dst)])
+        else:
+          instructions.append([Day25Op.CPY_VAL, int(src), encode(dst)])
+      case 'inc', register:
+        instructions.append([Day25Op.INC, encode(register), 0])
+      case 'dec', register:
+        instructions.append([Day25Op.DEC, encode(register), 0])
+      case 'jnz', predicate, offset:
+        assert not offset.isalpha()
+        if predicate.isalpha():
+          instructions.append([Day25Op.JNZ_REG, encode(predicate), int(offset)])
+        else:
+          instructions.append([Day25Op.JNZ_VAL, int(predicate), int(offset)])
+      case 'out', register:
+        instructions.append([Day25Op.OUT, encode(register), 0])
+      case x:
+        raise AssertionError(x)
+
+  def compute_output(initial_a: int) -> Iterator[int]:
+    yield from day25_compute(np.array(instructions), initial_a)
+
+  def desired_output() -> Iterator[int]:
+    return itertools.cycle([0, 1])
+
+  def equal_prefix(values1: Iterable[int], values2: Iterable[int], length: int) -> bool:
+    prefix1, prefix2 = itertools.islice(values1, length), itertools.islice(values2, length)
+    return all(e1 == e2 for e1, e2 in zip(prefix1, prefix2))
+
+  for initial_a in range(1, 2000):
+    if equal_prefix(compute_output(initial_a), desired_output(), 30):
+      return initial_a
+
+
+_ = day25(puzzle.input)  # For numba compilation.
+puzzle.verify(1, day25)
+puzzle.verify(2, lambda s: '')  # No Part 2 on day 25.
 
 # %%
 # You activate all fifty stars and transmit the signal. The star atop the antenna begins to glow.
@@ -2143,7 +2746,7 @@ if 1:  # Look for unwanted pollution of namespace.
           ' '.join(
               name
               for name, value in globals().items()
-              if not (name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS)
+              if not (name.startswith(('_', 'day', 'Day')) or name in _ORIGINAL_GLOBALS)
           )
       )
   )
@@ -2161,67 +2764,6 @@ hh.show_notebook_cell_top_times()
 
 # %% [markdown]
 # # End
-
-# %%
-# # Multiprocessing; hasher.copy(); digest().
-
-# def day5_find_zero_hashes(s: str, start: int, stop: int) -> list[int]:
-#   # Pool requires that this function be pickled, so it must be in global module scope.
-#   if 0:  # ~15% slower.
-#     return [index for index in range(start, stop)
-#             if hashlib.md5((s + str(index)).encode()).hexdigest()[:5] == '00000']
-#   results = []
-#   hasher = hashlib.md5(s.encode())
-#   for index in range(start, stop):
-#     hasher2 = hasher.copy()
-#     hasher2.update(str(index).encode())
-#     digest = hasher2.digest()
-#     if digest[:2] == b'\0\0' and digest.hex()[4] == '0':
-#       results.append(index)
-#   return results
-
-
-# def day5_multiprocessing_generator(s: str, part2: bool) -> Iterator[int]:
-#   group_size = 2_000_000 if part2 else 500_000
-#   with multiprocessing.Pool() as pool:
-#     for base in itertools.count(0, group_size):
-#       chunk_size = group_size // multiprocessing.cpu_count() + 1
-#       args = []
-#       start, group_stop = base, base + group_size
-#       while start < group_stop:
-#         stop = min(start + chunk_size, group_stop)
-#         args.append((s, start, stop))
-#         start = stop
-#       results = pool.starmap(day5_find_zero_hashes, args)
-#       yield from more_itertools.flatten(results)
-
-
-# def day5_evaluator(s: str, part2: bool, generator: Callable[[int, bool], Iterator[int]]) -> str:
-#   password = ['_'] * 8 if part2 else []
-#   for index in generator(s, part2):
-#     hashed = hashlib.md5((s + str(index)).encode()).hexdigest()
-#     check_eq(hashed[:5], '00000')
-#     if part2:
-#       position = int(hashed[5], 16)
-#       if position < 8 and password[position] == '_':
-#         password[position] = hashed[6]
-#         if '_' not in password:
-#           return ''.join(password)
-#     else:
-#       password.append(hashed[5])
-#       if len(password) == 8:
-#         return ''.join(password)
-
-# def day5(s, part2=False):
-#   return day5_evaluator(s, part2, day5_multiprocessing_generator)
-
-
-# # check_eq(day5('abc'), '18f47a30')
-# puzzle.verify(1, day5)  # ~0.5 s.
-
-# day5_part2 = functools.partial(day5, part2=True)
-# # check_eq(day5_part2('abc'), '05ace8e3')
-# puzzle.verify(2, day5_part2)  # ~1.25 s.
 
 # %% [markdown]
 # <!-- For Emacs:

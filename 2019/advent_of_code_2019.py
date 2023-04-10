@@ -132,12 +132,12 @@ _ORIGINAL_GLOBALS = list(globals())
 
 
 # %% [markdown]
-# ### `Machine` used in several puzzles
+# ### `_Machine` used in several puzzles
 
 
 # %%
-# Also called `IntCode` Machine in the puzzles.
-class Machine:
+# Also called `IntCode` _Machine in the puzzles.
+class _Machine:
 
   def __init__(self):
     self.mem: Sequence[int] = ()
@@ -156,12 +156,12 @@ class Machine:
   @staticmethod
   def make(*args, **kwargs):
     if using_numba:
-      return NumbaMachine(*args, **kwargs)
-    return PyMachine(*args, **kwargs)
+      return _NumbaMachine(*args, **kwargs)
+    return _PyMachine(*args, **kwargs)
 
 
 # %%
-class PyMachine(Machine):
+class _PyMachine(_Machine):
 
   def __init__(self, s, *, mem_extend=0):
     assert not mem_extend
@@ -257,9 +257,9 @@ class PyMachine(Machine):
     return output
 
 
-def test_machine_py():
+def _test_machine_py():
   def mem_after_machine_run(s):
-    machine = PyMachine(s)
+    machine = _PyMachine(s)
     machine.run_fully()
     return ','.join(map(str, machine.mem))
 
@@ -272,15 +272,15 @@ def test_machine_py():
   check_eq(mem_after_machine_run('1,1,1,4,99,5,6,0,99'), '30,1,1,4,2,5,6,0,99')
 
 
-test_machine_py()
+_test_machine_py()
 
 
 # %%
-class NumbaMachine(Machine):
+class _NumbaMachine(_Machine):
 
   def __init__(self, s, *, mem_extend=10_000):
     super().__init__()
-    # Preallocate extra memory because we do not grow it as in PyMachine.
+    # Preallocate extra memory because we do not grow it as in _PyMachine.
     self.mem = np.concatenate(
         (np.array(list(map(int, s.split(',')))), np.zeros(mem_extend, np.int64))
     )
@@ -366,7 +366,7 @@ class NumbaMachine(Machine):
 
 
 # %%
-def test_machine(machine_type):
+def _test_machine(machine_type):
   def mem_after_machine_run(s):
     machine = machine_type(s, mem_extend=0)
     machine.run_fully()
@@ -381,15 +381,15 @@ def test_machine(machine_type):
   check_eq(mem_after_machine_run('1,1,1,4,99,5,6,0,99'), '30,1,1,4,2,5,6,0,99')
 
 
-for _machine_type in (PyMachine, NumbaMachine):
-  test_machine(_machine_type)  # ~4 s for numba compilation.
+for _machine_type in (_PyMachine, _NumbaMachine):
+  _test_machine(_machine_type)  # ~4 s for numba compilation.
 
 # %%
 if 0:  # For quick timing test while developing.
   puzzle = advent.puzzle(day=13, silent=True)
 
   def run_game(s):
-    machine = Machine.make(s)
+    machine = _Machine.make(s)
     machine.mem[0] = 2  # set free play
     score = None
     last_yx = {}
@@ -406,7 +406,7 @@ if 0:  # For quick timing test while developing.
       input = [joystick]
     return score
 
-  puzzle.verify(2, run_game)  # ~60 ms with NumbaMachine; ~3 s without.
+  puzzle.verify(2, run_game)  # ~60 ms with _NumbaMachine; ~3 s without.
 
 # %% [markdown]
 # <a name="day1"></a>
@@ -467,7 +467,7 @@ puzzle = advent.puzzle(day=2)
 
 
 # %%
-def day2a(s, *, part2=False):  # Original implementation before Machine.
+def day2a(s, *, part2=False):  # Original implementation before _Machine.
   def day2_machine_op(s, a=12, b=2):
     l = list(map(int, s.split(',')))
     l[1] = a
@@ -501,9 +501,9 @@ puzzle.verify(2, day2a_part2)  # ~175 ms.
 
 
 # %%
-def day2(s, *, part2=False):  # Now using Machine class.
+def day2(s, *, part2=False):  # Now using _Machine class.
   def day2_machine_op(s, a=12, b=2):
-    machine = Machine.make(s)
+    machine = _Machine.make(s)
     machine.mem[1:3] = a, b
     machine.run_fully()
     return machine.mem[0]
@@ -521,7 +521,7 @@ def day2(s, *, part2=False):  # Now using Machine class.
 
 puzzle.verify(1, day2)  # ~0 ms.
 day2_part2 = functools.partial(day2, part2=True)
-puzzle.verify(2, day2_part2)  # ~220 ms with NumbaMachine; ~900 ms without.
+puzzle.verify(2, day2_part2)  # ~220 ms with _NumbaMachine; ~900 ms without.
 
 # %% [markdown]
 # <a name="day3"></a>
@@ -771,25 +771,25 @@ puzzle = advent.puzzle(day=5)
 # %%
 def day5_test():
   for input in (7, 8, 9):
-    check_eq(Machine.make('3,9,8,9,10,9,4,9,99,-1,8').run_fully([input]), [input == 8])
+    check_eq(_Machine.make('3,9,8,9,10,9,4,9,99,-1,8').run_fully([input]), [input == 8])
   for input in (7, 8, 9):
-    check_eq(Machine.make('3,9,7,9,10,9,4,9,99,-1,8').run_fully([input]), [input < 8])
+    check_eq(_Machine.make('3,9,7,9,10,9,4,9,99,-1,8').run_fully([input]), [input < 8])
   for input in (7, 8, 9):
-    check_eq(Machine.make('3,3,1108,-1,8,3,4,3,99').run_fully([input]), [input == 8])
+    check_eq(_Machine.make('3,3,1108,-1,8,3,4,3,99').run_fully([input]), [input == 8])
   for input in (7, 8, 9):
-    check_eq(Machine.make('3,3,1107,-1,8,3,4,3,99').run_fully([input]), [input < 8])
+    check_eq(_Machine.make('3,3,1107,-1,8,3,4,3,99').run_fully([input]), [input < 8])
 
   for input in (-1, 0, 1):
     s = '3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9'
-    check_eq(Machine.make(s).run_fully([input]), [int(input != 0)])
+    check_eq(_Machine.make(s).run_fully([input]), [int(input != 0)])
   for input in (-1, 0, 1):
     s = '3,3,1105,-1,9,1101,0,0,12,4,12,99,1'
-    check_eq(Machine.make(s).run_fully([input]), [int(input != 0)])
+    check_eq(_Machine.make(s).run_fully([input]), [int(input != 0)])
 
   s = '3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99'
   for input in (7, 8, 9):
     expected = 999 if input < 8 else 1000 if input == 8 else 1001
-    check_eq(Machine.make(s).run_fully([input]), [expected])
+    check_eq(_Machine.make(s).run_fully([input]), [expected])
 
 
 day5_test()
@@ -797,7 +797,7 @@ day5_test()
 
 # %%
 def day5(s, *, part2=False):
-  output = Machine.make(s).run_fully([5 if part2 else 1])
+  output = _Machine.make(s).run_fully([5 if part2 else 1])
   if part2:
     assert len(output) == 1
     return output[0]
@@ -888,7 +888,7 @@ def day7_part1(s, *, return_all=False):
     check_eq(sorted(phases), list(range(5)))
     value = 0
     for i in range(5):
-      (value,) = Machine.make(s).run_fully([phases[i], value])
+      (value,) = _Machine.make(s).run_fully([phases[i], value])
     return value
 
   all_phases = itertools.permutations(range(5))
@@ -913,7 +913,7 @@ puzzle.verify(1, day7_part1)  # ~80 ms.
 def day7_part2(s, *, return_all=False):
   def get_thrust2(phases):
     check_eq(sorted(phases), list(range(5, 10)))
-    machines = [Machine.make(s) for _ in range(5)]
+    machines = [_Machine.make(s) for _ in range(5)]
     value = 0
     for step in itertools.count():
       for i in range(5):
@@ -1016,16 +1016,16 @@ def day9_test():
   # produces a copy of itself as output
   s = '109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99'
   expected = list(map(int, s.split(',')))
-  check_eq(Machine.make(s).run_fully(), expected)
+  check_eq(_Machine.make(s).run_fully(), expected)
 
   # should output a 16-digit number
   s = '1102,34915192,34915192,7,4,7,99,0'
-  result = Machine.make(s).run_fully()[0]
+  result = _Machine.make(s).run_fully()[0]
   check_eq(len(str(result)), 16)
 
   # should output the large number in the middle
   s = '104,1125899906842624,99'
-  check_eq(Machine.make(s).run_fully()[0], 1125899906842624)
+  check_eq(_Machine.make(s).run_fully()[0], 1125899906842624)
 
 
 day9_test()
@@ -1034,14 +1034,14 @@ day9_test()
 # %%
 def day9(s, *, part2=False):
   input = 2 if part2 else 1
-  (output,) = Machine.make(s).run_fully([input])
+  (output,) = _Machine.make(s).run_fully([input])
   return output
 
 
 puzzle.verify(1, day9)  # ~1 ms.
 
 day9_part2 = functools.partial(day9, part2=True)
-puzzle.verify(2, day9_part2)  # ~11 ms with NumbaMachine; ~1300 ms without.
+puzzle.verify(2, day9_part2)  # ~11 ms with _NumbaMachine; ~1300 ms without.
 
 # %% [markdown]
 # <a name="day10"></a>
@@ -1261,7 +1261,7 @@ def day11(s, *, part2=False, visualize_nth=0):
 
   test()
 
-  machine = Machine.make(s)
+  machine = _Machine.make(s)
   painter = Painter(visualize_nth=visualize_nth)
   initial_color = 1 if part2 else 0
   painter.paint_color(initial_color)
@@ -1282,10 +1282,10 @@ def day11(s, *, part2=False, visualize_nth=0):
   return advent_of_code_ocr.convert_6(s2)  # e.g. 'BLCZCJLZ'
 
 
-puzzle.verify(1, day11)  # ~50 ms with NumbaMachine; ~400 ms without.
+puzzle.verify(1, day11)  # ~50 ms with _NumbaMachine; ~400 ms without.
 
 day11_part2 = functools.partial(day11, part2=True)
-puzzle.verify(2, day11_part2)  # ~10 ms with NumbaMachine; ~40 ms without.
+puzzle.verify(2, day11_part2)  # ~10 ms with _NumbaMachine; ~40 ms without.
 
 # %%
 _ = day11(puzzle.input, visualize_nth=8)
@@ -1433,7 +1433,7 @@ puzzle = advent.puzzle(day=13)
 # %%
 def day13(s):
   grid = {}
-  for x, y, tile_id in more_itertools.chunked(Machine.make(s).run_fully(), 3):
+  for x, y, tile_id in more_itertools.chunked(_Machine.make(s).run_fully(), 3):
     grid[y, x] = tile_id
 
   if 0:
@@ -1443,12 +1443,12 @@ def day13(s):
   return sum(value == 2 for value in grid.values())  # num tiles left on screen
 
 
-puzzle.verify(1, day13)  # ~3 ms with NumbaMachine; ~80 ms without.
+puzzle.verify(1, day13)  # ~3 ms with _NumbaMachine; ~80 ms without.
 
 
 # %%
 def day13_part2(s, *, visualize=False):
-  machine = Machine.make(s)
+  machine = _Machine.make(s)
   machine.mem[0] = 2  # set free play
   score = None
   grid = {}
@@ -1481,7 +1481,7 @@ def day13_part2(s, *, visualize=False):
   return score
 
 
-puzzle.verify(2, day13_part2)  # ~65 ms with NumbaMachine; ~3 s without.
+puzzle.verify(2, day13_part2)  # ~65 ms with _NumbaMachine; ~3 s without.
 
 # %%
 _ = day13_part2(puzzle.input, visualize=True)
@@ -1655,7 +1655,7 @@ class Day15ExploreMaze:
   COMMAND_FOR_MOVEMENT = {(0, 1): 4, (1, 0): 2, (0, -1): 3, (-1, 0): 1}
 
   def __init__(self, machine_s):
-    self.machine = Machine.make(machine_s)
+    self.machine = _Machine.make(machine_s)
     self.grid = {}  # {yx: code} with code in '.#' (empty, wall)
     self.current_yx = self.ORIGIN
     self.grid[self.current_yx] = '.'  # empty
@@ -2015,7 +2015,7 @@ def day17_part1(s):
 
   check_eq(find_intersections(s1), 76)
 
-  output = Machine.make(s).run_fully()
+  output = _Machine.make(s).run_fully()
   puzzle_s = ''.join(map(chr, output))
   return find_intersections(puzzle_s)
 
@@ -2100,7 +2100,7 @@ def day17_part2(s, *, visualize=False):
         ','.join(compute_commands(s2)), 'R,8,R,8,R,4,R,4,R,8,L,6,L,2,R,4,R,4,R,8,R,8,R,8,L,6,L,2'
     )
 
-    puzzle_s = ''.join(map(chr, Machine.make(s).run_fully()))
+    puzzle_s = ''.join(map(chr, _Machine.make(s).run_fully()))
     commands = compute_commands(puzzle_s)
     s_routine = ','.join(commands) + ','
     s_functions: list[str] = []
@@ -2128,7 +2128,7 @@ def day17_part2(s, *, visualize=False):
     return list(more_itertools.flatten(it))
 
   robot_input = get_robot_input(s)
-  machine = Machine.make(s)
+  machine = _Machine.make(s)
   check_eq(machine.mem[0], 1)
   machine.mem[0] = 2
   output = machine.run_fully(robot_input)
@@ -2490,7 +2490,7 @@ puzzle = advent.puzzle(day=19)
 # %%
 def day19_part1(s, *, shape=(50, 50), visualize=False):
   def in_tractor(y, x):
-    (output,) = Machine.make(s).run_fully([x, y])
+    (output,) = _Machine.make(s).run_fully([x, y])
     assert output in (0, 1)
     return output == 1
 
@@ -2500,7 +2500,7 @@ def day19_part1(s, *, shape=(50, 50), visualize=False):
   return np.count_nonzero(array)
 
 
-puzzle.verify(1, day19_part1)  # ~340 ms with NumbaMachine; ~3400 ms without.
+puzzle.verify(1, day19_part1)  # ~340 ms with _NumbaMachine; ~3400 ms without.
 
 # %%
 _ = day19_part1(puzzle.input, visualize=True)
@@ -2509,7 +2509,7 @@ _ = day19_part1(puzzle.input, visualize=True)
 # %%
 def day19_part2(s, *, size=100, visualize=False):
   def in_tractor(y, x):
-    (output,) = Machine.make(s).run_fully([x, y])
+    (output,) = _Machine.make(s).run_fully([x, y])
     assert output in (0, 1)
     return output == 1
 
@@ -2548,7 +2548,7 @@ def day19_part2(s, *, size=100, visualize=False):
       return x * 10_000 + y
 
 
-puzzle.verify(2, day19_part2)  # ~470 ms with NumbaMachine; ~4.4 s without.
+puzzle.verify(2, day19_part2)  # ~470 ms with _NumbaMachine; ~4.4 s without.
 
 # %%
 _ = day19_part2(puzzle.input, visualize=True)  # Slow; ~3.8 s.
@@ -2944,7 +2944,7 @@ puzzle = advent.puzzle(day=21)
 def day21_process_springscript(s, spring_program, verbose=False, command='WALK'):
   spring_program = spring_program + command + '\n'
   input = list(map(ord, spring_program))
-  output = Machine.make(s).run_fully(input)
+  output = _Machine.make(s).run_fully(input)
   value = output.pop() if output[-1] >= 128 else None
   last_moments = ''.join(map(chr, output))
   if verbose:
@@ -3080,7 +3080,7 @@ def day21_part2(s):
   return day21_process_springscript(s, spring_program, command='RUN')
 
 
-puzzle.verify(2, day21_part2)  # ~16 ms with NumbaMachine; ~2400 ms without.
+puzzle.verify(2, day21_part2)  # ~16 ms with _NumbaMachine; ~2400 ms without.
 
 # %% [markdown]
 # <a name="day22"></a>
@@ -3134,7 +3134,7 @@ Result: 9 2 5 8 1 4 7 0 3 6
 
 # %%
 # Old version that keeps a list of cards:
-class DeckOld:
+class _DeckOld:
 
   def __init__(self, arg):
     self.deck = list(range(int(arg))) if isinstance(arg, int) else list(arg)
@@ -3149,11 +3149,11 @@ class DeckOld:
     return self.deck.index(i)
 
   def deal_into_new_stack(self):
-    return DeckOld(reversed(self.deck))
+    return _DeckOld(reversed(self.deck))
 
   def cut_n_cards(self, n):
     n = n % len(self.deck)
-    return DeckOld(self.deck[n:] + self.deck[:n])
+    return _DeckOld(self.deck[n:] + self.deck[:n])
 
   def deal_with_increment(self, n):
     size = len(self.deck)
@@ -3163,7 +3163,7 @@ class DeckOld:
     for i in range(size):
       new_deck[position] = self.deck[i]
       position = (position + n) % size
-    return DeckOld(new_deck)
+    return _DeckOld(new_deck)
 
 
 # %%
@@ -3173,7 +3173,7 @@ class DeckOld:
 # (2) the offset of card 1 relative to card 0, as 0 <= value < deck_size
 # (This is similar to np.ndarray view with data and strides)
 @dataclasses.dataclass
-class Deck:
+class _Deck:
   size: int  # number of cards in deck
   start: int = 0  # zero-based position of card 0
   step: int = 1  # position of card 1 relative to card 0
@@ -3199,23 +3199,23 @@ class Deck:
     return (self.start + self.step * i) % self.size
 
   def deal_into_new_stack(self):
-    return Deck(self.size, -1 - self.start, -self.step)
+    return _Deck(self.size, -1 - self.start, -self.step)
 
   def cut_n_cards(self, n):
-    return Deck(self.size, self.start - n, self.step)
+    return _Deck(self.size, self.start - n, self.step)
 
   def deal_with_increment(self, n):
     assert self.size % n > 0
-    return Deck(self.size, self.start * n, self.step * n)
+    return _Deck(self.size, self.start * n, self.step * n)
 
   def copy(self):
     return dataclasses.replace(self)
 
   def __mul__(self, other):
-    return Deck(self.size, self.start + self.step * other.start, self.step * other.step)
+    return _Deck(self.size, self.start + self.step * other.start, self.step * other.step)
 
   def __pow__(self, exponent):
-    x = Deck(self.size)
+    x = _Deck(self.size)
     base = self.copy()
     while exponent > 0:
       if exponent % 2 == 1:
@@ -3248,16 +3248,16 @@ class Deck:
 
 
 def day22_test():
-  deck = Deck(10)
+  deck = _Deck(10)
   check_eq(deck.deal_into_new_stack().cards(), [9, 8, 7, 6, 5, 4, 3, 2, 1, 0])
   check_eq(deck.cut_n_cards(3).cards(), [3, 4, 5, 6, 7, 8, 9, 0, 1, 2])
   check_eq(deck.cut_n_cards(-4).cards(), [6, 7, 8, 9, 0, 1, 2, 3, 4, 5])
   check_eq(deck.deal_with_increment(3).cards(), [0, 7, 4, 1, 8, 5, 2, 9, 6, 3])
   for s in day22_deck10_shuffles:
-    Deck(10).verify_shuffle(s)
+    _Deck(10).verify_shuffle(s)
   check_eq(
-      Deck(10007).apply_shuffle(puzzle.input).apply_shuffle(puzzle.input),
-      Deck(10007).apply_shuffle(puzzle.input) ** 2,
+      _Deck(10007).apply_shuffle(puzzle.input).apply_shuffle(puzzle.input),
+      _Deck(10007).apply_shuffle(puzzle.input) ** 2,
   )
 
 
@@ -3268,7 +3268,7 @@ day22_test()
 def day22(s, *, part2=False):
   deck_size = 119315717514047 if part2 else 10007
   num_shuffles = 101741582076661 if part2 else 1
-  deck = Deck(deck_size).apply_shuffle(s) ** num_shuffles
+  deck = _Deck(deck_size).apply_shuffle(s) ** num_shuffles
   return deck.card_at_position(2020) if part2 else deck.position_of_card(2019)
 
 
@@ -3287,7 +3287,7 @@ puzzle = advent.puzzle(day=23)
 
 # %%
 def day23(s, *, part2=False, num_machines=50):
-  machines = [Machine.make(s) for _ in range(num_machines)]
+  machines = [_Machine.make(s) for _ in range(num_machines)]
   inputs = [collections.deque([i]) for i, machine in enumerate(machines)]
   nat_memory: tuple[int, int] | None = None
   previous_nat_memory: tuple[int, int] | None = None
@@ -3426,7 +3426,7 @@ def day25(s, *, num_steps=4000):
   # 'You're launched into space! Bye!'
   random.seed(0)
 
-  machine = Machine.make(s)
+  machine = _Machine.make(s)
   command = ''
   inventory = set()
   locations = set()

@@ -3903,7 +3903,7 @@ puzzle.verify(2, day22d_part2)  # ~380 ms.
 
 
 # %%
-class Kdtree(Generic[_T]):
+class _Kdtree(Generic[_T]):
   """Spatial structure that splits space using hyperplanes in successive dims.
 
   In this K-D tree implementation, the original bounding volume is the unit
@@ -3935,8 +3935,8 @@ class Kdtree(Generic[_T]):
     assert ndim > 0 and max_level > 0
     self.ndim = ndim
     self.max_level = max_level
-    self.entries: list[Kdtree.Entry[_T]] = []
-    self.nodes: list[Kdtree.Node] = []
+    self.entries: list[_Kdtree.Entry[_T]] = []
+    self.nodes: list[_Kdtree.Node] = []
 
   def add(self, bb0: tuple[float, ...], bb1: tuple[float, ...], data: _T) -> None:
     """Stores the box-bounded element."""
@@ -4046,8 +4046,8 @@ class Kdtree(Generic[_T]):
       yield from recurse(0)
 
 
-def test_kdtree():
-  kdtree = Kdtree[str](ndim=1)
+def _test_kdtree():
+  kdtree = _Kdtree[str](ndim=1)
   kdtree.add((0.1,), (0.2,), 'elem1')
   kdtree.add((0.7,), (0.8,), 'elem2')
   kdtree.add((0.4,), (0.6,), 'elem3')
@@ -4060,7 +4060,7 @@ def test_kdtree():
   check_eq({r[2] for r in kdtree.search((0.55,), (0.72,))}, {'elem3'})
   check_eq({r[2] for r in kdtree.search((0.15,), (0.95,))}, {'elem1', 'elem3'})
 
-  kdtree = Kdtree[str](ndim=2)
+  kdtree = _Kdtree[str](ndim=2)
   kdtree.add((0.1, 0.15), (0.2, 0.25), 'elem1')
   kdtree.add((0.7, 0.3), (0.75, 0.35), 'elem2')
   kdtree.add((0.2, 0.8), (0.25, 0.85), 'elem3')
@@ -4070,11 +4070,11 @@ def test_kdtree():
   check_eq({r[2] for r in kdtree.search((0.1, 0.1), (0.9, 0.9))}, {'elem1', 'elem2', 'elem3'})
 
 
-test_kdtree()
+_test_kdtree()
 
 
 # %%
-def day22e(s, *, part2=False):  # Using Kdtree.
+def day22e(s, *, part2=False):  # Using _Kdtree.
   lines = s.splitlines()
   state_cuboids = []
   for line in lines:
@@ -4145,7 +4145,7 @@ def day22e(s, *, part2=False):  # Using Kdtree.
     return finalized
 
   # Entries are disjoint union of "on" cubes.
-  kdtree = Kdtree[int](ndim=3)
+  kdtree = _Kdtree[int](ndim=3)
 
   for state, cuboid in state_cuboids:
     cells_to_add, cells_to_delete = set(), set()
@@ -4175,7 +4175,7 @@ puzzle.verify(1, day22e)  # ~14 ms.
 day22e_part2 = functools.partial(day22e, part2=True)
 check_eq(day22e_part2(s3), 2758514936282235)
 puzzle.verify(2, day22e_part2)  # ~330 ms vs. previous ~380 ms.
-# It looks like the overhead of maintaining the Kdtree is too great.
+# It looks like the overhead of maintaining the _Kdtree is too great.
 
 
 # %%

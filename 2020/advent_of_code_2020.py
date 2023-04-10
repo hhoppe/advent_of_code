@@ -1327,13 +1327,13 @@ puzzle.verify(1, day13_part1)  # ~0 ms.
 
 
 # %%
-def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
+def _extended_gcd(a: int, b: int) -> tuple[int, int, int]:
   """Finds the greatest common divisor using the extended Euclidean algorithm.
 
   Returns:
     (gcd(a, b), x, y) with the property that a * x + b * y = gcd(a, b).
 
-  >>> extended_gcd(29, 71)
+  >>> _extended_gcd(29, 71)
   (1, -22, 9)
   >>> (29 * -22) % 71
   1
@@ -1349,11 +1349,11 @@ def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
   return a, x, y
 
 
-check_eq(extended_gcd(29, 71), ((1, -22, 9)))
+check_eq(_extended_gcd(29, 71), ((1, -22, 9)))
 
 
 # %%
-def day13a_part2(s):  # Using pairwise reduction with extended_gcd.
+def day13a_part2(s):  # Using pairwise reduction with _extended_gcd.
   s = s.splitlines()[-1]
   buses = [int(e) for e in s.replace('x', '1').split(',')]
   check_eq(np.lcm.reduce(buses), math.prod(buses))  # verify all coprime
@@ -1362,7 +1362,7 @@ def day13a_part2(s):  # Using pairwise reduction with extended_gcd.
   def merge_buses(bus1, bus2):
     (b1, r1), (b2, r2) = bus1, bus2
     # https://en.wikipedia.org/wiki/Chinese_remainder_theorem
-    _, x, y = extended_gcd(b1, b2)
+    _, x, y = _extended_gcd(b1, b2)
     return b1 * b2, (r1 * y * b2 + r2 * x * b1) % (b1 * b2)
 
   _, r = functools.reduce(merge_buses, bus_remainders)
@@ -1403,13 +1403,7 @@ def day13_part2(s):  # Using built-in modular inverses and general Chinese Remai
     mod_prod = math.prod(moduli)
     other_mods = [mod_prod // mod for mod in moduli]
     inverses = [pow(other_mod, -1, mod=mod) for other_mod, mod in zip(other_mods, moduli)]
-    return (
-        sum(
-            inverse * other_mod * value
-            for inverse, other_mod, value in zip(inverses, other_mods, values)
-        )
-        % mod_prod
-    )
+    return sum(i * o * v for i, o, v in zip(inverses, other_mods, values)) % mod_prod
 
   return solve_mod_congruences(remainders, moduli)
 
