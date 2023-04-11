@@ -61,7 +61,6 @@ import os
 import pathlib
 import re
 import sys
-import textwrap
 import types
 from typing import Any
 
@@ -1201,6 +1200,7 @@ dec a
 jnz a 2
 dec a
 """
+
 
 # %%
 def day12a(s, *, part2=False):
@@ -2738,15 +2738,9 @@ if 0:  # Compute min execution times over several calls.
 
 # %%
 if 1:  # Look for unwanted pollution of namespace.
-  print(
-      textwrap.fill(
-          ' '.join(
-              name
-              for name, value in globals().items()
-              if not (name.startswith(('_', 'day', 'Day')) or name in _ORIGINAL_GLOBALS)
-          )
-      )
-  )
+  for _name in globals().copy():
+    if not (re.match(r'^_|(day|Day|s)\d+|(puzzle$)', _name) or _name in _ORIGINAL_GLOBALS):
+      print(_name)
 
 # %%
 if 0:  # Lint.

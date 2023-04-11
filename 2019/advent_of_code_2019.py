@@ -56,15 +56,16 @@ import collections
 from collections.abc import Iterable, Sequence
 import dataclasses
 import functools
+import graphlib
 import heapq
 import itertools
 import math
 import os
+import pathlib
 import random
 import re
 import sys
 import types
-import textwrap
 from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -84,6 +85,8 @@ hh.start_timing_notebook_cells()
 # %%
 YEAR = 2019
 SHOW_BIG_MEDIA = False
+if pathlib.Path('results').is_dir():
+  media.set_show_save_dir('results')
 
 # %%
 # (1) To obtain puzzle inputs and answers, we first try these paths/URLs:
@@ -982,8 +985,7 @@ def day8(s, *, part2=False):
   if 0:
     print(result)
   assert np.all(result < 2)
-  result2 = np.pad(result, 1)
-  media.show_image(result2, height=result2.shape[0] * 2)
+  media.show_image(np.pad(result, 1).repeat(4, axis=0).repeat(4, axis=1))
 
   s2 = hh.string_from_grid(result, {0: '.', 1: '#'})
   hh.display_html(s2.replace('.', '⬜').replace('#', '⬛').replace('\n', '<br/>'))
@@ -1165,7 +1167,7 @@ def day10(s, *, part2=False, return_final=True, index_vaporized=199, visualize=F
 
   if visualize:
     images = [images[0]] * 25 + images + [images[-1]] * 25
-    media.show_video(images, codec='gif', fps=25, border=True)
+    media.show_video(images, codec='gif', fps=25, border=True, title='day10')
   if 0 and index_vaporized == 35:
     with np.printoptions(linewidth=1000):
       print(time_vaporized)
@@ -1238,9 +1240,10 @@ def day11(s, *, part2=False, visualize_nth=0):
     def finish(self):
       if self.visualize_nth:
         video: Any = hh.grid_from_indices(self.tyx_white, pad=(0, 1, 1), dtype=bool)
-        video = video.repeat(2, axis=1).repeat(2, axis=2)
-        video = [video[0]] * 25 + list(video) + [video[-1]] * 25
-        media.show_video(video, codec='gif', fps=50)
+        repeat = 4 if part2 else 2
+        video = video.repeat(repeat, axis=1).repeat(repeat, axis=2)
+        video = [video[0]] * 40 + list(video) + [video[-1]] * 80
+        media.show_video(video, codec='gif', fps=50, title=f'day11{"b" if part2 else "a"}')
 
   def test():
     small = [
@@ -1398,7 +1401,7 @@ def day12_part2(s):
 
   initial_position = np.array(re.findall(r'<x=(.*), y=(.*), z=(.*)>', s), np.int64)
   periods = [period_for_1d(initial_position[:, coord]) for coord in range(3)]
-  return np.lcm.reduce(periods)
+  return math.lcm(*periods)
 
 
 check_eq(day12_part2(s1), 2772)
@@ -1476,7 +1479,7 @@ def day13_part2(s, *, visualize=False):
 
   if visualize:
     images = [images[0]] * 50 + images + [images[-1]] * 50
-    media.show_video(images, codec='gif', fps=50)
+    media.show_video(images, codec='gif', fps=50, title='day13')
 
   return score
 
@@ -1594,7 +1597,7 @@ def day14(s, *, fuel=1):
   recipes = parse_recipes(s)
   graph = {node: list(counter) for node, (_, counter) in recipes.items()}
   graph['ORE'] = []
-  elements_in_order = hh.topological_sort(graph)
+  elements_in_order = list(graphlib.TopologicalSorter(graph).static_order())[::-1]
   check_eq(elements_in_order[0], 'FUEL')
   check_eq(elements_in_order.pop(), 'ORE')
   for element_needed in elements_in_order:
@@ -1740,7 +1743,7 @@ class Day15ExploreMaze:
         grid[yx] = 'p'
         images.append(self.visualize_grid(grid))
       images = [images[0]] * 25 + images + [images[-1]] * 25
-      media.show_video(images, codec='gif', fps=25)
+      media.show_video(images, codec='gif', fps=25, title='day15a')
     return len(path)
 
   def farthest_distance_from_destination(self, visualize=False):
@@ -1775,7 +1778,7 @@ class Day15ExploreMaze:
         yx = previous[yx]
         images.append(self.visualize_grid(grid))
       images = [images[0]] * 25 + images + [images[-1]] * 25
-      media.show_video(images, codec='gif', fps=25)
+      media.show_video(images, codec='gif', fps=25, title='day15b')
     return distance
 
 
@@ -2136,8 +2139,8 @@ def day17_part2(s, *, visualize=False):
     s = ''.join(map(chr, output[:-1]))
     s = s.split('Continuous video feed?')[1].strip('\n')
     # print(s)  # Map confirming that we have reached the end of the path.
-    image = (hh.grid_from_string(s) != '.').repeat(3, axis=0).repeat(3, axis=1)
-    media.show_image(~image, border=True)
+    image = (hh.grid_from_string(s) != '.').repeat(4, axis=0).repeat(4, axis=1)
+    media.show_image(~image, border=True, title='day17')
   return output[-1]  # result is the last output element
 
 
@@ -2429,12 +2432,13 @@ def day18(s, *, part2=False, visualize=False, fps=50, size=4, speed=1, tail=1):
           yx = path[i - tail]
           if grid[yx] == '.':
             image[path[i - tail]] = cmap['.']
-        if (i - 1) % speed == 0:
+        if i == 0 or (i - 1) % speed == 0:
           images.append(image.repeat(size, axis=0).repeat(size, axis=1))
       current_keys = move(current_keys, index_key, key)
 
     images = [images[0]] * (2 * fps) + images + [images[-1]] * (2 * fps)
-    media.show_video(images, codec='gif', fps=fps)
+    title = None if len(grid) < 40 else 'day18b' if part2 else 'day18a'
+    media.show_video(images, codec='gif', fps=fps, title=title)
 
   return distance
 
@@ -2496,7 +2500,8 @@ def day19_part1(s, *, shape=(50, 50), visualize=False):
 
   array = np.fromfunction(np.vectorize(in_tractor), shape)
   if visualize:
-    media.show_image(np.pad(array, 1), height=100)
+    image = np.pad(array, 1).repeat(3, axis=0).repeat(3, axis=1)
+    media.show_image(image, title='day19a')
   return np.count_nonzero(array)
 
 
@@ -2544,7 +2549,7 @@ def day19_part2(s, *, size=100, visualize=False):
         image = hh.image_from_yx_map(yxmap, background=' ', cmap=cmap, pad=4)
         new_shape = int(image.shape[0] * 0.25), int(image.shape[1] * 0.25)
         image = media.resize_image(image, new_shape)
-        media.show_image(image)
+        media.show_image(image, title='day19b')
       return x * 10_000 + y
 
 
@@ -2860,15 +2865,21 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
       cmap = {' ': (235,) * 3, '.': (255,) * 3, '#': (30,) * 3, 'A': (40, 40, 255)}
       image0 = np.array([cmap[e] for e in grid.flat], np.uint8).reshape(*grid.shape, 3)
 
-      def record_image(image):
-        images.append(image.repeat(repeat, axis=0).repeat(repeat, axis=1))
+      def record_image(image, step, level):
+        image = image.repeat(repeat, axis=0).repeat(repeat, axis=1)
+        text = f'step {step:4}'
+        hh.overlay_text(image, (140, 140), text, fontsize=18, background=255, align='tl')
+        if part2:
+          text = f'level {level:2}'
+          hh.overlay_text(image, (180, 140), text, fontsize=18, background=255, align='tl')
+        images.append(image)
 
       image = image0.copy()
       count = 0
       level = 0
       last_lyx = src_lyx
       color = 255, 40, 40
-      for lyx in path:
+      for step, lyx in enumerate(path):
         if lyx[0] == level:
           image[lyx[1:]] = color
           if abs(lyx[1] - last_lyx[1]) + abs(lyx[2] - last_lyx[2]) > 1:
@@ -2876,12 +2887,12 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
             lyx2 = self.opposite_portal(last_lyx, max_level)
             image[lyx2[1:]] = color
           if count % speed == 0:
-            record_image(image)
+            record_image(image, step, level)
           count += 1
         else:
-          record_image(image)
-          image = image0.copy()
           level = lyx[0]
+          record_image(image, step, level)
+          image = image0.copy()
           count = 0
           color = (255, 40, 40) if self.is_inner_portal(last_lyx[1:]) else (0, 180, 60)
           lyx2 = self.opposite_portal(last_lyx, max_level)
@@ -2889,10 +2900,10 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
           yx2 = next(iter(self.portal_portal_path[lyx2[1:]].values()))[0]
           image[yx2] = color
         last_lyx = lyx
-      record_image(image)
+      record_image(image, step, level)
       images = [images[0]] * 50 + images + [images[-1]] * 120
       images += [images[0] * 0] * 10
-      media.show_video(images, codec='gif', fps=50)
+      media.show_video(images, codec='gif', fps=50, title=f'day20{"b" if part2 else "a"}')
 
   if part2:
     max_level = sys.maxsize
@@ -2916,7 +2927,12 @@ puzzle.verify(2, day20_part2)  # ~70 ms; ~3450 ms without portal_portal_path.
 _ = day20(puzzle.input, visualize=True, speed=1)  # Slow: ~4 s.
 
 # %%
-_ = day20_part2(puzzle.input, visualize=True, speed=2)  # Slow: ~25 s.
+if SHOW_BIG_MEDIA:
+  _ = day20_part2(puzzle.input, visualize=True, speed=2)  # Slow: ~25 s; ~1 MB.
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2019/results/day20b.gif"/>
 
 # %%
 # See also visualizations in:
@@ -3392,7 +3408,7 @@ def day24_part2(s, *, num_steps=200, visualize=False):
   # print(grid.sum(axis=(1, 2)))  # Confirm that all levels are occupied.
   if visualize:
     images = [images[0]] * 30 + images + [images[-1]] * 90
-    media.show_video(images, codec='gif', fps=25)  # ~1 MB embedded GIF.
+    media.show_video(images, codec='gif', fps=25, title='day24')  # ~1 MB embedded GIF.
 
   return np.count_nonzero(grid)
 
@@ -3496,22 +3512,9 @@ if 0:  # Compute min execution times over several calls.
 
 # %%
 if 1:  # Look for unwanted pollution of namespace.
-  print(
-      textwrap.fill(
-          ' '.join(
-              name
-              for name, value in globals().items()
-              if not (name.startswith(('_', 'day', 'Day')) or name in _ORIGINAL_GLOBALS)
-          )
-      )
-  )
-
-# %%
-if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
-  # Create a new tar.gz file.
-  hh.run(
-      f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
-  )
+  for _name in globals().copy():
+    if not (re.match(r'^_|(day|Day|s)\d+|(puzzle$)', _name) or _name in _ORIGINAL_GLOBALS):
+      print(_name)
 
 # %%
 if 0:  # Lint.

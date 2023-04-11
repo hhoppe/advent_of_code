@@ -1679,7 +1679,7 @@ Monkey 3:
 """
 
 # %%
-# mod = int(np.lcm.reduce([monkey.divisible_by for monkey in monkeys]))
+# mod = math.lcm(*[monkey.divisible_by for monkey in monkeys])
 
 
 # %%
@@ -2021,7 +2021,7 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
   )
   media.show_image(image, title='day12b', border=True)
 
-  if 1:
+  if SHOW_BIG_MEDIA:
     video = (
         np.asarray(tilt_video(fig))[:, 95:-80, 20:-20]
         if use_tilt
@@ -2034,6 +2034,11 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
 
 
 day12w(puzzle.input)
+
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day12c.gif"/>
 
 
 # %%
@@ -4599,7 +4604,12 @@ check_eq(day22_part2(s1), 5031)
 puzzle.verify(2, day22_part2)
 
 # %%
-media.show_video(day22_part2(puzzle.input, visualize=True), title='day22', codec='gif', fps=50)
+if SHOW_BIG_MEDIA:
+  media.show_video(day22_part2(puzzle.input, visualize=True), title='day22', codec='gif', fps=50)
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day22.gif"/>
 
 # %% [markdown]
 # <a name="day23"></a>
@@ -5220,20 +5230,9 @@ if 0:  # Compute min execution times over several calls.
 
 # %%
 if 1:  # Look for unwanted pollution of namespace.
-
-  def _bad_name(name):
-    return not (name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS)
-
-  print(textwrap.fill(' '.join(name for name, value in globals().items() if _bad_name(name))))
-
-# %%
-if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
-  # Create a new tar.gz file.
-  hh.run(
-      f"""cd /mnt/c/hh/tmp && mkdir -p '{PROFILE}' &&
-      cp -p ~/.config/aocd/'{PROFILE.replace("_", " ")}'/{YEAR}*[rt].txt '{PROFILE}' &&
-      tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
-  )
+  for _name in globals().copy():
+    if not (re.match(r'^_|(day|Day|s)\d+|(puzzle$)', _name) or _name in _ORIGINAL_GLOBALS):
+      print(_name)
 
 # %%
 if 0:  # Lint.

@@ -65,7 +65,6 @@ import math
 import operator
 import re
 import sys
-import textwrap
 import types
 from typing import Any
 
@@ -1356,7 +1355,7 @@ check_eq(_extended_gcd(29, 71), ((1, -22, 9)))
 def day13a_part2(s):  # Using pairwise reduction with _extended_gcd.
   s = s.splitlines()[-1]
   buses = [int(e) for e in s.replace('x', '1').split(',')]
-  check_eq(np.lcm.reduce(buses), math.prod(buses))  # verify all coprime
+  check_eq(math.lcm(*buses), math.prod(buses))  # verify all coprime
   bus_remainders = [(bus, -i % bus) for i, bus in enumerate(buses)]  # Optionally "if bus > 1".
 
   def merge_buses(bus1, bus2):
@@ -1382,7 +1381,7 @@ puzzle.verify(2, day13a_part2)  # ~0 ms.
 def day13_part2(s):  # Using built-in modular inverses and general Chinese Remainder method.
   s = s.splitlines()[-1]
   buses = [int(e) for e in s.replace('x', '1').split(',')]
-  check_eq(np.lcm.reduce(buses), math.prod(buses))  # verify all coprime
+  check_eq(math.lcm(*buses), math.prod(buses))  # verify all coprime
   remainders, moduli = zip(*[(-i % bus, bus) for i, bus in enumerate(buses)])  # Or "if bus > 1".
 
   def solve_mod_congruences(values: Iterable[int], moduli: Iterable[int]) -> int:
@@ -2880,22 +2879,9 @@ if 0:  # Compute min execution times over several calls.
 
 # %%
 if 1:  # Look for unwanted pollution of namespace.
-  print(
-      textwrap.fill(
-          ' '.join(
-              name
-              for name, value in globals().items()
-              if not (name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS)
-          )
-      )
-  )
-
-# %%
-if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
-  # Create a new tar.gz file.
-  hh.run(
-      f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
-  )
+  for _name in globals().copy():
+    if not (re.match(r'^_|(day|Day|s)\d+|(puzzle$)', _name) or _name in _ORIGINAL_GLOBALS):
+      print(_name)
 
 # %%
 if 0:  # Lint.

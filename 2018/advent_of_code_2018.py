@@ -66,7 +66,6 @@ import itertools
 import math
 import re
 import sys
-import textwrap
 import types
 from typing import Any
 import warnings
@@ -3714,22 +3713,9 @@ if 0:  # Compute min execution times over several calls.
 
 # %%
 if 1:  # Look for unwanted pollution of namespace.
-  print(
-      textwrap.fill(
-          ' '.join(
-              name
-              for name, value in globals().items()
-              if not (name.startswith(('_', 'day')) or name in _ORIGINAL_GLOBALS)
-          )
-      )
-  )
-
-# %%
-if 0:  # Save puzzle inputs and answers to a compressed archive for downloading.
-  # Create a new tar.gz file.
-  hh.run(
-      f"""cd /mnt/c/hh/tmp && cp -rp ~/.config/aocd/'{PROFILE.replace("_", " ")}' '{PROFILE}' && tar -czf '{PROFILE}.tar.gz' '{PROFILE}'"""
-  )
+  for _name in globals().copy():
+    if not (re.match(r'^_|(day|Day|s)\d+|(puzzle$)', _name) or _name in _ORIGINAL_GLOBALS):
+      print(_name)
 
 # %%
 if 0:  # Lint.
