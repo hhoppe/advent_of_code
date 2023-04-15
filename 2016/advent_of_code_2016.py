@@ -41,12 +41,11 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-ocr advent-of-code-hhoppe hhoppe-tools mediapy more-itertools numba
+# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools mediapy more-itertools numba numpy
 
 # %%
 from __future__ import annotations
 
-# pylint: disable=unused-import
 import collections
 from collections.abc import Callable, Iterable, Iterator
 import dataclasses
@@ -57,7 +56,6 @@ import heapq
 import itertools
 import math
 import multiprocessing
-import os
 import pathlib
 import re
 import sys
@@ -67,7 +65,7 @@ from typing import Any
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import advent_of_code_ocr  # https://github.com/bsoyka/advent-of-code-ocr/blob/main/advent_of_code_ocr/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
-import mediapy as media
+import mediapy as media  # https://github.com/google/mediapy
 import more_itertools
 import numpy as np
 
@@ -80,7 +78,6 @@ hh.start_timing_notebook_cells()
 
 # %%
 YEAR = 2016
-SHOW_BIG_MEDIA = False
 if pathlib.Path('results').is_dir():
   media.set_show_save_dir('results')
 
@@ -99,10 +96,9 @@ INPUT_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}_input.txt'
 ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
 
 # %%
-# (2) If URL is not found, we may try adventofcode.com using a session cookie:
+# (2) If URL is not found, we may try adventofcode.com using a session (auth login) cookie:
 if 0:
-  # # !rm -f ~/.config/aocd/token*; mkdir -p ~/.config/aocd; echo 53616... >~/.config/aocd/token
-  # where "53616..." is the session cookie from "adventofcode.com" (valid 1 month).
+  # echo 53616... >~/.config/aocd/token  # session cookie from "adventofcode.com" (valid 1 month).
   hh.run('pip install -q advent-of-code-data')  # https://github.com/wimglenn/advent-of-code-data
   import aocd  # pylint: disable=unused-import # noqa
 
@@ -116,7 +112,6 @@ except ModuleNotFoundError:
 using_numba = hasattr(numba, 'jit')
 
 # %%
-SHOW_BIG_MEDIA = os.environ.get('SHOW_BIG_MEDIA', str(SHOW_BIG_MEDIA)).lower() in ['true', '1']
 advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)
 
 # %%
@@ -129,15 +124,14 @@ hh.adjust_jupyterlab_markdown_width()
 check_eq = hh.check_eq
 _ORIGINAL_GLOBALS = list(globals())
 
+
 # %%
 # CPython has two implementations of MD5 hashing (https://stackoverflow.com/a/60254866):
 # - https://github.com/python/cpython/blob/main/Modules/_hashopenssl.c (hashlib) and
 # - https://github.com/python/cpython/blob/main/Modules/md5module.c (_md5).
-# # %timeit hashlib.md5(b"hello world")  # ~145 ns.
+# # %timeit hashlib.md5(b'hello world')  # ~145 ns.
 # import _md5
-# # %timeit _md5.md5(b"hello world")  # ~55 ns.
-
-
+# # %timeit _md5.md5(b'hello world')  # ~55 ns.
 def _get_md5() -> Any:
   try:
     import _md5
@@ -226,8 +220,8 @@ def day1_visualize(s, *, repeat=2):
       distances.append(distance)
 
   points = np.array(points_list)
-  shape = points.ptp(axis=0) + 3
   points_min = points.min(axis=0)
+  shape = points.ptp(axis=0) + 3
   image = np.full((*shape, 3), 245, np.uint8)
   images = []
   visited = set()
@@ -290,7 +284,7 @@ UUUUD
 
 
 # %%
-def day2a_part1(s):
+def day2a_part1(s):  # Hardcoded implementation for Part 1.
   y, x = 1, 1
   code = ''
   for line in s.splitlines():
@@ -314,7 +308,7 @@ puzzle.verify(1, day2a_part1)
 
 
 # %%
-def day2(s, *, part2=False):
+def day2(s, *, part2=False):  # More general constraints and lookup to also support Part 2.
   y, x = (2, 0) if part2 else (1, 1)
   code = ''
   center_y, center_x = (2, 2) if part2 else (1, 1)
@@ -373,7 +367,7 @@ puzzle.verify(1, day3a_part1)
 
 
 # %%
-def day3(s, *, part2=False):
+def day3(s, *, part2=False):  # Using numpy to permute lookup of values for Part 2.
   grid = np.array([line.split() for line in s.splitlines()], int)
   if part2:
     grid = grid.reshape((-1, 3, 3)).transpose(0, 2, 1).reshape((-1, 3))
@@ -453,7 +447,7 @@ puzzle = advent.puzzle(day=5)
 
 
 # %%
-def day5a(s, *, part2=False):  # Compact but slow serial solution.
+def day5a(s, *, part2=False):  # Serial solution; compact but slow.
   md5 = _get_md5()
   s = s.strip()
   password = ['_'] * 8 if part2 else []
@@ -487,12 +481,14 @@ day5a_part2 = functools.partial(day5a, part2=True)
 def day5_find_zero_hashes(s, start, stop):
   md5 = _get_md5()
   results = []
-  # hasher = md5(s.encode())
+  prefix = s.encode()
+  # hasher0 = md5(prefix)
   for index in range(start, stop):
-    # hasher2 = hasher.copy()
-    # hasher2.update(str(index).encode())
-    hasher2 = md5((s + str(index)).encode())
-    digest = hasher2.digest()
+    # hasher = hasher0.copy()
+    # hasher.update(str(index).encode())
+    # hasher = md5((s + str(index)).encode())
+    hasher = md5(prefix + bytes(str(index), 'ascii'))
+    digest = hasher.digest()
     if digest[:2] == b'\0\0' and digest.hex()[4] == '0':
       results.append(index)
   return results
@@ -600,10 +596,10 @@ puzzle = advent.puzzle(day=7)
 
 # %%
 def day7_part1(s):
-  def is_valid(s2: str) -> bool:
+  def is_valid(line: str) -> bool:
     found_valid = False
     in_bracket = False
-    for i, ch in enumerate(s2[:-3]):
+    for i, ch in enumerate(line[:-3]):
       if ch == '[':
         assert not in_bracket
         in_bracket = True
@@ -611,8 +607,8 @@ def day7_part1(s):
         assert in_bracket
         in_bracket = False
       else:
-        s4 = s2[i : i + 4]
-        if ch == s4[3] and s4[1] == s4[2] and ch != s4[1] and s4[1] not in '[]':
+        ch1, ch2, ch3 = line[i + 1 : i + 4]
+        if ch == ch3 and ch1 == ch2 and ch != ch1 and ch1 not in '[]':
           if in_bracket:
             return False
           found_valid = True
@@ -631,28 +627,27 @@ puzzle.verify(1, day7_part1)
 
 # %%
 def day7_part2(s):
-  def is_valid(s2: str) -> bool:
+  def is_valid(line: str) -> bool:
     found_inside = set()  # Contains 'aba' iff 'bab' is inside any brackets.
     in_bracket = False
-    for i, ch in enumerate(s2[:-2]):
+    for i, ch in enumerate(line[:-2]):
       if ch == '[':
         in_bracket = True
       elif ch == ']':
         in_bracket = False
       elif in_bracket:
-        s3 = s2[i : i + 3]
+        s3 = line[i : i + 3]
         if ch == s3[2] and ch != s3[1] and s3[1] not in '[]':
           found_inside.add(s3[1] + s3[0] + s3[1])
 
     in_bracket = False
-    for i, ch in enumerate(s2[:-2]):
+    for i, ch in enumerate(line[:-2]):
       if ch == '[':
         in_bracket = True
       elif ch == ']':
         in_bracket = False
       else:
-        s3 = s2[i : i + 3]
-        if not in_bracket and s3[0] == s3[2] and s3 in found_inside:
+        if not in_bracket and ch == line[i + 2] and line[i : i + 3] in found_inside:
           return True
 
     return False
@@ -710,15 +705,15 @@ def day8(s, *, part2=False, shape=(6, 50), visualize=False, repeat=8):
       image = hh.pad_array(image, 1, (230,) * 3)
       images.append(image.repeat(repeat, axis=0).repeat(repeat, axis=1))
 
-  s3 = '\n'.join(''.join(ch for ch in line) for line in grid)
+  text = '\n'.join(''.join(ch for ch in line) for line in grid)
 
   if visualize:
-    hh.display_html(s3.replace('.', '⬜').replace('#', '⬛').replace('\n', '<br/>'))
+    hh.display_html(text.replace('.', '⬜').replace('#', '⬛').replace('\n', '<br/>'))
     images = [images[0]] * 15 + images + [images[-1]] * 40
     media.show_video(images, codec='gif', fps=20, title='day8a')
 
   if part2:
-    return advent_of_code_ocr.convert_6(s3)
+    return advent_of_code_ocr.convert_6(text)
 
   return np.count_nonzero(grid == '#')
 
@@ -758,7 +753,8 @@ def day9(s, *, part2=False):
       check_eq(s[index], '(')
       index2 = s.index(')', index)
       nchar, ntimes = map(int, s[index + 1 : index2].split('x'))
-      size += (day9(s[index2 + 1 : index2 + 1 + nchar], part2=part2) if part2 else nchar) * ntimes
+      length = day9(s[index2 + 1 : index2 + 1 + nchar], part2=part2) if part2 else nchar
+      size += length * ntimes
       index = index2 + 1 + nchar
 
   check_eq(index, len(s))
@@ -796,9 +792,9 @@ puzzle.verify(2, day9_part2)  # E.g., 10_780_403_063
 puzzle = advent.puzzle(day=10)
 
 # %%
-if 0:
-  print(re.findall(r'(?m)^value 17.*$', puzzle.input))
-  print(re.findall(r'(?m)^value 61.*$', puzzle.input))
+if 1:
+  hh.display_html(str(re.findall(r'(?m)^value 17.*$', puzzle.input)))
+  hh.display_html(str(re.findall(r'(?m)^value 61.*$', puzzle.input)))
 
 # %%
 s1 = """\
@@ -817,7 +813,7 @@ def day10(s, *, part2=False, values=(17, 61)):
   values_for_node: collections.defaultdict[str, set[int]] = collections.defaultdict(set)
   queue: collections.deque[tuple[str, int]] = collections.deque()
   for line in s.splitlines():
-    if 'goes' in line:
+    if 'goes to' in line:
       s_value, bot = line[6:].split(' goes to ')
       value = int(s_value)
       queue.append((bot, value))
@@ -977,7 +973,7 @@ def day11b(s, *, part2=False, visualize=False):  # BFS; frozenset[int]; equivale
     floor, c = state
     return floor, encode1(c[0]), encode1(c[1]), encode1(c[2]), encode1(c[3])
 
-  prune_size = 50
+  prune_size = 50  # Heuristic; may fail if too small!
   seen: Any = {encode(start_state)}
   prev: Any = {start_state: None}
   states = [start_state]
@@ -1208,13 +1204,13 @@ def day12a(s, *, part2=False):
   registers = collections.defaultdict(int)
   if part2:
     registers['c'] = 1
-  pc = 0
+  program_counter = 0
 
   def get_value(src: str) -> int:
     return registers[src] if src.isalpha() else int(src)
 
-  while 0 <= pc < len(instructions):
-    match instructions[pc]:
+  while 0 <= program_counter < len(instructions):
+    match instructions[program_counter]:
       case 'cpy', src, dst:
         registers[dst] = get_value(src)
       case 'inc', register:
@@ -1223,10 +1219,10 @@ def day12a(s, *, part2=False):
         registers[register] -= 1
       case 'jnz', predicate, offset:
         if get_value(predicate) != 0:
-          pc += int(offset) - 1
+          program_counter += int(offset) - 1
       case x:
         raise AssertionError(x)
-    pc += 1
+    program_counter += 1
 
   assert set(registers) <= set('abcd')
   return registers['a']
@@ -1244,7 +1240,7 @@ def day12b(s, *, part2=False):  # Disappointingly not much faster.
   registers = [0] * 4
   if part2:
     registers[2] = 1
-  pc = 0
+  program_counter = 0
 
   def get_register(operand):
     return 'abcd'.index(operand)
@@ -1262,13 +1258,13 @@ def day12b(s, *, part2=False):  # Disappointingly not much faster.
     registers[register] -= 1
 
   def jnz_reg(register, offset):
-    nonlocal pc
+    nonlocal program_counter
     if registers[register] != 0:
-      pc += offset - 1
+      program_counter += offset - 1
 
   def jump(offset):
-    nonlocal pc
-    pc += offset - 1
+    nonlocal program_counter
+    program_counter += offset - 1
 
   instructions: list[Callable[[], None]] = []
   for line in s.splitlines():
@@ -1298,9 +1294,9 @@ def day12b(s, *, part2=False):  # Disappointingly not much faster.
     else:
       raise AssertionError(line)
 
-  while 0 <= pc < len(instructions):
-    instructions[pc]()
-    pc += 1
+  while 0 <= program_counter < len(instructions):
+    instructions[program_counter]()
+    program_counter += 1
 
   return registers[0]
 
@@ -1452,7 +1448,7 @@ puzzle.verify(2, day13a_part2)
 
 
 # %%
-def day13(s, *, part2=False, src_yx=(1, 1), dst_yx=(39, 31), visualize=False):
+def day13(s, *, part2=False, src_yx=(1, 1), dst_yx=(39, 31), visualize=False):  # Create video.
   seed = int(s)
   sentinel = -1, -1
 
@@ -1521,6 +1517,7 @@ puzzle.verify(1, day13)
 day13_part2 = functools.partial(day13, part2=True)
 puzzle.verify(2, day13_part2)
 
+# %%
 _ = day13(puzzle.input, visualize=True, part2=False)
 _ = day13(puzzle.input, visualize=True, part2=True)
 
@@ -1538,9 +1535,9 @@ puzzle = advent.puzzle(day=14)
 
 
 # %%
-def day14_find_triplet(hash: str) -> str:
-  for index, ch in enumerate(hash[:-2]):
-    if ch == hash[index + 1] == hash[index + 2]:
+def day14_find_triplet(hashed: str) -> str:
+  for index, ch in enumerate(hashed[:-2]):
+    if ch == hashed[index + 1] == hashed[index + 2]:
       return ch
   return ''
 
@@ -1550,20 +1547,20 @@ def day14a(s, *, part2=False):
   s = s.strip()
   md5 = _get_md5()
 
-  def get_hash(index: int) -> str:
-    hash = md5((s + str(index)).encode()).hexdigest()
+  def get_hashed(index: int) -> str:
+    hashed = md5((s + str(index)).encode()).hexdigest()
     if part2:
       for _ in range(2016):
-        hash = md5(hash.encode()).hexdigest()
-    return hash
+        hashed = md5(hashed.encode()).hexdigest()
+    return hashed
 
-  hashes = [get_hash(index) for index in range(1000)]
+  hashes = [get_hashed(index) for index in range(1000)]
 
   num_found = 0
   for index in itertools.count():
-    hashes.append(get_hash(len(hashes)))
+    hashes.append(get_hashed(len(hashes)))
     ch = day14_find_triplet(hashes[index])
-    if ch and any(ch * 5 in hash for hash in hashes[index + 1 : index + 1001]):
+    if ch and any(ch * 5 in hashed for hashed in hashes[index + 1 : index + 1001]):
       num_found += 1
       if num_found == 64:
         return index
@@ -1579,12 +1576,12 @@ day14a_part2 = functools.partial(day14a, part2=True)
 
 # %%
 # Faster multiprocessing solution.
-def day14_get_part2_hash(s: str) -> str:
+def day14_get_part2_hashed(s: str) -> str:
   md5 = _get_md5()
-  hash = md5(s.encode()).hexdigest()
+  hashed = md5(s.encode()).hexdigest()
   for _ in range(2016):
-    hash = md5(hash.encode()).hexdigest()
-  return hash
+    hashed = md5(hashed.encode()).hexdigest()
+  return hashed
 
 
 def day14_part2(s):
@@ -1595,7 +1592,7 @@ def day14_part2(s):
 
     def replenish_hashes(group_size=2400, chunksize=100):
       strings = [s + str(index) for index in range(len(hashes), len(hashes) + group_size)]
-      new_hashes = pool.map(day14_get_part2_hash, strings, chunksize)
+      new_hashes = pool.map(day14_get_part2_hashed, strings, chunksize)
       hashes.extend(new_hashes)
 
     num_found = 0
@@ -1603,7 +1600,7 @@ def day14_part2(s):
       if len(hashes) < index + 1001:
         replenish_hashes()
       ch = day14_find_triplet(hashes[index])
-      if ch and any(ch * 5 in hash for hash in hashes[index + 1 : index + 1001]):
+      if ch and any(ch * 5 in hashed for hashed in hashes[index + 1 : index + 1001]):
         num_found += 1
         if num_found == 64:
           return index
@@ -1632,11 +1629,11 @@ Disc #2 has 2 positions; at time=0, it is at position 1.
 
 
 # %%
-def day15a(s, *, part2=False):
+def day15a(s, *, part2=False):  # Using brute-force search over all time values.
   @dataclasses.dataclass
   class Wheel:
     period: int
-    phase: int  # Phase of wheel if ball released at time 0.
+    phase: int  # Phase of wheel when the ball reaches it if the ball is released at time 0.
 
   wheels = []
   for line in s.splitlines():
@@ -1842,7 +1839,7 @@ puzzle.verify(1, day18a)
 
 day18a_part2 = functools.partial(day18a, num_rows=400_000)
 if 0:
-  puzzle.verify(2, day18a_part2)
+  puzzle.verify(2, day18a_part2)  # ~8 s.
 
 
 # %%
@@ -1879,7 +1876,7 @@ day18_visualize(puzzle.input)
 
 
 # %%
-@numba.njit  # Using numba; 1000x speedup.
+@numba.njit  # Using numba; 1000x speedup over Python "for" loops.
 def day18_process(state, num_rows):
   num_safe = 0
   state2 = state.copy()
@@ -1935,12 +1932,11 @@ puzzle.verify(1, day19a_part1)
 
 # %%
 def day19a_part1_find_pattern():
-  for i in range(2, 33):
-    hh.show(i, day19a_part1(str(i)))
+  for i in range(2, 18):
+    hh.display_html(f'value({i:02}) = {day19a_part1(str(i))}')
 
 
-if 0:
-  day19a_part1_find_pattern()
+day19a_part1_find_pattern()
 
 
 # %%
@@ -1971,14 +1967,13 @@ def day19a_part2(s):  # Impractical quadratic complexity.
 check_eq(day19a_part2('5'), 2)
 # puzzle.verify(2, day19_part2)  # Impossibly slow.
 
-
+# %%
 def day19a_part2_find_pattern():
   for i in range(2, 30):
-    hh.show(i, day19_part2(str(i)))
+    hh.display_html(f'value({i:02}) = {day19a_part2(str(i))}')
 
 
-if 0:
-  day19a_part2_find_pattern()
+day19a_part2_find_pattern()
 
 
 # %%
@@ -2196,7 +2191,7 @@ puzzle.verify(2, day21_part2)
 #
 # - Part 2: What is the fewest number of steps required to move your goal data to node-x0-y0?
 #
-# (Note: the puzzle description has bugs; it refers to `node-y0-x1` rather than `node-x1-y0`.)
+# (Note: the puzzle description has bugs; it incorrectly refers to `node-y0-x1` instead of `node-x1-y0`.)
 
 # %%
 puzzle = advent.puzzle(day=22)
@@ -2213,15 +2208,17 @@ def day22(s, *, part2=False, debug=False):
     x, y, size1, used1, avail1 = map(int, hh.re_groups(pattern, line))
     size[y, x], used[y, x], avail[y, x] = size1, used1, avail1
 
-  # Assumptions:
-  assert size.min() >= 0 and used.min() >= 0 and avail.min() >= 0  # Loaded data is complete.
-  assert (used == 0).sum() == 1  # There is only one free node.
-  assert used[0, -1] < size.min()  # All nodes can hold the (upper-right) data.
-  assert used[used > 0].min() > avail[used > 0].max()  # Data can only transfer to the free node.
+  def check_assumptions() -> None:
+    assert size.min() >= 0 and used.min() >= 0 and avail.min() >= 0  # Loaded data is complete.
+    assert (used == 0).sum() == 1  # There is only one free node.
+    assert used[0, -1] < size.min()  # All nodes can hold the (upper-right) data.
+    assert used[used > 0].min() > avail[used > 0].max()  # Data can only transfer to the free node.
+    assert size[~large].max() < large_value  # Data from large nodes can never move.
+    assert np.all(~large[0])  # There are no large nodes on the topmost grid row.
+
   large_value = used[used > size.min()].min()
   large = used >= large_value
-  assert size[~large].max() < large_value  # Data from large nodes can never move.
-  assert np.all(~large[0])  # There are no large nodes on the topmost grid row.
+  check_assumptions()
 
   if debug:
     hh.show(used[0, -1], size.min(), large_value, used[used > 0].min(), avail[used > 0].max())
@@ -2295,13 +2292,13 @@ def day23(s, *, part2=False, debug=False):
     instructions = [line.split() for line in s.splitlines()]
     registers = collections.defaultdict(int)
     registers['a'] = initial_a
-    pc = 0
+    program_counter = 0
 
     def get_value(src: str) -> int:
       return registers[src] if src.isalpha() else int(src)
 
-    while 0 <= pc < len(instructions):
-      match instructions[pc]:
+    while 0 <= program_counter < len(instructions):
+      match instructions[program_counter]:
         case 'cpy', src, dst:
           if dst.isalpha():
             registers[dst] = get_value(src)
@@ -2313,12 +2310,12 @@ def day23(s, *, part2=False, debug=False):
             registers[register] -= 1
         case 'jnz', predicate, offset:
           if get_value(predicate) != 0:
-            pc += get_value(offset) - 1
+            program_counter += get_value(offset) - 1
         case 'tgl', register:
           assert register.isalpha()
-          pc2 = pc + registers[register]
+          pc2 = program_counter + registers[register]
           if debug:
-            hh.show('tgl', pc, registers, pc2)
+            hh.show('tgl', program_counter, registers, pc2)
           if 0 <= pc2 < len(instructions):
             instruction = instructions[pc2]
             old_instruction = instruction.copy()
@@ -2334,14 +2331,14 @@ def day23(s, *, part2=False, debug=False):
             if debug:
               hh.show(pc2, old_instruction, instruction)
           if registers['b'] > 1 and not debug:  # Multiplication optimization.
-            check_eq(pc, 16)
+            check_eq(program_counter, 16)
             registers['a'] *= registers['b']
             registers['b'] -= 1
             registers['c'] -= 2
-            pc -= 1
+            program_counter -= 1
         case x:
           raise AssertionError(x)
-      pc += 1
+      program_counter += 1
 
     assert set(registers) <= set('abcd')
     return registers['a']
@@ -2365,46 +2362,46 @@ if 0:
   _ = day23(puzzle.input, debug=True)
 
 # %%
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 30, 'b': 4, 'd': 0, 'c': 8}), pc2 = 24
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 30, 'b': 4, 'd': 0, 'c': 8}), pc2 = 24
 # pc2 = 24, old_instruction = ['inc', 'c'], instruction = ['dec', 'c']
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 120, 'b': 3, 'd': 0, 'c': 6}), pc2 = 22
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 120, 'b': 3, 'd': 0, 'c': 6}), pc2 = 22
 # pc2 = 22, old_instruction = ['inc', 'd'], instruction = ['dec', 'd']
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 360, 'b': 2, 'd': 0, 'c': 4}), pc2 = 20
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 360, 'b': 2, 'd': 0, 'c': 4}), pc2 = 20
 # pc2 = 20, old_instruction = ['jnz', '79', 'd'], instruction = ['cpy', '79', 'd']
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 720, 'b': 1, 'd': 0, 'c': 2}), pc2 = 18
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 720, 'b': 1, 'd': 0, 'c': 2}), pc2 = 18
 # pc2 = 18, old_instruction = ['jnz', '1', 'c'], instruction = ['cpy', '1', 'c']
 # initial_a = 6, compute(initial_a) = 7751
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 42, 'b': 5, 'd': 0, 'c': 10}), pc2 = 26
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 210, 'b': 4, 'd': 0, 'c': 8}), pc2 = 24
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 42, 'b': 5, 'd': 0, 'c': 10}), pc2 = 26
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 210, 'b': 4, 'd': 0, 'c': 8}), pc2 = 24
 # pc2 = 24, old_instruction = ['inc', 'c'], instruction = ['dec', 'c']
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 840, 'b': 3, 'd': 0, 'c': 6}), pc2 = 22
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 840, 'b': 3, 'd': 0, 'c': 6}), pc2 = 22
 # pc2 = 22, old_instruction = ['inc', 'd'], instruction = ['dec', 'd']
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 2520, 'b': 2, 'd': 0, 'c': 4}), pc2 = 20
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 2520, 'b': 2, 'd': 0, 'c': 4}), pc2 = 20
 # pc2 = 20, old_instruction = ['jnz', '79', 'd'], instruction = ['cpy', '79', 'd']
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 5040, 'b': 1, 'd': 0, 'c': 2}), pc2 = 18
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 5040, 'b': 1, 'd': 0, 'c': 2}), pc2 = 18
 # pc2 = 18, old_instruction = ['jnz', '1', 'c'], instruction = ['cpy', '1', 'c']
 # initial_a = 7, compute(initial_a) = 12071
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 56, 'b': 6, 'd': 0, 'c': 12}), pc2 = 28
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 336, 'b': 5, 'd': 0, 'c': 10}), pc2 = 26
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 1680, 'b': 4, 'd': 0, 'c': 8}), pc2 = 24
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 56, 'b': 6, 'd': 0, 'c': 12}), pc2 = 28
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 336, 'b': 5, 'd': 0, 'c': 10}), pc2 = 26
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 1680, 'b': 4, 'd': 0, 'c': 8}), pc2 = 24
 # pc2 = 24, old_instruction = ['inc', 'c'], instruction = ['dec', 'c']
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 6720, 'b': 3, 'd': 0, 'c': 6}), pc2 = 22
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 6720, 'b': 3, 'd': 0, 'c': 6}), pc2 = 22
 # pc2 = 22, old_instruction = ['inc', 'd'], instruction = ['dec', 'd']
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 20160, 'b': 2, 'd': 0, 'c': 4}), pc2 = 20
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 20160, 'b': 2, 'd': 0, 'c': 4}), pc2 = 20
 # pc2 = 20, old_instruction = ['jnz', '79', 'd'], instruction = ['cpy', '79', 'd']
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 40320, 'b': 1, 'd': 0, 'c': 2}), pc2 = 18
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 40320, 'b': 1, 'd': 0, 'c': 2}), pc2 = 18
 # pc2 = 18, old_instruction = ['jnz', '1', 'c'], instruction = ['cpy', '1', 'c']
 # initial_a = 8, compute(initial_a) = 47351
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 72, 'b': 7, 'd': 0, 'c': 14}), pc2 = 30
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 504, 'b': 6, 'd': 0, 'c': 12}), pc2 = 28
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 3024, 'b': 5, 'd': 0, 'c': 10}), pc2 = 26
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 15120, 'b': 4, 'd': 0, 'c': 8}), pc2 = 24
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 72, 'b': 7, 'd': 0, 'c': 14}), pc2 = 30
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 504, 'b': 6, 'd': 0, 'c': 12}), pc2 = 28
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 3024, 'b': 5, 'd': 0, 'c': 10}), pc2 = 26
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 15120, 'b': 4, 'd': 0, 'c': 8}), pc2 = 24
 # pc2 = 24, old_instruction = ['inc', 'c'], instruction = ['dec', 'c']
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 60480, 'b': 3, 'd': 0, 'c': 6}), pc2 = 22
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 60480, 'b': 3, 'd': 0, 'c': 6}), pc2 = 22
 # pc2 = 22, old_instruction = ['inc', 'd'], instruction = ['dec', 'd']
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 181440, 'b': 2, 'd': 0, 'c': 4}), pc2 = 20
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 181440, 'b': 2, 'd': 0, 'c': 4}), pc2 = 20
 # pc2 = 20, old_instruction = ['jnz', '79', 'd'], instruction = ['cpy', '79', 'd']
-# tgl, pc = 16, registers = defaultdict(<class 'int'>, {'a': 362880, 'b': 1, 'd': 0, 'c': 2}), pc2 = 18
+# tgl, program_counter = 16, registers = defaultdict(<class 'int'>, {'a': 362880, 'b': 1, 'd': 0, 'c': 2}), pc2 = 18
 # pc2 = 18, old_instruction = ['jnz', '1', 'c'], instruction = ['cpy', '1', 'c']
 # initial_a = 9, compute(initial_a) = 369911
 # <StopExecution>
@@ -2591,13 +2588,13 @@ def day25a(s, debug=False):
   def compute_output(initial_a: int) -> Iterator[int]:
     assert initial_a > 0
     registers = dict(a=initial_a, b=0, c=0, d=0)
-    pc = 0
+    program_counter = 0
 
     def get_value(src: str) -> int:
       return registers[src] if src.isalpha() else int(src)
 
     while True:
-      match instructions[pc]:
+      match instructions[program_counter]:
         case 'cpy', src, dst:
           registers[dst] = get_value(src)
         case 'inc', register:
@@ -2606,12 +2603,12 @@ def day25a(s, debug=False):
           registers[register] -= 1
         case 'jnz', predicate, offset:
           if get_value(predicate) != 0:
-            pc += get_value(offset) - 1
+            program_counter += get_value(offset) - 1
         case 'out', src:
           yield get_value(src)
         case x:
           raise AssertionError(x)
-      pc += 1
+      program_counter += 1
 
   def equal_prefix(values1: Iterable[int], values2: Iterable[int], length: int) -> bool:
     prefix1, prefix2 = itertools.islice(values1, length), itertools.islice(values2, length)
@@ -2643,10 +2640,10 @@ Day25Op = enum.IntEnum('Day25Op', ['CPY_REG', 'CPY_VAL', 'INC', 'DEC', 'JNZ_REG'
 @numba.njit
 def day25_compute(instructions: np.ndarray, initial_a: int) -> Iterator[int]:
   registers = [initial_a, 0, 0, 0]
-  pc = 0
+  program_counter = 0
   while True:
-    assert 0 <= pc < len(instructions)
-    instruction = instructions[pc]
+    assert 0 <= program_counter < len(instructions)
+    instruction = instructions[program_counter]
     op, args = instruction[0], instruction[1:]
     if op == Day25Op.CPY_REG:
       registers[args[1]] = registers[args[0]]
@@ -2658,15 +2655,15 @@ def day25_compute(instructions: np.ndarray, initial_a: int) -> Iterator[int]:
       registers[args[0]] -= 1
     elif op == Day25Op.JNZ_REG:
       if registers[args[0]] != 0:
-        pc += args[1] - 1
+        program_counter += args[1] - 1
     elif op == Day25Op.JNZ_VAL:
       if args[0] != 0:
-        pc += args[1] - 1
+        program_counter += args[1] - 1
     elif op == Day25Op.OUT:
       yield registers[args[0]]
     else:
       raise AssertionError
-    pc += 1
+    program_counter += 1
 
 
 def day25(s):

@@ -130,7 +130,6 @@ except ModuleNotFoundError:
 using_numba = hasattr(numba, 'jit')
 
 # %%
-SHOW_BIG_MEDIA = os.environ.get('SHOW_BIG_MEDIA', str(SHOW_BIG_MEDIA)).lower() in ['true', '1']
 advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)
 
 # %%
