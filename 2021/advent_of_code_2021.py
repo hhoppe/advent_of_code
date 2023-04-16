@@ -5,13 +5,14 @@
 # [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2021/advent_of_code_2021.ipynb)
 #
 # Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2021/advent_of_code_2021.ipynb)
-# by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to the
+# with Python solutions to the
 # [2021 Advent of Code puzzles](https://adventofcode.com/2021),
-# completed in December 2021.
+# completed in December 2021,
+# by [Hugues Hoppe](http://hhoppe.com/).
 #
 # See [reddit](https://www.reddit.com/r/adventofcode/comments/rtx354/advent_of_code_2021_notebook_of_compact_and_fast/?utm_source=share&utm_medium=web2x&context=3).
 #
-# We explore both "compact" and "fast" code versions, along with data visualizations.
+# The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 #
 # For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is less than 1 s on my PC.<br/>
 # (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)
@@ -5198,10 +5199,9 @@ def day25c(s, *, verbose=False, visualize=False):  # With visualization.
         print('\n' + '\n'.join(''.join(line) for line in grid))
 
     if visualize:
-      cmap = {'.': (240,) * 3, '>': (180, 0, 0), 'v': (0, 180, 0)}
-      a = np.array([cmap[e] for e in grid.flat], np.uint8)
-      image = a.reshape(*grid.shape, 3).repeat(2, axis=0).repeat(2, axis=1)
-      images.append(image)
+      image = hh.to_image(grid == '>', 240, (180, 0, 0))  # default is '.'
+      image[grid == 'v'] = 0, 180, 0
+      images.append(image.repeat(2, axis=0).repeat(2, axis=1))
 
     if not moved:
       if visualize:
@@ -5211,7 +5211,7 @@ def day25c(s, *, verbose=False, visualize=False):  # With visualization.
 
 
 if SHOW_BIG_MEDIA:
-  _ = day25c(puzzle.input, visualize=True)  # Slow; ~14 s.
+  _ = day25c(puzzle.input, visualize=True)
 
 
 # %% [markdown]

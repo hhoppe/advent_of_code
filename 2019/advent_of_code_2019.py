@@ -5,11 +5,12 @@
 # [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2019/advent_of_code_2019.ipynb)
 #
 # Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2019/advent_of_code_2019.ipynb)
-# by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to the
+# with Python solutions to the
 # [2019 Advent of Code puzzles](https://adventofcode.com/2019),
-# mostly completed in March 2021.
+# completed in March 2021,
+# by [Hugues Hoppe](http://hhoppe.com/).
 #
-# We explore both "compact" and "fast" code versions, along with data visualizations.
+# The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 #
 # For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is less than 2 s on my PC.<br/>
 # (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)
@@ -2859,10 +2860,9 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
       images = []
       src_lyx = (0, *self.yx_of_portal[0]['AA'])
       path = [src_lyx] + self.shortest_path(max_level)
-      grid = self.grid.copy()
-      grid[('A' <= grid) & (grid <= 'Z')] = 'A'
-      cmap = {' ': (235,) * 3, '.': (255,) * 3, '#': (30,) * 3, 'A': (40, 40, 255)}
-      image0 = np.array([cmap[e] for e in grid.flat], np.uint8).reshape(*grid.shape, 3)
+      image0 = hh.to_image(self.grid == '#', 255, 30)  # default is '.'
+      image0[self.grid == ' '] = 235
+      image0[('A' <= self.grid) & (self.grid <= 'Z')] = 40, 40, 255
 
       def record_image(image, step, level):
         image = image.repeat(repeat, axis=0).repeat(repeat, axis=1)

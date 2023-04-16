@@ -2,10 +2,13 @@
 
 [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb)
 
-Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb) by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to the [2022 Advent of Code puzzles](https://adventofcode.com/2022),
-completed in December 2022.
+Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb)
+with Python solutions to the
+[2022 Advent of Code puzzles](https://adventofcode.com/2022),
+completed in December 2022,
+by [Hugues Hoppe](http://hhoppe.com/).
 
-We explore both "compact" and "fast" code versions, along with data visualizations.
+The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 
 For the fast solutions, the cumulative time across all 25 puzzles is less than 1 s on my PC.<br/>
 (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)

@@ -5,11 +5,12 @@
 # [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2016/advent_of_code_2016.ipynb)
 #
 # Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2016/advent_of_code_2016.ipynb)
-# by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to the
+# with Python solutions to the
 # [2016 Advent of Code puzzles](https://adventofcode.com/2016),
-# completed in April 2023.
+# completed in April 2023,
+# by [Hugues Hoppe](http://hhoppe.com/).
 #
-# We explore both "compact" and "fast" code versions, along with data visualizations.
+# The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 #
 # For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is less than 4 s on my PC.<br/>
 # (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)<br/>
@@ -700,8 +701,7 @@ def day8(s, *, part2=False, shape=(6, 50), visualize=False, repeat=8):
         grid[:, index] = np.roll(grid[:, index], rotation)
 
     if visualize:
-      image = np.full((*grid.shape, 3), 255, np.uint8)
-      image[grid == '#'] = 0
+      image = hh.to_image(grid == '#', 255, 0)
       image = hh.pad_array(image, 1, (230,) * 3)
       images.append(image.repeat(repeat, axis=0).repeat(repeat, axis=1))
 
@@ -1465,8 +1465,7 @@ def day13(s, *, part2=False, src_yx=(1, 1), dst_yx=(39, 31), visualize=False):  
     images: list[np.ndarray] = []
     shape = 50, 60
     grid_wall = np.array([is_wall(y, x) for y, x in np.ndindex(shape)]).reshape(shape)
-    image = np.full((*grid_wall.shape, 3), 250, np.uint8)
-    image[grid_wall] = 0
+    image = hh.to_image(grid_wall, 250, 0)
     image[src_yx] = 0, 255, 0
     image[dst_yx] = 255, 0, 0
     add_image(image)
@@ -2481,8 +2480,7 @@ def day24a(s, *, part2=False, visualize=False):  # Find shortest path over all n
   if visualize:
     path = permutation_path(permutation)
     images = []
-    image = np.full((*grid.shape, 3), 245, np.uint8)
-    image[grid == '#'] = 10
+    image = hh.to_image(grid == '#', 245, 10)
     image[np.char.isdigit(grid)] = 255, 0, 0
     for node in path:
       if not grid[node].isdigit():

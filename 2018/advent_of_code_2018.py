@@ -5,11 +5,12 @@
 # [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2018/advent_of_code_2018.ipynb)
 #
 # Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2018/advent_of_code_2018.ipynb)
-# by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to the
+# with Python solutions to the
 # [2018 Advent of Code puzzles](https://adventofcode.com/2018),
-# mostly completed in November 2021.
+# completed in November 2021,
+# by [Hugues Hoppe](http://hhoppe.com/).
 #
-# We explore both "compact" and "fast" code versions, along with data visualizations.
+# The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 #
 # For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is less than 3 s on my PC.<br/>
 # (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)
@@ -2027,9 +2028,9 @@ def day15_part1(s, visualize=False, elf_attack_power=3, fail_if_elf_dies=False):
   incomplete_round = False
   for round in itertools.count():
     if visualize:
-      cmap = {'.': (250,) * 3, '#': (0, 0, 0), 'E': (255, 0, 0), 'G': (0, 190, 0)}
-      image = np.array([cmap[e] for e in grid.flat], np.uint8)
-      image = image.reshape(*grid.shape, 3)
+      image = hh.to_image(grid == '#', 250, 0)
+      image[grid == 'E'] = 255, 0, 0
+      image[grid == 'G'] = 0, 190, 0
       image = image.repeat(5, axis=0).repeat(5, axis=1)
       images.append(image)
     if incomplete_round:
@@ -2393,10 +2394,9 @@ def day18(s, *, num_minutes=10, part2=False, visualize=False):
   period = -1
   for minute in itertools.count():
     if visualize:
-      cmap = {'.': (200, 0, 0), '|': (0, 200, 0), '#': (0, 0, 200)}
-      image = np.array([cmap[e] for e in grid.flat], np.uint8)
-      image = image.reshape(*grid.shape, 3).repeat(3, axis=0).repeat(3, axis=1)
-      images.append(image)
+      image = hh.to_image(grid == '#', (200, 0, 0), (0, 0, 200))
+      image[grid == '|'] = 0, 200, 0
+      images.append(image.repeat(3, axis=0).repeat(3, axis=1))
     config = grid.tobytes()  # Hashable; ''.join(grid.flat) is slower.
     if config in configs and period < 0:
       period = configs[config] - remaining_minutes
@@ -3122,9 +3122,8 @@ def day22(s, *, part2=False, pad=60, visualize=False):
   grid = construct_grid(shape)
   distance, path = day22_dijkstra(grid, target_yx, visualize)
   if visualize:
-    cmap = {0: (150, 0, 0), 1: (0, 150, 0), 2: (0, 0, 150)}
-    image = np.array([cmap[e] for e in grid.flat], np.uint8)
-    image = image.reshape(*grid.shape, 3)
+    image = hh.to_image(grid == 1, (150, 0, 0), (0, 150, 0))
+    image[grid == 2] = 0, 0, 150
     image2 = image.copy()
     for node in path:
       image2[node[1:]] += 105  # Let the path be brighter.

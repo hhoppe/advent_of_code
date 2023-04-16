@@ -5,12 +5,13 @@
 # [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb)
 #
 # Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb)
-# by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to the
+# with Python solutions to the
 # [2022 Advent of Code puzzles](https://adventofcode.com/2022),
-# completed in December 2022.
+# completed in December 2022,
+# by [Hugues Hoppe](http://hhoppe.com/).
 #
-# We explore both "compact" and "fast" code versions, along with data visualizations.
-#
+# The notebook presents both "compact" and "fast" code versions, along with data visualizations.
+# @#
 # For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is less than 1 s on my PC.<br/>
 # (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)
 #
@@ -2311,8 +2312,7 @@ def day14(s, *, part2=False, visualize=False, period=2, acceleration=18, magnify
       else:
         grid[y1, slice(x1, x2 + 1) if x1 < x2 else slice(x2, x1 + 1)] = True
 
-  image = np.full(grid.shape + (3,), (255, 255, 255), np.uint8)
-  image[grid] = 0, 0, 0
+  image = hh.to_image(grid, 255, 0)
   color, part2_color = (0, 255, 0), (180, 210, 255)
   images = []
 
@@ -2341,7 +2341,7 @@ def day14(s, *, part2=False, visualize=False, period=2, acceleration=18, magnify
   if visualize:
     record_image(index)  # Add final frame.
     images = [images[0]] * 25 + images + [images[-1]] * 50
-    return images
+    media.show_video(images, title='day14', codec='gif', fps=50, border=True)
 
   return index
 
@@ -2354,9 +2354,7 @@ check_eq(day14_part2(s1), 93)
 puzzle.verify(2, day14_part2)
 
 # %%
-media.show_video(
-    day14_part2(puzzle.input, visualize=True), title='day14', codec='gif', fps=50, border=True
-)
+_ = day14_part2(puzzle.input, visualize=True)
 
 # %% [markdown]
 # <a name="day15"></a>
@@ -3324,13 +3322,8 @@ def day17_visualize(s, *, num_cols=4, num_rows=20, size=6):
         '4': (75, 172, 198),
         '5': (247, 150, 70),
     }
-    image = (
-        np.array([cmap[e] for e in grid.flat], np.uint8)
-        .reshape(*grid.shape, 3)
-        .repeat(size, axis=0)
-        .repeat(size, axis=1)
-    )
-    images.append(image)
+    image = np.array([cmap[e] for e in grid.flat], np.uint8).reshape(*grid.shape, 3)
+    images.append(image.repeat(size, axis=0).repeat(size, axis=1))
 
   for rock in itertools.cycle(rocks):
     ry, rx = rock.shape
@@ -3505,11 +3498,11 @@ def day18b(s, *, part2=False, visualize=False, magnify=8):
         stack.append(p2)
 
   if visualize:
-    black, blue, background = np.array([[0, 0, 0], [170, 210, 255], [245] * 3], np.uint8)
-    video: Any = np.where(grid[..., None], black, np.where(outside[..., None], blue, background))
+    video: Any = hh.to_image(grid, 245, 0)
+    video[outside] = 170, 210, 255
     video = video.repeat(magnify, axis=1).repeat(magnify, axis=2)
     video = list(video) + [video[-1]] * 1
-    return video
+    media.show_video(video, title='day18a', codec='gif', fps=5)
 
   neighbors = np.array([np.roll(outside, dp, range(grid.ndim)) for dp in dps])
   return (grid & neighbors).sum()
@@ -3523,7 +3516,7 @@ check_eq(day18b_part2(s1), 58)
 puzzle.verify(2, day18b_part2)
 
 # %%
-media.show_video(day18b_part2(puzzle.input, visualize=True), title='day18a', codec='gif', fps=5)
+_ = day18b_part2(puzzle.input, visualize=True)
 
 
 # %%
@@ -4900,8 +4893,7 @@ def day24a(s, *, part2=False, visualize=False, repeat=3):
     path = [start] + path1 + path2 + path3
     images = []
     for time, (y, x) in enumerate(path):
-      wall, empty = np.array([120] * 3, np.uint8), np.array([255] * 3, np.uint8)
-      image = np.where(grid0[..., None] == '#', wall, empty)
+      image = hh.to_image(grid0 == '#', 255, 120)
       blizzards = np.array([
           np.roll(grid == '>', time, 1),
           np.roll(grid == '<', -time, 1),
@@ -4917,7 +4909,7 @@ def day24a(s, *, part2=False, visualize=False, repeat=3):
         yx = repeat, image.shape[1] - repeat
         text = f'Time {time:3}'
         margin = [[3, 1], [2, 2]]
-        hh.overlay_text(image, yx, text, fontsize=14, background=empty, align='tr', margin=margin)
+        hh.overlay_text(image, yx, text, fontsize=14, background=255, align='tr', margin=margin)
       images.append(image)
     fps = {4: 5, 35: 50}[grid.shape[0]]
     hold = int(fps * 1.5)

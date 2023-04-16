@@ -3,11 +3,12 @@
 [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2016/advent_of_code_2016.ipynb)
 
 Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2016/advent_of_code_2016.ipynb)
-by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to the
+with Python solutions to the
 [2016 Advent of Code puzzles](https://adventofcode.com/2016),
-completed in April 2023.
+completed in April 2023,
+by [Hugues Hoppe](http://hhoppe.com/).
 
-We explore both "compact" and "fast" code versions, along with data visualizations.
+The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 
 For the fast solutions, the cumulative time across all 25 puzzles is less than 4 s on my PC.<br/>
 (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)<br/>
