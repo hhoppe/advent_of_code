@@ -21,7 +21,7 @@ extend-exclude = "\\.ipynb"
 disable = [
   "unspecified-encoding", "fixme", "redefined-builtin", "cell-var-from-loop",
   "using-constant-test", "simplifiable-condition", "import-outside-toplevel", "line-too-long",
-  "too-many-lines", "too-few-public-methods", "too-many-arguments", "too-many-locals",
+  "too-many-lines", "too-few-public-methods", "too-many-arguments", "too-many-locals", "use-dict-literal",
   # For advent:
   "missing-module-docstring", "missing-function-docstring", "redefined-outer-name", "missing-class-docstring",
   "too-many-branches", "too-many-statements", "multiple-statements", "condition-evals-to-constant",

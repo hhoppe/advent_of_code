@@ -5,9 +5,10 @@
 # [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2020/advent_of_code_2020.ipynb)
 #
 # Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2020/advent_of_code_2020.ipynb)
-# by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to the
+# with Python solutions to the
 # [2020 Advent of Code puzzles](https://adventofcode.com/2020),
-# completed in December 2020.
+# completed in December 2020,
+# by [Hugues Hoppe](http://hhoppe.com/).
 #
 # I participated in the 25-day [Advent of Code](https://adventofcode.com/) for the first time this year, thanks to encouragement from colleagues, especially [Sascha Häberling](https://github.com/shaeberling).  It was great fun and provided a nice opportunity to learn more advanced Python.
 #
@@ -34,13 +35,19 @@
 # Here are some visualization results:
 #
 # <p>
-# <a href="#day11">day11</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day11a.gif" width="200">
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day11b.gif" width="200">&emsp;
-# <a href="#day20">day20</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day20a.png" width="200">
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day20b.png" width="200">
+# <a href="#day5">day5</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day5.png" width="200">&emsp;
+# <a href="#day11">day11</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day11a.gif" width="200">&emsp;
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day11b.gif" width="200">
 # </p>
 # <p>
-# <a href="#day24">day24</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day24.gif" width="200">
+# <a href="#day17">day17</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day17a.gif" width="40">&emsp;
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day17b.gif" width="340">&emsp;
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day17c.gif" width="340">
+# </p>
+# <p>
+# <a href="#day20">day20</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day20a.png" width="250">&emsp;
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day20b.png" width="200">&emsp;
+# <a href="#day24">day24</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day24c.gif" width="250">
 # </p>
 
 # %% [markdown]
@@ -63,6 +70,7 @@ import functools
 import itertools
 import math
 import operator
+import pathlib
 import re
 import sys
 import types
@@ -85,6 +93,9 @@ hh.start_timing_notebook_cells()
 
 # %%
 YEAR = 2020
+SHOW_BIG_MEDIA = False
+if pathlib.Path('results').is_dir():
+  media.set_show_save_dir('results')
 
 # %%
 # (1) To obtain puzzle inputs and answers, we first try these paths/URLs:
@@ -166,7 +177,7 @@ def day1(s, *, total=2020):
 
 
 check_eq(day1(s1), 514579)  # Reference answer provided in the description.
-puzzle.verify(1, day1)  # ~0 ms.
+puzzle.verify(1, day1)
 
 
 # %%
@@ -181,7 +192,7 @@ def day1_part2(s, *, total=2020):
 
 
 check_eq(day1_part2(s1), 241861950)
-puzzle.verify(2, day1_part2)  # ~1 ms.
+puzzle.verify(2, day1_part2)
 
 # %% [markdown]
 # <a name="day2"></a>
@@ -220,11 +231,11 @@ def day2(s, *, part2=False):
 
 
 check_eq(day2(s1), 2)
-puzzle.verify(1, day2)  # ~3 ms.
+puzzle.verify(1, day2)
 
 day2_part2 = functools.partial(day2, part2=True)
 check_eq(day2_part2(s1), 1)
-puzzle.verify(2, day2_part2)  # ~1 ms.
+puzzle.verify(2, day2_part2)
 
 # %% [markdown]
 # <a name="day3"></a>
@@ -273,15 +284,15 @@ def day3a(s, *, part2=False):  # Slower.
 
 
 check_eq(day3a(s1), 7)
-puzzle.verify(1, day3a)  # ~1 ms.
+puzzle.verify(1, day3a)
 
 day3a_part2 = functools.partial(day3a, part2=True)
 check_eq(day3a_part2(s1), 336)
-puzzle.verify(2, day3a_part2)  # ~3 ms.
+puzzle.verify(2, day3a_part2)
 
 
 # %%
-def day3(s, *, part2=False):  # Faster.
+def day3(s, *, part2=False, visualize=False):  # Faster.
   dyxs = ((1, 1), (1, 3), (1, 5), (1, 7), (2, 1)) if part2 else ((1, 3),)
   grid = hh.grid_from_string(s)
 
@@ -290,15 +301,30 @@ def day3(s, *, part2=False):  # Faster.
     x = (np.arange(len(y)) * dx) % grid.shape[1]
     return np.count_nonzero(grid[y, x] == '#')
 
+  if visualize:
+    image = hh.to_image(grid == '#', 245, 0)
+    for index, (dy, dx) in enumerate(dyxs):
+      y = np.arange(0, grid.shape[0], dy)
+      x = (np.arange(len(y)) * dx) % grid.shape[1]
+      color = [(0, 0, 255), (0, 255, 0), (255, 0, 0), (200, 200, 0), (0, 200, 200)][index]
+      image[y, x] = color
+    image = image.repeat(2, axis=0).repeat(2, axis=1)
+    image = np.rot90(image)
+    hh.display_html('(Image rotated by 90 degrees.  This visualization is not so helpful.)')
+    media.show_image(image, title='day3')
+
   return math.prod(get_count(dy, dx) for dy, dx in dyxs)
 
 
 check_eq(day3(s1), 7)
-puzzle.verify(1, day3)  # ~1 ms.
+puzzle.verify(1, day3)
 
 day3_part2 = functools.partial(day3, part2=True)
 check_eq(day3_part2(s1), 336)
-puzzle.verify(2, day3_part2)  # ~2 ms.
+puzzle.verify(2, day3_part2)
+
+# %%
+_ = day3(puzzle.input, visualize=True, part2=True)
 
 # %% [markdown]
 # <a name="day4"></a>
@@ -420,12 +446,12 @@ def day4(s, *, part2=False):
 
 
 check_eq(day4(s1), 2)
-puzzle.verify(1, day4)  # ~3 ms.
+puzzle.verify(1, day4)
 
 day4_part2 = functools.partial(day4, part2=True)
-check_eq(day4_part2(s2), 0)  # all records are invalid
-check_eq(day4_part2(s3), 4)  # all records are valid
-puzzle.verify(2, day4_part2)  # ~6 ms.
+check_eq(day4_part2(s2), 0)  # All records are invalid.
+check_eq(day4_part2(s3), 4)  # All records are valid.
+puzzle.verify(2, day4_part2)
 
 # %% [markdown]
 # <a name="day5"></a>
@@ -459,7 +485,7 @@ def day5(s):
   return max(day5_seat_id(line) for line in s.split())
 
 
-puzzle.verify(1, day5)  # ~1 ms.
+puzzle.verify(1, day5)
 
 
 # %% [markdown]
@@ -467,13 +493,12 @@ puzzle.verify(1, day5)  # ~1 ms.
 
 
 # %%
-def day5_visualize_transposed_seat_grid(s):
-  grid = np.full((128, 8), 0)
+def day5_visualize_transposed_seat_grid(s, repeat=4):
+  image = np.full((128, 8, 3), 0, np.uint8)
   yx = np.array([divmod(day5_seat_id(line), 8) for line in s.split()])
-  grid[tuple(yx.T)] = 1
-  if 0:
-    print('\n'.join(''.join('.#'[e] for e in row) for row in grid.T))
-  media.show_image(grid.T == 1, border=True, width=600)
+  image[tuple(yx.T)] = 230
+  image = np.rot90(image.repeat(repeat, axis=0).repeat(repeat, axis=1))
+  media.show_image(image, title='day5')
 
 
 day5_visualize_transposed_seat_grid(puzzle.input)
@@ -487,7 +512,7 @@ def day5a_part2(s):  # Using regular expression search.
   return seat_id
 
 
-puzzle.verify(2, day5a_part2)  # ~11 ms.
+puzzle.verify(2, day5a_part2)
 
 
 # %%
@@ -505,7 +530,7 @@ def day5b_part2(s):  # Using string indexing.
   return seat_id
 
 
-puzzle.verify(2, day5b_part2)  # ~9 ms.
+puzzle.verify(2, day5b_part2)
 
 
 # %%
@@ -517,7 +542,7 @@ def day5c_part2(s):  # Fast, using numpy successive differences of sorted indice
   return seat_id
 
 
-puzzle.verify(2, day5c_part2)  # ~2 ms.
+puzzle.verify(2, day5c_part2)
 
 
 # %%
@@ -537,7 +562,7 @@ def day5_part2(s):  # Also fast, using numpy subsequence search.
   return seat_id
 
 
-puzzle.verify(2, day5_part2)  # ~2 ms.
+puzzle.verify(2, day5_part2)
 
 # %% [markdown]
 # <a name="day6"></a>
@@ -589,7 +614,7 @@ def day6a_part1(s):  # Long code.
 
 
 check_eq(day6a_part1(s1), 11)
-puzzle.verify(1, day6a_part1)  # ~3 ms.
+puzzle.verify(1, day6a_part1)
 
 
 # %%
@@ -600,7 +625,7 @@ def day6b_part1(s):  # Using reduction.
 
 
 check_eq(day6b_part1(s1), 11)
-puzzle.verify(1, day6b_part1)  # ~3 ms.
+puzzle.verify(1, day6b_part1)
 
 
 # %%
@@ -609,7 +634,7 @@ def day6_part1(s):  # Compact, and also fastest.
 
 
 check_eq(day6_part1(s1), 11)
-puzzle.verify(1, day6_part1)  # ~1 ms.
+puzzle.verify(1, day6_part1)
 
 
 # %% [markdown]
@@ -625,7 +650,7 @@ def day6a_part2(s):  # Using reduction.
 
 
 check_eq(day6a_part2(s1), 6)
-puzzle.verify(2, day6a_part2)  # ~3 ms.
+puzzle.verify(2, day6a_part2)
 
 
 # %%
@@ -634,7 +659,7 @@ def day6_part2(s):  # Compact and same speed.
 
 
 check_eq(day6_part2(s1), 6)
-puzzle.verify(2, day6_part2)  # ~3 ms.
+puzzle.verify(2, day6_part2)
 
 # %% [markdown]
 # <a name="day7"></a>
@@ -700,7 +725,7 @@ def day7a_part1(s, *, query='shiny gold'):  # Compact and fast with caching.
 
 
 check_eq(day7a_part1(s1), 4)
-puzzle.verify(1, day7a_part1)  # ~3 ms.  (~240 ms without lru_cache)
+puzzle.verify(1, day7a_part1)
 
 
 # %%
@@ -724,7 +749,7 @@ def day7_part1(s, *, query='shiny gold'):  # Fast too.
 
 
 check_eq(day7_part1(s1), 4)
-puzzle.verify(1, day7_part1)  # ~3 ms.
+puzzle.verify(1, day7_part1)
 
 
 # %% [markdown]
@@ -745,7 +770,7 @@ def day7_part2(s, *, query='shiny gold'):
 
 check_eq(day7_part2(s1), 32)
 check_eq(day7_part2(s2), 126)
-puzzle.verify(2, day7_part2)  # ~3 ms.
+puzzle.verify(2, day7_part2)
 
 # %% [markdown]
 # <a name="day8"></a>
@@ -812,11 +837,11 @@ def day8(s, *, part2=False):
 
 
 check_eq(day8(s1), 5)
-puzzle.verify(1, day8)  # ~0 ms.
+puzzle.verify(1, day8)
 
 day8_part2 = functools.partial(day8, part2=True)
 check_eq(day8_part2(s1), 8)
-puzzle.verify(2, day8_part2)  # ~14 ms.
+puzzle.verify(2, day8_part2)
 
 # %% [markdown]
 # <a name="day9"></a>
@@ -891,11 +916,11 @@ def day9(s, *, last_n=25, part2=False):
 
 
 check_eq(day9(s1, last_n=5), 127)
-puzzle.verify(1, day9)  # ~2 ms.
+puzzle.verify(1, day9)
 
 day9_part2 = functools.partial(day9, part2=True)
 check_eq(day9_part2(s1, last_n=5), 62)
-puzzle.verify(2, day9_part2)  # ~4 ms.
+puzzle.verify(2, day9_part2)
 
 # %% [markdown]
 # <a name="day10"></a>
@@ -970,7 +995,7 @@ def day10_part1(s):
 
 check_eq(day10_part1(s1), 7 * 5)
 check_eq(day10_part1(s2), 22 * 10)
-puzzle.verify(1, day10_part1)  # ~0 ms.  66 * 32.
+puzzle.verify(1, day10_part1)
 
 
 # %% [markdown]
@@ -997,7 +1022,7 @@ def day10a_part2(s):
 
 check_eq(day10a_part2(s1), 8)
 check_eq(day10a_part2(s2), 19208)
-puzzle.verify(2, day10a_part2)  # ~0 ms.
+puzzle.verify(2, day10a_part2)
 
 
 # %%
@@ -1014,7 +1039,7 @@ def day10b_part2(s):
 
 check_eq(day10b_part2(s1), 8)
 check_eq(day10b_part2(s2), 19208)
-puzzle.verify(2, day10b_part2)  # ~0 ms.
+puzzle.verify(2, day10b_part2)
 
 
 # %%
@@ -1029,7 +1054,7 @@ def day10_part2(s):
 
 check_eq(day10_part2(s1), 8)
 check_eq(day10_part2(s2), 19208)
-puzzle.verify(2, day10_part2)  # ~0 ms.
+puzzle.verify(2, day10_part2)
 
 # %% [markdown]
 # <a name="day11"></a>
@@ -1052,7 +1077,9 @@ puzzle.verify(2, day10_part2)  # ~0 ms.
 puzzle = advent.puzzle(day=11)
 
 # %%
-media.show_image(hh.grid_from_string(puzzle.input) == 'L', border=True, width=250)
+media.show_image(
+    hh.grid_from_string(puzzle.input).repeat(3, axis=0).repeat(3, axis=1) == 'L', border=True
+)
 
 # %%
 s1 = """\
@@ -1114,8 +1141,8 @@ day11a_part2 = functools.partial(day11a, part2=True)
 check_eq(day11a_part2(s1), 26)
 
 if not using_numba:  # Best non-numba solutions.
-  puzzle.verify(1, day11a)  # ~2500 ms.
-  puzzle.verify(2, day11a_part2)  # ~5800 ms.
+  puzzle.verify(1, day11a)  # ~0.8 s.
+  puzzle.verify(2, day11a_part2)  # ~2.0 s.
 
 
 # %%
@@ -1147,7 +1174,7 @@ def day11_evolve(grid, neighbors, part2):
   return not np.all(grid == prev)
 
 
-def day11(s, *, part2=False, return_video=False):
+def day11(s, *, part2=False, visualize=False):
   int_from_ch = {'.': 0, 'L': 1, '#': 2}
   grid = hh.grid_from_string(s, int_from_ch)
   neighbors = tuple(set(itertools.product((-1, 0, 1), repeat=2)) - {(0, 0)})
@@ -1155,37 +1182,35 @@ def day11(s, *, part2=False, return_video=False):
 
   images = []
   while day11_evolve(grid, neighbors, part2):
-    if return_video:
+    if visualize:
       image = (grid == OCCUPIED).repeat(2, axis=0).repeat(2, axis=1)
       images.append(image)
 
-  if return_video:
+  if visualize:
     # We view only the even-numbered frames to avoid flashing on/off.
     images = [images[0]] * 10 + images[::2] + [images[-1]] * 10
-    return images
+    title = f'day11{"b" if part2 else "a"}'
+    media.show_video(images, codec='gif', fps=10, border=True, title=title)
+
   return np.count_nonzero(grid == OCCUPIED)
 
 
-check_eq(day11(s1), 37)  # ~2000 ms for numba compilation.
+check_eq(day11(s1), 37)  # ~0.5 s for numba compilation.
 day11_part2 = functools.partial(day11, part2=True)
 check_eq(day11_part2(s1), 26)
 
 if using_numba:
-  puzzle.verify(1, day11)  # ~32 ms with numba; ~24 s without numba.
-  puzzle.verify(2, day11_part2)  # ~49 ms with numba; ~27 s without numba.
+  puzzle.verify(1, day11)
+  puzzle.verify(2, day11_part2)
 
 # %%
 if using_numba:
-  videos = {
-      'Part 1': day11(puzzle.input, return_video=True),
-      'Part 2': day11_part2(puzzle.input, return_video=True),
-  }
-  media.show_videos(videos, codec='gif', fps=10, border=True)
-  del videos
+  _ = day11(puzzle.input, visualize=True, part2=False)
+  _ = day11(puzzle.input, visualize=True, part2=True)
 
 # %% [markdown]
 # <a name="day12"></a>
-# ## Day 12: Ship and waypoint navigation
+# ## Day 12: Waypoint navigation
 
 # %% [markdown]
 # Given a list of instructions (a translation direction `N|S|E|W` and magnitude, a rotation `L|R` and angle (positive multiple of 90 degrees), or a forward directive `F` and value), update a ship's position and orientation in a 2D domain.
@@ -1236,7 +1261,7 @@ def day12_part1(s):
 
 
 check_eq(day12_part1(s1), 25)
-puzzle.verify(1, day12_part1)  # ~1 ms.
+puzzle.verify(1, day12_part1)
 
 
 # %%
@@ -1270,7 +1295,7 @@ def day12_part2(s):
 
 
 check_eq(day12_part2(s1), 286)
-puzzle.verify(2, day12_part2)  # ~1 ms.
+puzzle.verify(2, day12_part2)
 
 # %% [markdown]
 # <a name="day13"></a>
@@ -1304,7 +1329,7 @@ def day13_part1(s):
 
 
 check_eq(day13_part1(s1), 295)
-puzzle.verify(1, day13_part1)  # ~0 ms.
+puzzle.verify(1, day13_part1)
 
 
 # %% [markdown]
@@ -1374,7 +1399,7 @@ check_eq(day13a_part2('67,7,59,61'), 754018)
 check_eq(day13a_part2('67,x,7,59,61'), 779210)
 check_eq(day13a_part2('67,7,x,59,61'), 1261476)
 check_eq(day13a_part2('1789,37,47,1889'), 1202161486)
-puzzle.verify(2, day13a_part2)  # ~0 ms.
+puzzle.verify(2, day13a_part2)
 
 
 # %%
@@ -1413,11 +1438,11 @@ check_eq(day13_part2('67,7,59,61'), 754018)
 check_eq(day13_part2('67,x,7,59,61'), 779210)
 check_eq(day13_part2('67,7,x,59,61'), 1261476)
 check_eq(day13_part2('1789,37,47,1889'), 1202161486)
-puzzle.verify(2, day13_part2)  # ~0 ms.
+puzzle.verify(2, day13_part2)
 
 # %% [markdown]
 # <a name="day14"></a>
-# ## Day 14: Write masked values to mem
+# ## Day 14: Masked values to memory
 
 # %% [markdown]
 # Process a sequence of instructions, each specifying either a bitmask (where each location contains `0`, `1`, or `X`) or the writing of a value to a memory address, and report the sum of the resulting memory contents.
@@ -1476,11 +1501,11 @@ def day14(s, *, part2=False):
 
 
 check_eq(day14(s1), 165)
-puzzle.verify(1, day14)  # ~1 ms.
+puzzle.verify(1, day14)
 
 day14_part2 = functools.partial(day14, part2=True)
 check_eq(day14_part2(s2), 208)
-puzzle.verify(2, day14_part2)  # ~22 ms.
+puzzle.verify(2, day14_part2)
 
 # %% [markdown]
 # <a name="day15"></a>
@@ -1532,10 +1557,10 @@ check_eq(day15a('1,2,3'), 27)
 check_eq(day15a('2,3,1'), 78)
 check_eq(day15a('3,2,1'), 438)
 check_eq(day15a('3,1,2'), 1836)
-puzzle.verify(1, day15a)  # ~1 ms.
+puzzle.verify(1, day15a)
 
 day15a_part2 = functools.partial(day15a, num_turns=30_000_000)
-# puzzle.verify(2, day15a_part2)  # Slow; ~15 s.
+# puzzle.verify(2, day15a_part2)  # Slow; ~6 s.
 
 
 # %%
@@ -1559,12 +1584,12 @@ def day15b(s, *, num_turns=2020):  # Faster, using List.
 
 
 check_eq(day15b(s1), 436)
-puzzle.verify(1, day15b)  # ~1 ms.
+puzzle.verify(1, day15b)
 
 if not using_numba:
   day15b_part2 = functools.partial(day15b, num_turns=30_000_000)
-  # check_eq(day15b_part2(s1), 175594)  # Slow; ~9 s.
-  puzzle.verify(2, day15b_part2)  # Slow; ~10 s.
+  # check_eq(day15b_part2(s1), 175594)  # Slow; ~3 s.
+  puzzle.verify(2, day15b_part2)  # Slow; ~3 s.
 
 
 # %%
@@ -1590,12 +1615,12 @@ def day15(s, *, num_turns=2020):
   return day15_func(initial_sequence, num_turns)
 
 
-check_eq(day15(s1), 436)  # ~1 s for numba compilation.
-puzzle.verify(1, day15)  # ~4 ms.
+check_eq(day15(s1), 436)  # ~0.1 s for numba compilation.
+puzzle.verify(1, day15)
 
 if using_numba:
   day15_part2 = functools.partial(day15, num_turns=30_000_000)
-  check_eq(day15_part2(s1), 175594)  # ~1 s for numba compilation.
+  check_eq(day15_part2(s1), 175594)  # ~0.1 s for numba compilation.
   if 0:
     check_eq(day15_part2('1,3,2'), 2578)
     check_eq(day15_part2('2,1,3'), 3544142)
@@ -1603,9 +1628,9 @@ if using_numba:
     check_eq(day15_part2('2,3,1'), 6895259)
     check_eq(day15_part2('3,2,1'), 18)
     check_eq(day15_part2('3,1,2'), 362)
-  puzzle.verify(2, day15_part2)  # ~650 ms with numba, ~110 s without numba.
-  # (Without numba, accessing individual elements is much faster within
-  # a Python list than within an np.array.)
+  puzzle.verify(2, day15_part2)  # ~0.4 s with numba, ~64 s without numba.
+  # (Without numba, accessing individual elements is much faster within a Python list than
+  # within an np.array.)
 
 # %% [markdown]
 # <a name="day16"></a>
@@ -1724,10 +1749,10 @@ def day16(s, *, part2=False):
 
 
 check_eq(day16(s1), 71)
-puzzle.verify(1, day16)  # ~6 ms.
+puzzle.verify(1, day16)
 
 day16_part2 = functools.partial(day16, part2=True)
-puzzle.verify(2, day16_part2)  # ~52 ms.
+puzzle.verify(2, day16_part2)
 
 # %% [markdown]
 # <a name="day17"></a>
@@ -1783,11 +1808,16 @@ def day17a(s, *, num_cycles=6, dim=3):  # Slower.
 
 
 check_eq(day17a(s1), 112)
-puzzle.verify(1, day17a)  # ~150 ms.
+puzzle.verify(1, day17a)
+
+day17a_part2 = functools.partial(day17a, dim=4)
+check_eq(day17a_part2(s1), 848)
+# puzzle.verify(2, day17a_part2)  # Slow; ~1.5 s.
 
 
 # %%
-def day17(s, *, num_cycles=6, dim=3):  # Faster.
+# Faster using specialization and collections.Counter, and add visualization.
+def day17(s, *, num_cycles=6, dim=3, visualize=False, magnify=2):
   lines = s.splitlines()
   indices = {
       (0,) * (dim - 2) + (y, x)
@@ -1797,12 +1827,28 @@ def day17(s, *, num_cycles=6, dim=3):  # Faster.
   }
   offsets = set(itertools.product((-1, 0, 1), repeat=dim)) - {(0,) * dim}
 
+  def add_image():
+    pad = num_cycles
+    shape = (1 + 2 * pad,) * (dim - 2) + (len(lines) + 2 * pad, len(lines[0]) + 2 * pad, 3)
+    grid = np.full(shape, 240, np.uint8)
+    for index in indices:
+      grid[tuple(c + pad for c in index)] = 0
+    tiles = grid.reshape(-1, *shape[-3:])
+    shape0 = (1,) * (4 - dim) + shape[:-3]
+    image = hh.assemble_arrays(tiles, shape0, background=255, spacing=1)
+    # image = hh.to_image(tmp, 255, 0)
+    images.append(image.repeat(magnify, axis=0).repeat(magnify, axis=1))
+
+  images: list[np.ndarray] = []
+  if visualize:
+    add_image()
+
   def neighbors(index):
     i = index
-    if dim == 3:  # faster
+    if dim == 3:  # Optional specialization for speed.
       for o in offsets:
         yield i[0] + o[0], i[1] + o[1], i[2] + o[2]
-    elif dim == 4:  # faster
+    elif dim == 4:  # Optional specialization for speed.
       for o in offsets:
         yield i[0] + o[0], i[1] + o[1], i[2] + o[2], i[3] + o[3]
     else:
@@ -1820,25 +1866,37 @@ def day17(s, *, num_cycles=6, dim=3):  # Faster.
         for index, count in neighbor_counts.items()
         if count == 3 or (count == 2 and index in indices)
     }
+    if visualize:
+      add_image()
+
+  if visualize:
+    images = [images[0]] * 3 + images + [images[-1]] * 3
+    title = f'day17{"abc"[dim - 2]}'
+    media.show_video(images, codec='gif', fps=2, title=title)
 
   return len(indices)
 
 
 check_eq(day17(s1), 112)
-puzzle.verify(1, day17)  # ~8 ms.
+puzzle.verify(1, day17)
 
 day17_part2 = functools.partial(day17, dim=4)
 check_eq(day17_part2(s1), 848)
-puzzle.verify(2, day17_part2)  # ~200 ms.
+puzzle.verify(2, day17_part2)
+
+# %%
+for _dim in range(2, 5):
+  _ = day17(puzzle.input, dim=_dim, num_cycles=6, visualize=True)
 
 
 # %%
 def day17_show_num_active_in_each_generation_for_2d_3d_4d():
   for dim in range(2, 5):
-    print(dim, [day17(puzzle.input, num_cycles=num_cycles, dim=dim) for num_cycles in range(6)])
+    num_active = [day17(puzzle.input, num_cycles=num_cycles, dim=dim) for num_cycles in range(7)]
+    hh.display_html(f'{dim=} {num_active=}')
 
 
-if 0:
+if 1:
   day17_show_num_active_in_each_generation_for_2d_3d_4d()
 
 # %% [markdown]
@@ -1891,10 +1949,10 @@ def day18a(strings, *, part2=False):  # Slower, more readable.
   return sum(evaluate_line(s) for s in strings.splitlines())
 
 
-puzzle.verify(1, day18a)  # ~50 ms.
+puzzle.verify(1, day18a)
 
 day18a_part2 = functools.partial(day18a, part2=True)
-puzzle.verify(2, day18a_part2)  # ~55 ms.
+puzzle.verify(2, day18a_part2)
 
 
 # %%
@@ -1923,7 +1981,7 @@ check_eq(day18('2 * 3 + (4 * 5)'), 26)
 check_eq(day18('5 + (8 * 3 + 9 + 3 * 4 * 3)'), 437)
 check_eq(day18('5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))'), 12240)
 check_eq(day18('((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2'), 13632)
-puzzle.verify(1, day18)  # ~4 ms.
+puzzle.verify(1, day18)
 
 day18_part2 = functools.partial(day18, part2=True)
 check_eq(day18_part2('1 + 2 * 3 + 4 * 5 + 6'), 231)
@@ -1932,7 +1990,7 @@ check_eq(day18_part2('2 * 3 + (4 * 5)'), 46)
 check_eq(day18_part2('5 + (8 * 3 + 9 + 3 * 4 * 3)'), 1445)
 check_eq(day18_part2('5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))'), 669060)
 check_eq(day18_part2('((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2'), 23340)
-puzzle.verify(2, day18_part2)  # ~6 ms.
+puzzle.verify(2, day18_part2)
 
 # %% [markdown]
 # <a name="day19"></a>
@@ -2039,11 +2097,11 @@ def day19a(s, *, part2=False):  # Compact.
 
 
 check_eq(day19a(s1), 2)
-puzzle.verify(1, day19a)  # ~100 ms.
+puzzle.verify(1, day19a)
 
 day19a_part2 = functools.partial(day19a, part2=True)
 check_eq(day19a_part2(s2), 12)
-puzzle.verify(2, day19a_part2)  # ~500 ms.
+puzzle.verify(2, day19a_part2)
 
 
 # %%
@@ -2079,11 +2137,11 @@ def day19(s, *, part2=False):  # Faster.
 
 
 check_eq(day19(s1), 2)
-puzzle.verify(1, day19)  # ~75 ms.
+puzzle.verify(1, day19)
 
 day19_part2 = functools.partial(day19, part2=True)
 check_eq(day19_part2(s2), 12)
-puzzle.verify(2, day19_part2)  # ~350 ms.
+puzzle.verify(2, day19_part2)
 
 # %% [markdown]
 # <a name="day20"></a>
@@ -2217,8 +2275,10 @@ def day20(s, *, part2=False, visualize=False):
   n = math.isqrt(len(tiles))
 
   if visualize:
-    tiles_bool = [tile != '#' for tile in tiles.values()]
-    media.show_images(tiles_bool, columns=n, border=True, height=30)
+    images = [hh.to_image(tile == '#', 240, 0) for tile in tiles.values()]
+    image = hh.assemble_arrays(images, (n, n), background=(255,) * 3, spacing=3)
+    image = image.repeat(2, axis=0).repeat(2, axis=1)
+    media.show_image(image, title='day20a')
 
   rotations = tuple(range(8))  # 4 proper rotations * 2 flips
 
@@ -2328,23 +2388,20 @@ def day20(s, *, part2=False, visualize=False):
         grid[y:, x:][pattern_indices] = 'O'
 
   if visualize:
-    value_from_ch = {'.': 0.0, '#': -1.0, 'O': 1.0}
-    lookup = np.zeros(256, np.float32)
-    for ch, value in value_from_ch.items():
-      lookup[ord(ch)] = value
-    grid2 = lookup[grid.view(np.uint32).astype(np.uint8)]
-    grid2 = grid2.repeat(3, axis=0).repeat(3, axis=1)
-    media.show_image(grid2, border=True)
+    image = hh.to_image(grid == '#', 140, 0)
+    image[grid == 'O'] = 255
+    image = image.repeat(3, axis=0).repeat(3, axis=1)
+    media.show_image(image, border=True, title='day20b')
 
   return np.count_nonzero(grid == '#')
 
 
 check_eq(day20(s1), 20899048083289)
-puzzle.verify(1, day20)  # ~12 ms.
+puzzle.verify(1, day20)
 
 day20_part2 = functools.partial(day20, part2=True)
 check_eq(day20_part2(s1), 273)
-puzzle.verify(2, day20_part2)  # ~31 ms.
+puzzle.verify(2, day20_part2)
 
 # %%
 _ = day20_part2(puzzle.input, visualize=True)
@@ -2410,11 +2467,11 @@ def day21(s, *, part2=False):
 
 
 check_eq(day21(s1), 5)
-puzzle.verify(1, day21)  # ~1 ms.
+puzzle.verify(1, day21)
 
 day21_part2 = functools.partial(day21, part2=True)
 check_eq(day21_part2(s1), 'mxmxvkd,sqjhc,fvjkl')
-puzzle.verify(2, day21_part2)  # ~1 ms.
+puzzle.verify(2, day21_part2)
 
 # %% [markdown]
 # <a name="day22"></a>
@@ -2461,7 +2518,7 @@ def day22_part1(s):
 
 
 check_eq(day22_part1(s1), 306)
-puzzle.verify(1, day22_part1)  # ~0 ms.
+puzzle.verify(1, day22_part1)
 
 
 # %% [markdown]
@@ -2495,7 +2552,7 @@ def day22a_part2(s):  # Slower code using deque.
 
 
 check_eq(day22a_part2(s1), 291)
-# puzzle.verify(2, day22a_part2)  # ~1750 ms.
+puzzle.verify(2, day22a_part2)
 
 
 # %%
@@ -2527,13 +2584,17 @@ def day22_part2(s):  # Faster code using tuples.
 
 
 check_eq(day22_part2(s1), 291)
-puzzle.verify(2, day22_part2)  # ~1200 ms.
+puzzle.verify(2, day22_part2)
 
 # %%
 # # # %timeit -r8 day22_part2(puzzle.input)
+if 0:
+  hh.print_time(lambda: day22_part2(puzzle.input))
 
 # %%
-# # # %prun day22_part2(puzzle.input)  # No obvious opportunity for optimization.
+# # # %prun day22_part2(puzzle.input)
+if 0:
+  hh.prun(lambda: day22_part2(puzzle.input))  # No obvious opportunity for optimization.
 
 # %% [markdown]
 # <a name="day23"></a>
@@ -2605,7 +2666,7 @@ check_eq(day23b(s1), '67384529')
 
 # %%
 # Code keeping track of next cup label for each cup label:
-@numba.njit  # 0.25 s to jit on first invocation
+@numba.njit
 def day23_func(l, max_num, num_moves, next_cup):
   n = len(next_cup) - 1
   current = l[0]
@@ -2649,15 +2710,17 @@ def day23(s, *, max_num=0, num_moves=100):
 
 check_eq(day23(s1, num_moves=10), '92658374')
 check_eq(day23(s1), '67384529')
-puzzle.verify(1, day23)  # ~6 ms with numba; ~1 ms without numba.
+puzzle.verify(1, day23)
 
 day23_part2 = functools.partial(day23, num_moves=10_000_000, max_num=1_000_000)
 if using_numba:
-  check_eq(day23_part2(s1), 149245887792)
-puzzle.verify(2, day23_part2)  # ~400 ms with numba; ~25 s without numba.
+  check_eq(day23_part2(s1), 149245887792)  # Numba compilation.
+puzzle.verify(2, day23_part2)  # ~0.2 s with numba; ~58 s without numba.
 
 # %%
 # # # %timeit -r8 day23_part2(puzzle.input)
+if 0:
+  hh.print_time(lambda: day23_part2(puzzle.input))
 
 # %% [markdown]
 # <a name="day24"></a>
@@ -2702,7 +2765,7 @@ wseweeenwnesenwwwswnew
 
 
 # %%
-def day24(s, *, part2=False, num_days=100, visualize=False):
+def day24(s, *, part2=False, num_days=100, visualize=False, radius=57):
   if not part2:
     num_days = 0
   offsets = dict(e=(0, 1), w=(0, -1), sw=(1, 0), se=(1, 1), nw=(-1, -1), ne=(-1, 0))
@@ -2715,11 +2778,11 @@ def day24(s, *, part2=False, num_days=100, visualize=False):
       offset = offsets[s2]
       y, x = y + offset[0], x + offset[1]
     indices ^= {(y, x)}
-  indices_3d: list[tuple[int, int, int]] = []
+  all_indices: list[set[tuple[int, int]]] = []
 
   for day in range(num_days):
     if visualize:
-      indices_3d.extend((day, y, x) for y, x in indices)
+      all_indices.append(indices)
     neighbor_counts = collections.Counter(
         (y + dy, x + dx) for y, x in indices for dy, dx in tuple_offsets
     )
@@ -2730,39 +2793,69 @@ def day24(s, *, part2=False, num_days=100, visualize=False):
     }
 
   if visualize:
-    video: Any = hh.grid_from_indices(indices_3d, dtype=bool, pad=(0, 2, 2))
-    video = video.repeat(2, axis=1).repeat(2, axis=2)
-    video = [video[0]] * 10 + list(video) + [video[-1]] * 10
-    media.show_video(video, codec='gif', fps=10)
+    all_indices.append(indices)
 
-  if visualize:
-    # See https://stackoverflow.com/a/59042263
-    fig, ax = plt.subplots(figsize=(6, 6), dpi=90)
-    ax.set_aspect('equal')
-    ax.autoscale(True)
-    params = dict(numVertices=6, radius=math.sqrt(1 / 3), edgecolor=None)
-    for sw, e in indices:
-      xy = e - sw / 2, sw * (math.sqrt(3) / 2)
-      hexagon = matplotlib.patches.RegularPolygon(xy, **params)
-      ax.add_patch(hexagon)
-    fig.tight_layout(pad=0)
-    image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
-    media.show_image(image, title='day24', border=False)
-    plt.close(fig)
+    if 1:
+      indices_3d = more_itertools.flatten(
+          ((day, y, x) for y, x in indices) for day, indices in enumerate(all_indices)
+      )
+      video: Any = hh.grid_from_indices(indices_3d, dtype=bool, pad=(0, 2, 2))
+      video = video.repeat(2, axis=1).repeat(2, axis=2)
+      video = [video[0]] * 10 + list(video) + [video[-1]] * 10
+      media.show_video(video, codec='gif', fps=10, title='day24a')
+
+    # For hexagon rendering in matplotlib, see https://stackoverflow.com/a/59042263.
+    def create_hexagons(indices):
+      params = dict(numVertices=6, radius=math.sqrt(1 / 3), edgecolor=None)
+      for sw, e in indices:
+        xy = e - sw / 2, sw * (math.sqrt(3) / 2)
+        yield matplotlib.patches.RegularPolygon(xy, **params)
+
+    if 1:
+      fig, ax = plt.subplots(figsize=(6, 6), dpi=90)
+      ax.set(aspect='equal')
+      ax.autoscale(True, tight=True)  # ax.set(autoscale_on=True) does not work.
+      # ax.set(xlim=(-radius, radius), ylim=(-radius, radius))
+      ax.set_axis_off()
+      for hexagon in create_hexagons(indices):
+        ax.add_patch(hexagon)
+      fig.tight_layout(pad=0)
+      image = hh.image_from_plt(fig)
+      media.show_image(image, title='day24b', border=True)
+      plt.close(fig)
+
+    if SHOW_BIG_MEDIA:  # ~75 s and 1.3 MB.
+      images = []
+      for indices in all_indices:  # [all_indices[0], all_indices[-1]]:
+        fig, ax = plt.subplots(figsize=(3, 3), dpi=90)
+        ax.set(xlim=(-radius, radius), ylim=(-radius, radius))
+        ax.set_axis_off()
+        for hexagon in create_hexagons(indices):
+          ax.add_patch(hexagon)
+        fig.tight_layout(pad=0)
+        images.append(hh.image_from_plt(fig))
+        # Moving plt.subplots and plt.close outside and adding "ax.patches.clear()" is slower!
+        plt.close(fig)
+      images = [images[0]] * 15 + images + [images[-1]] * 15
+      media.show_video(images, codec='gif', fps=10, title='day24c', border=True)
 
   return len(indices)
 
 
 check_eq(day24(s1), 10)
-puzzle.verify(1, day24)  # ~3 ms.
+puzzle.verify(1, day24)
 
 day24_part2 = functools.partial(day24, part2=True)
 check_eq(day24_part2(s1, num_days=10), 37)
 check_eq(day24_part2(s1), 2208)
-puzzle.verify(2, day24_part2)  # ~460 ms.
+puzzle.verify(2, day24_part2)
 
 # %%
-_ = day24_part2(puzzle.input, visualize=True)  # ~1700 ms.
+_ = day24_part2(puzzle.input, visualize=True)
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day24c.gif"/>
 
 # %% [markdown]
 # <a name="day25"></a>
@@ -2817,7 +2910,7 @@ def day25a(s, *, base=7, mod=20201227):  # Slow.
 
 
 check_eq(day25a(s1), 14897079)
-puzzle.verify(1, day25a)  # ~1000 ms.
+puzzle.verify(1, day25a)
 
 
 # %%
@@ -2857,7 +2950,7 @@ def day25(s, *, base=7, mod=20201227):  # Fast.
 
 
 check_eq(day25(s1), 14897079)
-puzzle.verify(1, day25)  # ~1 ms.
+puzzle.verify(1, day25)
 
 # %% [markdown]
 # Part 2
