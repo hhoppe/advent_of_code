@@ -65,7 +65,6 @@ import importlib
 import itertools
 import math
 import operator
-import os
 import pathlib
 import re
 import string
@@ -1029,7 +1028,7 @@ def day7v(s):  # Visualization
   nx.draw(graph, pos, node_size=150, node_color=node_color, width=0.7)
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
-  media.show_image(image, title='day07', border=True)
+  media.show_image(image, border=True, title='day07')
   plt.close(fig)
 
 
@@ -1238,14 +1237,14 @@ def day8w(s):  # Use plotly to create 3D visualization.
     fig.show()
 
   image = image_from_plotly(fig, width=350, height=175)
-  media.show_image(image, title='day08c', border=True)
+  media.show_image(image, border=True, title='day08c')
 
   if SHOW_BIG_MEDIA:
     video: Any = wobble_video(fig, amplitude=2.0)
-    media.show_video(video, title='day08d', codec='gif', fps=10, border=True)
+    media.show_video(video, codec='gif', fps=10, border=True, title='day08d')
     set_fig_layout(for_tilt=True)
     video = np.array(tilt_video(fig))[:, :, 140:-140]
-    media.show_video(video, title='day08e', codec='gif', fps=3, border=True)
+    media.show_video(video, codec='gif', fps=3, border=True, title='day08e')
 
   media.set_max_output_height(5000)
 
@@ -1459,7 +1458,9 @@ def day9b(s, *, part2=False, visualize=False, pad=1, pad0=12, background=(245,) 
       hh.overlay_text(resized, (6, 3), text, fontsize=20, background=background)
       images.append(resized)
     images = [images[0]] * 5 + images + [images[-1]] * 50
-    return images
+    media.show_image(images[-1], title='day09a')
+    if SHOW_BIG_MEDIA:  # ~1 MB GIF (or 444 MB h264).
+      media.show_video(images, codec='gif', fps=50, title='day09b')
 
   return len(visited)
 
@@ -1472,13 +1473,7 @@ check_eq(day9b_part2(s2), 36)
 puzzle.verify(2, day9b_part2)
 
 # %%
-media.show_image(day9b_part2(puzzle.input, visualize=True)[-1], title='day09a')
-
-# %%
-if SHOW_BIG_MEDIA:
-  # ~1 MB GIF (or 444 MB h264).
-  media.show_video(day9b_part2(puzzle.input, visualize=True), title='day09b', codec='gif', fps=50)
-
+_ = day9b_part2(puzzle.input, visualize=True)
 
 # %% [markdown]
 # Cached result:<br/>
@@ -1936,11 +1931,10 @@ def day12v(s, *, n=3):  # Visualize as GIF image.
   images.append(image)
   images = [np.pad(image, ((1, 1), (1, 1), (0, 0))) for image in images]
   images = [image.repeat(n, axis=0).repeat(n, axis=1) for image in images]
-  return images
+  media.show_video(images, codec='gif', fps=1, title='day12a')
 
 
-# media.show_video(day12v(s1, n=20), codec='gif', fps=1)
-media.show_video(day12v(puzzle.input), title='day12a', codec='gif', fps=1)
+day12v(puzzle.input)
 
 
 # %%
@@ -2020,7 +2014,7 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
       if use_tilt
       else image_from_plotly(fig)[110:-25, 0:-20]
   )
-  media.show_image(image, title='day12b', border=True)
+  media.show_image(image, border=True, title='day12b')
 
   if SHOW_BIG_MEDIA:
     video = (
@@ -2029,7 +2023,7 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
         else np.asarray(wobble_video(fig, amplitude=2.0))[:, 110:-25, 0:-20]
     )
     fps = 3 if use_tilt else 10
-    media.show_video(video, title='day12c', codec='gif', fps=fps, border=True)
+    media.show_video(video, codec='gif', fps=fps, border=True, title='day12c')
 
   media.set_max_output_height(5000)
 
@@ -2342,7 +2336,7 @@ def day14(s, *, part2=False, visualize=False, period=2, acceleration=18, magnify
   if visualize:
     record_image(index)  # Add final frame.
     images = [images[0]] * 25 + images + [images[-1]] * 50
-    media.show_video(images, title='day14', codec='gif', fps=50, border=True)
+    media.show_video(images, codec='gif', fps=50, border=True, title='day14')
 
   return index
 
@@ -2494,7 +2488,7 @@ puzzle.verify(1, day15b)
 day15b_part2 = functools.partial(day15b, part2=True)
 check_eq(day15b_part2(s1, side_part2=20), 56_000_011)
 if 0:
-  puzzle.verify(2, day15b_part2)  # Slow; ~4-11 s (instead of ~3 ms)!
+  puzzle.verify(2, day15b_part2)  # Slow.
 
 
 # %%
@@ -2565,7 +2559,7 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
 
   if 1:
     image = image_from_plotly(fig)[40:-40, 40:-40]
-    media.show_image(image, title='day15a', border=True)
+    media.show_image(image, border=True, title='day15a')
 
   if SHOW_BIG_MEDIA:
     images = []
@@ -2583,7 +2577,7 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
       vmax = vmin + diam * scale
       assert len(images) < 400
     images = [images[0]] * 30 + images + [images[-1]] * 20
-    media.show_video(images, title='day15b', codec='gif', fps=15)
+    media.show_video(images, codec='gif', fps=15, title='day15b')
 
   media.set_max_output_height(5000)
 
@@ -2921,14 +2915,14 @@ check_eq(day16c_part2(s1), 1707)
 
 # %%
 media.show_image(
-    day16c(puzzle.input, visualize=True, only_last_frame=True)[0], title='day16a', border=True
+    day16c(puzzle.input, visualize=True, only_last_frame=True)[0], border=True, title='day16a'
 )
 
 # %%
-if SHOW_BIG_MEDIA:  # Slow due to search().
+if SHOW_BIG_MEDIA:  # Slow due to search(); ~16 s.
   media.show_video(
-      day16c_part2(puzzle.input, visualize=True), codec='gif', fps=2, title='day16b', border=True
-  )  # ~16 s
+      day16c_part2(puzzle.input, visualize=True), codec='gif', fps=2, border=True, title='day16b'
+  )
 
 
 # %% [markdown]
@@ -3350,10 +3344,10 @@ def day17_visualize(s, *, num_cols=4, num_rows=20, size=6):
         break
 
   images = [images[0] * 1] + images + [images[-1]] * 50
-  return images
+  media.show_video(images, codec='gif', fps=50, title='day17')
 
 
-media.show_video(day17_visualize(s1), title='day17', codec='gif', fps=50)
+day17_visualize(s1)
 
 # %% [markdown]
 # <a name="day18"></a>
@@ -3503,7 +3497,7 @@ def day18b(s, *, part2=False, visualize=False, magnify=8):
     video[outside] = 170, 210, 255
     video = video.repeat(magnify, axis=1).repeat(magnify, axis=2)
     video = list(video) + [video[-1]] * 1
-    media.show_video(video, title='day18a', codec='gif', fps=5)
+    media.show_video(video, codec='gif', fps=5, title='day18a')
 
   neighbors = np.array([np.roll(outside, dp, range(grid.ndim)) for dp in dps])
   return (grid & neighbors).sum()
@@ -3562,11 +3556,11 @@ def day18v(s):  # Visualize Part 1 using plotly 3D rendering.
     fig.show()
 
   image = image_from_plotly(fig)
-  media.show_image(image, title='day18b', border=True)
+  media.show_image(image, border=True, title='day18b')
 
   if SHOW_BIG_MEDIA:
     video = wobble_video(fig)
-    media.show_video(video, title='day18c', codec='gif', fps=10)
+    media.show_video(video, codec='gif', fps=10, title='day18c')
 
   media.set_max_output_height(5000)
 
@@ -4445,11 +4439,11 @@ else:
   media.show_image(day21v(s1))
   media.show_image(day21v(s1, simplify=True))
   media.show_image(
-      day21v(puzzle.input, simplify=True, figsize=(30, 15)), title='day21a', border=True
+      day21v(puzzle.input, simplify=True, figsize=(30, 15)), border=True, title='day21a'
   )
   if SHOW_BIG_MEDIA:
     media.show_image(
-        day21v(puzzle.input, prog='neato', figsize=(40, 20)), title='day21b', border=True
+        day21v(puzzle.input, prog='neato', figsize=(40, 20)), border=True, title='day21b'
     )
     media.show_image(
         day21v(puzzle.input, figsize=(60, 30)),
@@ -4584,7 +4578,7 @@ def day22(s, *, part2=False, visualize=False, background=(252,) * 3):
 
   if visualize:
     images = [images[0]] * 30 + images + [images[-1]] * 50
-    return images
+    media.show_video(images, codec='gif', fps=50, title='day22')
 
   return (y + 1) * 1000 + (x + 1) * 4 + [(0, 1), (1, 0), (0, -1), (-1, 0)].index((dy, dx))
 
@@ -4598,7 +4592,7 @@ puzzle.verify(2, day22_part2)
 
 # %%
 if SHOW_BIG_MEDIA:
-  media.show_video(day22_part2(puzzle.input, visualize=True), title='day22', codec='gif', fps=50)
+  _ = day22_part2(puzzle.input, visualize=True)
 
 # %% [markdown]
 # Cached result:<br/>
@@ -4688,7 +4682,7 @@ def day23a(s, *, part2=False, visualize=False, pad=60, background=250):
     if part2 and 1 not in counter.values():
       if visualize:
         images = [images[0]] * 60 + images + [images[-1]] * 60
-        return images
+        media.show_video(images, codec='gif', fps=50, title='day23')
       return round_index + 1
 
     for yx in current.copy():
@@ -4708,7 +4702,7 @@ check_eq(day23a_part2(s1), 20)
 
 # %%
 if SHOW_BIG_MEDIA:  # Slow simulation.
-  media.show_video(day23a_part2(puzzle.input, visualize=True), title='day23', codec='gif', fps=50)
+  _ = day23a_part2(puzzle.input, visualize=True)
 
 
 # %% [markdown]
@@ -4928,14 +4922,14 @@ check_eq(day24a_part2(s1), 54)
 # puzzle.verify(2, day24a_part2)
 
 # %%
-media.show_video(day24a_part2(s1, visualize=True, repeat=12), title='day24a', codec='gif', fps=5)
+media.show_video(day24a_part2(s1, visualize=True, repeat=12), codec='gif', fps=5, title='day24a')
 
 # %%
 media.show_image(day24a_part2(puzzle.input, visualize=True)[-1], title='day24b')
 
 # %%
 if SHOW_BIG_MEDIA:
-  media.show_video(day24a_part2(puzzle.input, visualize=True), title='day24c', codec='gif', fps=50)
+  media.show_video(day24a_part2(puzzle.input, visualize=True), codec='gif', fps=50, title='day24c')
 
 
 # %% [markdown]

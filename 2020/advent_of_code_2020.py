@@ -2822,7 +2822,7 @@ def day24(s, *, part2=False, num_days=100, visualize=False, radius=57):
         ax.add_patch(hexagon)
       fig.tight_layout(pad=0)
       image = hh.image_from_plt(fig)
-      media.show_image(image, title='day24b', border=True)
+      media.show_image(image, border=True, title='day24b')
       plt.close(fig)
 
     if SHOW_BIG_MEDIA:  # ~75 s and 1.3 MB.
@@ -2838,7 +2838,7 @@ def day24(s, *, part2=False, num_days=100, visualize=False, radius=57):
         # Moving plt.subplots and plt.close outside and adding "ax.patches.clear()" is slower!
         plt.close(fig)
       images = [images[0]] * 15 + images + [images[-1]] * 15
-      media.show_video(images, codec='gif', fps=10, title='day24c', border=True)
+      media.show_video(images, codec='gif', fps=10, border=True, title='day24c')
 
   return len(indices)
 

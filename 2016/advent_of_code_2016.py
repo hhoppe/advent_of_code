@@ -610,7 +610,7 @@ def day7_part1(s):
         assert in_bracket
         in_bracket = False
       else:
-        ch1, ch2, ch3 = line[i + 1 : i + 4]
+        ch1, ch2, ch3 = line[i + 1], line[i + 2], line[i + 3]
         if ch == ch3 and ch1 == ch2 and ch != ch1 and ch1 not in '[]':
           if in_bracket:
             return False
@@ -1967,6 +1967,7 @@ def day19a_part2(s):  # Impractical quadratic complexity.
 
 check_eq(day19a_part2('5'), 2)
 # puzzle.verify(2, day19_part2)  # Impossibly slow.
+
 
 # %%
 def day19a_part2_find_pattern():

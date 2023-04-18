@@ -14,7 +14,7 @@ The notebook presents both "compact" and "fast" code versions, along with data v
 For the fast solutions, the cumulative time across all 25 puzzles is less than 2 s on my PC.<br/>
 (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)
 
-Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`):
+Here are some visualization results:
 
 <p>
 <a href="#day10">day10</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2019/results/day10.gif" width="150">&emsp;
