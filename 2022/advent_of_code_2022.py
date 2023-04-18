@@ -10,8 +10,10 @@
 # completed in December 2022,
 # by [Hugues Hoppe](http://hhoppe.com/).
 #
+# See [reddit](https://www.reddit.com/r/adventofcode/comments/108taz7/2022_advent_notebook_with_gif_visualizations/).
+#
 # The notebook presents both "compact" and "fast" code versions, along with data visualizations.
-# @#
+#
 # For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is less than 1 s on my PC.<br/>
 # (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)
 #
@@ -48,7 +50,7 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools kaleido mediapy more-itertools numba plotly resampler
+# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools kaleido mediapy more-itertools numba numpy plotly resampler
 
 # %%
 from __future__ import annotations
@@ -114,10 +116,9 @@ INPUT_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}_input.txt'
 ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
 
 # %%
-# (2) If URL is not found, we may try adventofcode.com using a session cookie:
+# (2) If URL is not found, we may try adventofcode.com using a session (auth login) cookie:
 if 0:
-  # # !rm -f ~/.config/aocd/token*; mkdir -p ~/.config/aocd; echo 53616... >~/.config/aocd/token
-  # where "53616..." is the session cookie from "adventofcode.com" (valid 1 month).
+  # echo 53616... >~/.config/aocd/token  # session cookie from "adventofcode.com" (valid 1 month).
   hh.run('pip install -q advent-of-code-data')  # https://github.com/wimglenn/advent-of-code-data
   import aocd  # pylint: disable=unused-import # noqa
 

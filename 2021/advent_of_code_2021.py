@@ -10,32 +10,32 @@
 # completed in December 2021,
 # by [Hugues Hoppe](http://hhoppe.com/).
 #
-# See [reddit](https://www.reddit.com/r/adventofcode/comments/rtx354/advent_of_code_2021_notebook_of_compact_and_fast/?utm_source=share&utm_medium=web2x&context=3).
+# See [reddit](https://www.reddit.com/r/adventofcode/comments/rtx354/advent_of_code_2021_notebook_of_compact_and_fast/).
 #
 # The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 #
 # For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is less than 1 s on my PC.<br/>
 # (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)
 #
-# Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`):
+# Here are some visualization results:
 #
 # <p>
-# <a href="#day5">day5</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day05.png" width="200">&emsp;
-# <a href="#day9">day9</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day09.gif" width="200">&emsp;
-# <a href="#day11">day11</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day11.gif" width="140">
+# <a href="#day5">day5</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day5.png" width="200">&emsp;
+# <a href="#day9">day9</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day9b.gif" width="200">&emsp;
+# <a href="#day11">day11</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day11.gif" width="140">
 # </p>
 # <p>
-# <a href="#day13">day13</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day13.gif" width="300">&emsp;
-# <a href="#day15">day15</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day15.gif" width="200">
+# <a href="#day13">day13</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day13a.gif" width="300">&emsp;
+# <a href="#day15">day15</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day15.gif" width="200">
 # </p>
 # <p>
-# <a href="#day17">day17</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day17.png" width="200">&emsp;
-# <a href="#day20">day20</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day20.gif" width="200">
+# <a href="#day17">day17</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day17.png" width="200">&emsp;
+# <a href="#day20">day20</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day20.gif" width="200">
 # </p>
 # <p>
-# <a href="#day21">day21</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day21.png" width="200">&emsp;
-# <a href="#day23">day23</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day23.gif" width="200">&emsp;
-# <a href="#day25">day25</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day25.gif" width="200">
+# <a href="#day21">day21</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day21.png" width="200">&emsp;
+# <a href="#day23">day23</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day23.gif" width="200">&emsp;
+# <a href="#day25">day25</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2021/results/day25.gif" width="200">
 # </p>
 
 # %% [markdown]
@@ -46,7 +46,7 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-ocr advent-of-code-hhoppe hhoppe-tools mediapy more-itertools numba parse
+# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools mediapy more-itertools numba parse
 
 # %%
 from __future__ import annotations
@@ -60,7 +60,7 @@ import functools
 import heapq
 import itertools
 import math
-import os
+import pathlib
 import re
 import sys
 import types
@@ -71,7 +71,7 @@ import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/
 import advent_of_code_ocr  # https://github.com/bsoyka/advent-of-code-ocr/blob/main/advent_of_code_ocr/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
 import matplotlib.pyplot as plt
-import mediapy as media
+import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
 import numpy as np
 import parse
@@ -89,6 +89,8 @@ hh.start_timing_notebook_cells()
 # %%
 YEAR = 2021
 SHOW_BIG_MEDIA = False
+if pathlib.Path('results').is_dir():
+  media.set_show_save_dir('results')
 
 # %%
 # (1) To obtain puzzle inputs and answers, we first try these paths/URLs:
@@ -132,11 +134,13 @@ hh.adjust_jupyterlab_markdown_width()
 
 # %%
 check_eq = hh.check_eq
+
+# %%
 _ORIGINAL_GLOBALS = list(globals())
 
 # %% [markdown]
 # <a name="day1"></a>
-# ## Day 1: Increasing numbers in sequence
+# ## Day 1: Sums of subsequences
 
 # %% [markdown]
 # - Part 1: How many measurements are larger than the previous measurement?
@@ -178,11 +182,11 @@ def day1a(s, *, part2=False):  # Solution based on generators.
 
 
 check_eq(day1a(s1), 7)
-puzzle.verify(1, day1a)  # ~1 ms.
+puzzle.verify(1, day1a)
 
 day1a_part2 = functools.partial(day1a, part2=True)
 check_eq(day1a_part2(s1), 5)
-puzzle.verify(2, day1a_part2)  # ~2 ms.
+puzzle.verify(2, day1a_part2)
 
 
 # %%
@@ -194,11 +198,11 @@ def day1(s, *, part2=False):  # Solution using numpy; fastest.
 
 
 check_eq(day1(s1), 7)
-puzzle.verify(1, day1)  # ~1 ms.
+puzzle.verify(1, day1)
 
 day1_part2 = functools.partial(day1, part2=True)
 check_eq(day1_part2(s1), 5)
-puzzle.verify(2, day1_part2)  # ~1 ms.
+puzzle.verify(2, day1_part2)
 
 # %% [markdown]
 # <a name="day2"></a>
@@ -241,7 +245,7 @@ def day2_part1(s):
 
 
 check_eq(day2_part1(s1), 150)
-puzzle.verify(1, day2_part1)  # ~1 ms.
+puzzle.verify(1, day2_part1)
 
 
 # %%
@@ -263,7 +267,7 @@ def day2_part2(s):
 
 
 check_eq(day2_part2(s1), 900)
-puzzle.verify(2, day2_part2)  # ~1 ms.
+puzzle.verify(2, day2_part2)
 
 # %% [markdown]
 # <a name="day3"></a>
@@ -322,11 +326,11 @@ def day3(s, *, part2=False):
 
 
 check_eq(day3(s1), 198)
-puzzle.verify(1, day3)  # ~5 ms.
+puzzle.verify(1, day3)
 
 day3_part2 = functools.partial(day3, part2=True)
 check_eq(day3_part2(s1), 230)
-puzzle.verify(2, day3_part2)  # ~22 ms.
+puzzle.verify(2, day3_part2)
 
 # %% [markdown]
 # <a name="day4"></a>
@@ -396,11 +400,11 @@ def day4a(s, *, part2=False):  # Compact.
 
 
 check_eq(day4a(s1), 4512)
-puzzle.verify(1, day4a)  # ~10 ms.
+puzzle.verify(1, day4a)
 
 day4a_part2 = functools.partial(day4a, part2=True)
 check_eq(day4a_part2(s1), 1924)
-puzzle.verify(2, day4a_part2)  # ~10 ms.
+puzzle.verify(2, day4a_part2)
 
 
 # %%
@@ -426,11 +430,11 @@ def day4(s, *, part2=False):  # More readable.
 
 
 check_eq(day4(s1), 4512)
-puzzle.verify(1, day4)  # ~10 ms.
+puzzle.verify(1, day4)
 
 day4_part2 = functools.partial(day4, part2=True)
 check_eq(day4_part2(s1), 1924)
-puzzle.verify(2, day4_part2)  # ~10 ms.
+puzzle.verify(2, day4_part2)
 
 # %% [markdown]
 # <a name="day5"></a>
@@ -449,7 +453,7 @@ puzzle.verify(2, day4_part2)  # ~10 ms.
 # using `numpy` vectorized operations to increment all the pixels for a line segment in a single call.  For diagonal segments, this involves
 #  [advanced indexing](https://numpy.org/devdocs/user/basics.indexing.html#advanced-indexing).
 #
-# It's interesting to see the 100x speed improvement, from 900 ms down to 9 ms.
+# It's interesting to see the 100x speed improvement, from 400 ms down to 4 ms.
 
 # %%
 puzzle = advent.puzzle(day=5)
@@ -483,11 +487,11 @@ def day5a(s, *, part2=False):  # Compact but slow; supports any dimension.
 
 
 check_eq(day5a(s1), 5)
-puzzle.verify(1, day5a)  # ~480 ms.
+puzzle.verify(1, day5a)
 
 day5a_part2 = functools.partial(day5a, part2=True)
 check_eq(day5a_part2(s1), 12)
-puzzle.verify(2, day5a_part2)  # ~800 ms.
+puzzle.verify(2, day5a_part2)
 
 
 # %%
@@ -514,9 +518,9 @@ def day5b(s, *, part2=False):  # Faster, still with dict.
   return sum(v >= 2 for v in count.values())
 
 
-puzzle.verify(1, day5b)  # ~90 ms.
+puzzle.verify(1, day5b)
 day5b_part2 = functools.partial(day5b, part2=True)
-puzzle.verify(2, day5b_part2)  # ~180 ms.
+puzzle.verify(2, day5b_part2)
 
 
 # %%
@@ -546,11 +550,11 @@ def day5c(s, *, part2=False, size=1000):  # All numpy; clever diagonal slicing.
 
 
 check_eq(day5c(s1, size=10), 5)
-puzzle.verify(1, day5c)  # ~6 ms.
+puzzle.verify(1, day5c)
 
 day5c_part2 = functools.partial(day5c, part2=True)
 check_eq(day5c_part2(s1), 12)
-puzzle.verify(2, day5c_part2)  # ~9 ms.
+puzzle.verify(2, day5c_part2)
 
 
 # %%
@@ -573,17 +577,17 @@ def day5(s, *, part2=False, size=1000, visualize=False):  # Just as fast.
   if visualize:
     window: Any = Ellipsis  # Uncropped
     window = np.s_[100:400, 100:400]  # Cropped to upper left
-    media.show_image(count.astype(float)[window], vmax=3)
+    media.show_image(-count.astype(float)[window], vmin=-3, vmax=0, title='day5')
 
   return np.count_nonzero(count >= 2)
 
 
 check_eq(day5(s1, size=10), 5)
-puzzle.verify(1, day5)  # ~6 ms.
+puzzle.verify(1, day5)
 
 day5_part2 = functools.partial(day5, part2=True)
 check_eq(day5_part2(s1), 12)
-puzzle.verify(2, day5_part2)  # ~9 ms.
+puzzle.verify(2, day5_part2)
 
 # %%
 _ = day5_part2(puzzle.input, visualize=True)
@@ -626,9 +630,9 @@ def day6a(s, *, part2=False):  # Initial solution, using Counter.
   return sum(counter.values())  # (counter.total() in Python 3.10)
 
 
-puzzle.verify(1, day6a)  # ~1 ms.
+puzzle.verify(1, day6a)
 day6a_part2 = functools.partial(day6a, part2=True)
-puzzle.verify(2, day6a_part2)  # ~3 ms.
+puzzle.verify(2, day6a_part2)
 
 
 # %%
@@ -644,14 +648,14 @@ def day6(s, *, part2=False):  # List-based approach used by colleagues.
   return sum(counts)
 
 
-puzzle.verify(1, day6)  # ~0 ms.
+puzzle.verify(1, day6)
 day6_part2 = functools.partial(day6, part2=True)
-puzzle.verify(2, day6_part2)  # ~0 ms.
+puzzle.verify(2, day6_part2)
 
 
 # %%
-# Looking at progression for single input, to ideally derive a closed-form
-# expression.  However it looks highly irregular.
+# Looking at progression for single input, to ideally derive a closed-form expression.
+# However, it looks highly irregular.
 def day6_test(s):
   counter = collections.Counter(map(int, s.strip().split(',')))
   for i in range(80):
@@ -712,9 +716,9 @@ def day7a(s, *, part2=False):  # Brute-force search.
   return min(func(x) for x in range(max(values)))
 
 
-puzzle.verify(1, day7a)  # ~14 ms.
+puzzle.verify(1, day7a)
 day7a_part2 = functools.partial(day7a, part2=True)
-puzzle.verify(2, day7a_part2)  # ~52 ms.
+puzzle.verify(2, day7a_part2)
 
 
 # %%
@@ -732,11 +736,11 @@ def day7(s, *, part2=False):  # Almost closed-form expression.
 
 
 check_eq(day7(s1), 37)
-puzzle.verify(1, day7)  # ~0 ms.
+puzzle.verify(1, day7)
 
 day7_part2 = functools.partial(day7, part2=True)
 check_eq(day7_part2(s1), 168)
-puzzle.verify(2, day7_part2)  # ~1 ms.
+puzzle.verify(2, day7_part2)
 
 # %% [markdown]
 # <a name="day8"></a>
@@ -749,7 +753,7 @@ puzzle.verify(2, day7_part2)  # ~1 ms.
 #
 # ---
 #
-# I explored a total of 7 different approaches with progressively faster speeds, from 1450 ms to 5 ms.
+# I explored a total of 7 different approaches with progressively faster speeds, from 600 ms to 3 ms.
 #
 # The first 6 approaches search all permutations of assigning input LED segments to output LED segments,
 # using `itertools.permutations('abcdefg')`.
@@ -780,9 +784,8 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
 
 # %%
 # Brute-force iteration over all permutations is not excessive:
-if 0:
-  print(len(list(itertools.permutations('abcdefg'))))  # 5040
-  print(math.perm(len('abcdefg')))  # 5040
+# hh.display_html(str(len(list(itertools.permutations('abcdefg')))))
+hh.display_html(str(math.perm(len('abcdefg'))))
 
 
 # %%
@@ -806,7 +809,7 @@ def day8_part1(s):
 
 
 check_eq(day8_part1(s1), 26)
-puzzle.verify(1, day8_part1)  # ~0 ms.
+puzzle.verify(1, day8_part1)
 
 
 # %%
@@ -848,7 +851,7 @@ def day8a_part2(s):  # Brute-force; most compact.
 
 
 check_eq(day8a_part2(s1), 61229)
-puzzle.verify(2, day8a_part2)  # ~1450 ms.
+puzzle.verify(2, day8a_part2)
 
 
 # %%
@@ -876,7 +879,7 @@ def day8b_part2(s):  # Faster; cache a translation table for each permutation.
 
 
 check_eq(day8b_part2(s1), 61229)
-puzzle.verify(2, day8b_part2)  # ~810 ms.
+puzzle.verify(2, day8b_part2)
 
 
 # %%
@@ -901,7 +904,7 @@ def day8c_part2(s):  # Faster; loop over permutations first, then lines.
 
 
 check_eq(day8c_part2(s1), 61229)
-puzzle.verify(2, day8c_part2)  # ~360 ms.
+puzzle.verify(2, day8c_part2)
 
 
 # %%
@@ -931,7 +934,7 @@ def day8d_part2(s):  # Faster; precompute seg sets for each permutation.
 
 
 check_eq(day8d_part2(s1), 61229)
-puzzle.verify(2, day8d_part2)  # ~240 ms.
+puzzle.verify(2, day8d_part2)
 
 
 # %%
@@ -961,7 +964,7 @@ def day8e_part2(s):  # Faster; loop over permutations first, and use sets of lin
 
 
 check_eq(day8e_part2(s1), 61229)
-puzzle.verify(2, day8e_part2)  # ~170 ms.
+puzzle.verify(2, day8e_part2)
 
 
 # %%
@@ -997,7 +1000,7 @@ def day8_part2(s):  # Fastest; custom solution for the 7-segment LED.
 
 
 check_eq(day8_part2(s1), 61229)
-puzzle.verify(2, day8_part2)  # ~5 ms.
+puzzle.verify(2, day8_part2)
 
 # %% [markdown]
 # <a name="day9"></a>
@@ -1068,15 +1071,15 @@ def day9a(s, *, part2=False):  # Solution using Union-Find.  Relatively slow.
 
 
 check_eq(day9a(s1), 15)
-puzzle.verify(1, day9a)  # ~5 ms.
+puzzle.verify(1, day9a)
 
 day9a_part2 = functools.partial(day9a, part2=True)
 check_eq(day9a_part2(s1), 1134)
-puzzle.verify(2, day9a_part2)  # ~110 ms.
+puzzle.verify(2, day9a_part2)
 
 
 # %%
-def day9b(s, *, part2=False, visualize=False):  # Faster using numpy.
+def day9b(s, *, part2=False):  # Faster using numpy.
   grid = np.array([list(line) for line in s.splitlines()], int)
   dyxs = np.concatenate([[v, -v] for v in np.eye(grid.ndim, dtype=int)])
   t = np.pad(grid, 1, constant_values=10)
@@ -1095,25 +1098,15 @@ def day9b(s, *, part2=False, visualize=False):  # Faster using numpy.
 
   _, count = np.unique(yx.reshape(2, -1), axis=1, return_counts=True)
 
-  if visualize:
-    _, inverse = np.unique(yx.reshape(2, -1), axis=1, return_inverse=True)
-    cmap = np.random.default_rng(0).choice(range(30, 150), (len(count), 3)).astype(np.uint8)
-    cmap[count == 1] = 0
-    cmap[count >= heapq.nlargest(3, count)[-1]] += 100  # 2 are tied for third!
-    basin = cmap[inverse.reshape(grid.shape)]
-    basin[low_point] = 255
-    images = {'Heightmap': grid.astype(float), 'Basins': basin}
-    media.show_images(images, height=grid.shape[0] * 3)
-
   return math.prod(heapq.nlargest(3, count))
 
 
 check_eq(day9b(s1), 15)
-puzzle.verify(1, day9b)  # ~4 ms.
+puzzle.verify(1, day9b)
 
 day9b_part2 = functools.partial(day9b, part2=True)
 check_eq(day9b_part2(s1), 1134)
-puzzle.verify(2, day9b_part2)  # ~15 ms.
+puzzle.verify(2, day9b_part2)
 
 
 # %%
@@ -1148,9 +1141,10 @@ def day9(s, *, part2=False, visualize=False):  # Faster, using flat indexing.
       basin[low_point] = 255
       basins[highlight] = basin.repeat(3, axis=0).repeat(3, axis=1)
     height_map = grid.astype(float).repeat(3, axis=0).repeat(3, axis=1)
-    media.show_image(height_map, title='Height map')
-    title = 'Basins (two may be tied for 3rd place!)'
-    media.show_video(basins.values(), title=title, codec='gif', fps=1)
+    hh.display_html('Height map:')
+    media.show_image(height_map, title='day9a')
+    hh.display_html('Basins (two may be tied for 3rd place!):')
+    media.show_video(basins.values(), codec='gif', fps=1, title='day9b')
 
   return math.prod(heapq.nlargest(3, count))
 
@@ -1163,11 +1157,11 @@ def day9(s, *, part2=False, visualize=False):  # Faster, using flat indexing.
 #                            range(8), np.arange(grid.size))
 
 check_eq(day9(s1), 15)
-puzzle.verify(1, day9)  # ~4 ms.
+puzzle.verify(1, day9)
 
 day9_part2 = functools.partial(day9, part2=True)
 check_eq(day9_part2(s1), 1134)
-puzzle.verify(2, day9_part2)  # ~7 ms.
+puzzle.verify(2, day9_part2)
 
 # %%
 _ = day9_part2(puzzle.input, visualize=True)
@@ -1219,7 +1213,7 @@ def day10_part1(s):
 
 
 check_eq(day10_part1(s1), 26397)
-puzzle.verify(1, day10_part1)  # ~2 ms.
+puzzle.verify(1, day10_part1)
 
 
 # %%
@@ -1244,7 +1238,7 @@ def day10_part2(s):
 
 
 check_eq(day10_part2(s1), 288957)
-puzzle.verify(2, day10_part2)  # ~3 ms.
+puzzle.verify(2, day10_part2)
 
 # %% [markdown]
 # <a name="day11"></a>
@@ -1315,11 +1309,11 @@ def day11a(s, *, part2=False):  # Compact.
 
 
 check_eq(day11a(s1), 1656)
-puzzle.verify(1, day11a)  # ~110 ms.
+puzzle.verify(1, day11a)
 
 day11a_part2 = functools.partial(day11a, part2=True)
 check_eq(day11a_part2(s1), 195)
-puzzle.verify(2, day11a_part2)  # ~225 ms.
+puzzle.verify(2, day11a_part2)
 
 
 # %%
@@ -1353,11 +1347,11 @@ def day11b(s, *, part2=False):  # Faster, using ndenumerate and bool array.
 
 
 check_eq(day11b(s1), 1656)
-puzzle.verify(1, day11b)  # ~16 ms.
+puzzle.verify(1, day11b)
 
 day11b_part2 = functools.partial(day11b, part2=True)
 check_eq(day11b_part2(s1), 195)
-puzzle.verify(2, day11b_part2)  # ~30 ms.
+puzzle.verify(2, day11b_part2)
 
 
 # %%
@@ -1407,16 +1401,16 @@ def day11(s, *, part2=False, visualize=False):  # Fastest, using flat array.
     elif flashed.all():
       if visualize:
         images = [images[0]] * 15 + images + [images[-1]] * 15
-        media.show_video(images, codec='gif', fps=15, border=True)
+        media.show_video(images, codec='gif', fps=15, border=True, title='day11')
       return step
 
 
 check_eq(day11(s1), 1656)
-puzzle.verify(1, day11)  # ~8 ms.
+puzzle.verify(1, day11)
 
 day11_part2 = functools.partial(day11, part2=True)
 check_eq(day11_part2(s1), 195)
-puzzle.verify(2, day11_part2)  # ~15 ms.
+puzzle.verify(2, day11_part2)
 
 # %%
 _ = day11_part2(puzzle.input, visualize=True)
@@ -1501,12 +1495,12 @@ def day12a(s, *, part2=False):  # Clean solution.
 
 check_eq(day12a(s1), 10)
 check_eq(day12a(s2), 226)
-puzzle.verify(1, day12a)  # ~14 ms.
+puzzle.verify(1, day12a)
 
 day12a_part2 = functools.partial(day12a, part2=True)
 check_eq(day12a_part2(s1), 36)
 check_eq(day12a_part2(s2), 3509)
-puzzle.verify(2, day12a_part2)  # ~440 ms.
+puzzle.verify(2, day12a_part2)
 
 
 # %%
@@ -1538,12 +1532,12 @@ def day12(s, *, part2=False):  # Much faster using lru_cache and frozenset.
 
 check_eq(day12(s1), 10)
 check_eq(day12(s2), 226)
-puzzle.verify(1, day12)  # ~1 ms.
+puzzle.verify(1, day12)
 
 day12_part2 = functools.partial(day12, part2=True)
 check_eq(day12_part2(s1), 36)
 check_eq(day12_part2(s2), 3509)
-puzzle.verify(2, day12_part2)  # ~1 ms.
+puzzle.verify(2, day12_part2)
 
 # %% [markdown]
 # <a name="day13"></a>
@@ -1613,10 +1607,10 @@ def day13a(s, *, part2=False):  # Most compact; set-based.
 
 
 check_eq(day13a(s1), 17)
-puzzle.verify(1, day13a)  # ~2 ms.
+puzzle.verify(1, day13a)
 
 day13a_part2 = functools.partial(day13a, part2=True)
-puzzle.verify(2, day13a_part2)  # ~6 ms.  e.g. 'EPLGRULR'.
+puzzle.verify(2, day13a_part2)
 
 
 # %%
@@ -1642,9 +1636,10 @@ def day13b(s, *, part2=False, visualize=False):  # More readable; a bit faster.
 
   if visualize:
     all_dots = {tyx for tyx in all_dots if tyx[0] >= 4}  # Skip initial frames.
-    video: Any = hh.grid_from_indices(all_dots, pad=(0, 1, 1), dtype=bool)
+    video: Any = hh.to_image(hh.grid_from_indices(all_dots, pad=(0, 1, 1), dtype=bool), 240, 0)
+    video = video.repeat(2, axis=1).repeat(2, axis=2)
     video = [video[0]] * 2 + list(video) + [video[-1]] * 3
-    media.show_video(video, codec='gif', fps=2)
+    media.show_video(video, codec='gif', fps=2, title='day13a')
 
   grid = np.full((6, 39), '.')
   # grid[tuple(np.array(list(dots)).T)] = '#'
@@ -1653,11 +1648,12 @@ def day13b(s, *, part2=False, visualize=False):  # More readable; a bit faster.
 
 
 check_eq(day13b(s1), 17)
-puzzle.verify(1, day13b)  # ~2 ms.
+puzzle.verify(1, day13b)
 
 day13b_part2 = functools.partial(day13b, part2=True)
-puzzle.verify(2, day13b_part2)  # ~4 ms.  e.g. 'EPLGRULR'.
+puzzle.verify(2, day13b_part2)
 
+# %%
 _ = day13b_part2(puzzle.input, visualize=True)
 
 
@@ -1678,16 +1674,17 @@ def day13(s, *, part2=False, visualize=False):  # Numpy approach; as fast.
       return np.count_nonzero(grid)
 
   if visualize:
-    media.show_image(~np.pad(grid, 1), height=48, border=True)
+    image = ~np.pad(grid, 1).repeat(6, axis=0).repeat(6, axis=1)
+    media.show_image(image, border=True, title='day13b')
   grid = np.array(['.', '#'])[grid]
   return advent_of_code_ocr.convert_6('\n'.join(''.join(row) for row in grid))
 
 
 check_eq(day13(s1), 17)
-puzzle.verify(1, day13)  # ~4 ms.
+puzzle.verify(1, day13)
 
 day13_part2 = functools.partial(day13, part2=True)
-puzzle.verify(2, day13_part2)  # ~4 ms.  e.g. 'EPLGRULR'.
+puzzle.verify(2, day13_part2)
 
 # %%
 _ = day13_part2(puzzle.input, visualize=True)
@@ -1760,11 +1757,11 @@ def day14a(s, *, part2=False):  # Compact.
 
 
 check_eq(day14a(s1), 1588)
-puzzle.verify(1, day14a)  # ~18 ms.
+puzzle.verify(1, day14a)
 
 day14a_part2 = functools.partial(day14a, part2=True)
 check_eq(day14a_part2(s1), 2188189693529)
-puzzle.verify(2, day14a_part2)  # ~85 ms.
+puzzle.verify(2, day14a_part2)
 
 
 # %%
@@ -1792,11 +1789,11 @@ def day14(s, *, part2=False):  # Faster (avoiding inefficient sum()).
 
 
 check_eq(day14(s1), 1588)
-puzzle.verify(1, day14)  # ~1 ms.
+puzzle.verify(1, day14)
 
 day14_part2 = functools.partial(day14, part2=True)
 check_eq(day14_part2(s1), 2188189693529)
-puzzle.verify(2, day14_part2)  # ~4 ms.
+puzzle.verify(2, day14_part2)
 
 # %% [markdown]
 # <a name="day15"></a>
@@ -1843,7 +1840,7 @@ s1 = """\
 
 
 # %%
-def day15a(s, *, part2=False):  # Compact.
+def day15a(s, *, part2=False):  # Compact Dijkstra.
   grid = np.array([list(line) for line in s.splitlines()], int)
   if part2:
     a = [np.concatenate([(grid + (y + x - 1)) % 9 + 1 for x in range(5)], axis=1) for y in range(5)]
@@ -1866,10 +1863,10 @@ def day15a(s, *, part2=False):  # Compact.
 
 
 check_eq(day15a(s1), 40)
-puzzle.verify(1, day15a)  # ~60 ms.
+puzzle.verify(1, day15a)
 day15a_part2 = functools.partial(day15a, part2=True)
 check_eq(day15a_part2(s1), 315)
-puzzle.verify(2, day15a_part2)  # ~1700 ms.
+puzzle.verify(2, day15a_part2)
 
 
 # %%
@@ -1882,7 +1879,7 @@ def day15b(s, *, part2=False):  # Try A* search.
   grid = np.pad(grid, 1, constant_values=10**8)  # To avoid boundary checks.
   c0 = grid.shape[0] - 2 + grid.shape[1] - 2
 
-  def hfunc(yx):
+  def hfunc(yx):  # Estimated lower bound on remaining distance to goal.
     heuristic_weight = 2
     return (c0 - yx[0] - yx[1]) * heuristic_weight
 
@@ -1915,10 +1912,10 @@ def day15b(s, *, part2=False):  # Try A* search.
 
 
 check_eq(day15b(s1), 40)
-# puzzle.verify(1, day15b)  # ~140 ms.
+puzzle.verify(1, day15b)
 day15b_part2 = functools.partial(day15b, part2=True)
 check_eq(day15b_part2(s1), 315)
-# puzzle.verify(2, day15b_part2)  # ~1850 ms.
+puzzle.verify(2, day15b_part2)
 
 
 # %%
@@ -1960,14 +1957,14 @@ def day15c(s, *, part2=False):
 
 
 check_eq(day15c(s1), 40)
-# puzzle.verify(1, day15c)  # ~11 ms.  (Commented because it could fail.)
+# puzzle.verify(1, day15c)  # ~1 ms.  (Commented because it could fail.)
 day15c_part2 = functools.partial(day15c, part2=True)
 check_eq(day15c_part2(s1), 315)
-# puzzle.verify(2, day15c_part2)  # ~27 ms.  (Commented because it could fail.)
+# puzzle.verify(2, day15c_part2)  # ~5 ms.  (Commented because it could fail.)
 
 
 # %%
-# Padded, numba, visualization.
+# Padded Dijkstra, numba, visualization.
 @numba.njit
 def day15_func(grid, visualize):
   start = 1, 1
@@ -2009,15 +2006,15 @@ def day15(s, *, part2=False, visualize=False):
     # media.show_image(~path_image, border=True)
     frame0 = media.to_rgb(grid[1:-1, 1:-1] * 1.0, cmap='bwr')
     frame1 = np.where(path_image[1:-1, 1:-1, None], 0, frame0)
-    media.show_video([frame0, frame1], codec='gif', fps=1)
+    media.show_video([frame0, frame1], codec='gif', fps=1, title='day15')
   return d
 
 
 check_eq(day15(s1), 40)
-puzzle.verify(1, day15)  # ~14 ms.
+puzzle.verify(1, day15)
 day15_part2 = functools.partial(day15, part2=True)
 check_eq(day15_part2(s1), 315)
-puzzle.verify(2, day15_part2)  # ~90 ms.
+puzzle.verify(2, day15_part2)
 
 # %%
 _ = day15_part2(puzzle.input, visualize=True)
@@ -2093,7 +2090,7 @@ check_eq(day16a('8A004A801A8002F478'), 16)
 check_eq(day16a('620080001611562C8802118E34'), 12)
 check_eq(day16a('C0015000016115A2E0802F182340'), 23)
 check_eq(day16a('A0016C880162017C3686B18A3D4780'), 31)
-puzzle.verify(1, day16a)  # ~2 ms.
+puzzle.verify(1, day16a)
 
 day16a_part2 = functools.partial(day16a, part2=True)
 check_eq(day16a_part2('C200B40A82'), 3)
@@ -2104,7 +2101,7 @@ check_eq(day16a_part2('D8005AC2A8F0'), 1)
 check_eq(day16a_part2('F600BC2D8F'), 0)
 check_eq(day16a_part2('9C005AC2F8F0'), 0)
 check_eq(day16a_part2('9C0141080250320F1802104A08'), 1)
-puzzle.verify(2, day16a_part2)  # ~2 ms.
+puzzle.verify(2, day16a_part2)
 
 
 # %%
@@ -2173,7 +2170,7 @@ check_eq(day16('8A004A801A8002F478'), 16)
 check_eq(day16('620080001611562C8802118E34'), 12)
 check_eq(day16('C0015000016115A2E0802F182340'), 23)
 check_eq(day16('A0016C880162017C3686B18A3D4780'), 31)
-puzzle.verify(1, day16)  # ~2 ms.
+puzzle.verify(1, day16)
 
 day16_part2 = functools.partial(day16, part2=True)
 check_eq(day16_part2('C200B40A82'), 3)
@@ -2184,7 +2181,7 @@ check_eq(day16_part2('D8005AC2A8F0'), 1)
 check_eq(day16_part2('F600BC2D8F'), 0)
 check_eq(day16_part2('9C005AC2F8F0'), 0)
 check_eq(day16_part2('9C0141080250320F1802104A08'), 1)
-puzzle.verify(2, day16_part2)  # ~2 ms.
+puzzle.verify(2, day16_part2)
 if 0:
   _ = day16_part2(puzzle.input, visualize=2)
 
@@ -2252,11 +2249,11 @@ def day17a(s, *, part2=False):  # Slow.
 
 
 check_eq(day17a(s1), 45)
-puzzle.verify(1, day17a)  # ~320 ms.
+puzzle.verify(1, day17a)
 
 day17a_part2 = functools.partial(day17a, part2=True)
 check_eq(day17a_part2(s1), 112)
-puzzle.verify(2, day17a_part2)  # ~320 ms.
+puzzle.verify(2, day17a_part2)
 
 
 # %%
@@ -2292,18 +2289,19 @@ def day17(s, *, part2=False, visualize=False):
         | {(y, x): (100, 100, 255) for y in range(y1, y2 + 1) for x in range(x1, x2 + 1)}
     )
     image = hh.grid_from_indices(yx_map, background=(250,) * 3, pad=1, dtype=np.uint8)[::-1]
-    media.show_image(image, border=True, height=min(image.shape[0] * 2, 500))
+    image = image.repeat(2, axis=0).repeat(2, axis=1)
+    media.show_image(image, border=True, title='day17')
   return len(winners) if part2 else highest
 
 
 check_eq(day17(s1), 45)
 check_eq(day17(s2), 45)
-puzzle.verify(1, day17)  # ~6 ms.
+puzzle.verify(1, day17)
 
 day17_part2 = functools.partial(day17, part2=True)
 check_eq(day17_part2(s1), 112)
 check_eq(day17_part2(s2), 112)
-puzzle.verify(2, day17_part2)  # ~6 ms.
+puzzle.verify(2, day17_part2)
 
 # %%
 _ = day17_part2(puzzle.input, visualize=True)
@@ -2326,9 +2324,9 @@ _ = day17_part2(puzzle.input, visualize=True)
 # My first approach uses a **nested set of lists**.
 # This means that the input is trivial to read (using the unsafe `eval()` function) and trivial to print for debugging.
 #
-# After the initial implementation, I realized that all necessary `explode` operations can be safely applied in the same nested-list traversal, and this provides some speedup (from 4100 ms to 2600 ms)
+# After the initial implementation, I realized that all necessary `explode` operations can be safely applied in the same nested-list traversal, and this provides some speedup (from 1200 ms to 700 ms)
 #
-# An even greater speedup (down to 230 ms) is enabled by creating an algorithm compatible with `numba`-compilation.
+# An even greater speedup (down to 80 ms) is enabled by creating an algorithm compatible with `numba`-compilation.
 # For this, I changed the representation from nested lists to a simple **array of tokens**, and I eliminated recursive function calling by instead using a stack.
 # This is cumbersome, and my thought now is that if one is really interested in maximizing efficiency for this puzzle, it would be best to just use `C++`.
 
@@ -2471,11 +2469,11 @@ check_eq(day18_parse_reduce_a(s4), '[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]
 check_eq(day18_parse_reduce_a(s5), '[[[[6,6],[7,6]],[[7,7],[7,0]]],[[[7,7],[7,7]],[[7,8],[9,9]]]]')
 
 check_eq(day18a(s5), 4140)
-puzzle.verify(1, day18a)  # ~250 ms.
+puzzle.verify(1, day18a)
 
 day18a_part2 = functools.partial(day18a, part2=True)
 check_eq(day18a_part2(s5), 3993)
-# puzzle.verify(2, day18a_part2)  # ~4100 ms.
+# puzzle.verify(2, day18a_part2)  # ~1.2 s.
 
 
 # %%
@@ -2558,12 +2556,12 @@ check_eq(day18_parse_reduce_b(s4), '[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]
 check_eq(day18_parse_reduce_b(s5), '[[[[6,6],[7,6]],[[7,7],[7,0]]],[[[7,7],[7,7]],[[7,8],[9,9]]]]')
 
 check_eq(day18b(s5), 4140)
-puzzle.verify(1, day18b)  # ~140 ms.
+puzzle.verify(1, day18b)
 
 day18b_part2 = functools.partial(day18b, part2=True)
 check_eq(day18b_part2(s5), 3993)
 if not using_numba:
-  puzzle.verify(2, day18b_part2)  # ~2600 ms.
+  puzzle.verify(2, day18b_part2)  # ~0.7 s.
 
 
 # %%
@@ -2679,12 +2677,12 @@ check_eq(day18_parse_reduce(s4), '[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],
 check_eq(day18_parse_reduce(s5), '[[[[6,6],[7,6]],[[7,7],[7,0]]],[[[7,7],[7,7]],[[7,8],[9,9]]]]')
 
 check_eq(day18(s5), 4140)
-puzzle.verify(1, day18)  # ~35 ms with numba; ~600 ms without numba.
+puzzle.verify(1, day18)
 
 day18_part2 = functools.partial(day18, part2=True)
 check_eq(day18_part2(s5), 3993)
 if using_numba:
-  puzzle.verify(2, day18_part2)  # ~230 ms with numba; ~9.5 s without numba.
+  puzzle.verify(2, day18_part2)
 
 # %% [markdown]
 # <a name="day19"></a>
@@ -2711,7 +2709,7 @@ if using_numba:
 # We compute the rotation that satisfies all matches.
 # We transform all of the points from one scan into the coordinate system of the remaining scan (the one declared to be the "representative" by the Union-Find algorithm).
 #
-# [Sascha Häberling](https://github.com/shaeberling) demonstrated that a **brute-force** approach is feasible.  I decided to explore this in Python, adding two acceleration techniques: transforming 3D points into 1D indices, and using `np.isin()` to vectorize the point searches.  Even with these accelerations, the brute-force code takes 3500 ms in Python, compared to 120 ms for the signatures-based approach.
+# [Sascha Häberling](https://github.com/shaeberling) demonstrated that a **brute-force** approach is feasible.  I decided to explore this in Python, adding two acceleration techniques: transforming 3D points into 1D indices, and using `np.isin()` to vectorize the point searches.  Even with these accelerations, the brute-force code takes 1600 ms in Python, compared to 35 ms for the signatures-based approach.
 
 # %%
 puzzle = advent.puzzle(day=19)
@@ -2903,11 +2901,11 @@ def day19a(s, *, part2=False):  # Brute-force approach.
 
 
 check_eq(day19a(s1), 79)
-# puzzle.verify(1, day19a)  # ~35 s.
+# puzzle.verify(1, day19a)  # ~11 s.
 
 day19a_part2 = functools.partial(day19a, part2=True)
 check_eq(day19a_part2(s1), 3621)
-# puzzle.verify(2, day19a_part2)  # ~35 s.
+# puzzle.verify(2, day19a_part2)  # ~11 s.
 
 
 # %%
@@ -2971,11 +2969,11 @@ def day19b(s, *, part2=False):  # Brute-force; encode 3D point/vector as integer
 
 
 check_eq(day19b(s1), 79)
-# puzzle.verify(1, day19b)  # ~11.5 s
+# puzzle.verify(1, day19b)  # ~4 s
 
 day19b_part2 = functools.partial(day19b, part2=True)
 check_eq(day19b_part2(s1), 3621)
-# puzzle.verify(2, day19b_part2)  # ~11.6 s
+# puzzle.verify(2, day19b_part2)  # ~4 s
 
 
 # %%
@@ -3029,11 +3027,11 @@ def day19c(s, *, part2=False):  # Brute-force np.isin() with encoded points.
 
 
 check_eq(day19c(s1), 79)
-# puzzle.verify(1, day19c)  # ~3.5 s.
+# puzzle.verify(1, day19c)  # ~1.6 s.
 
 day19c_part2 = functools.partial(day19c, part2=True)
 check_eq(day19c_part2(s1), 3621)
-# puzzle.verify(2, day19c_part2)  # ~3.5 s.
+# puzzle.verify(2, day19c_part2)  # ~1.6 s.
 
 
 # %%
@@ -3140,11 +3138,11 @@ def day19(s, *, part2=False):  # Fast.
 
 
 check_eq(day19(s1), 79)
-puzzle.verify(1, day19)  # ~120 ms.
+puzzle.verify(1, day19)
 
 day19_part2 = functools.partial(day19, part2=True)
 check_eq(day19_part2(s1), 3621)
-puzzle.verify(2, day19_part2)  # ~120 ms.
+puzzle.verify(2, day19_part2)
 
 # %% [markdown]
 # <a name="day20"></a>
@@ -3224,11 +3222,11 @@ def day20a(s, *, part2=False):  # Slow.
 
 
 check_eq(day20a(s1), 35)
-puzzle.verify(1, day20a)  # ~165 ms.
+puzzle.verify(1, day20a)
 
 day20a_part2 = functools.partial(day20a, part2=True)
 check_eq(day20a_part2(s1), 3351)
-# puzzle.verify(2, day20a_part2)  # Slow; ~10 s.
+# puzzle.verify(2, day20a_part2)  # Slow; ~3.5 s.
 
 
 # %%
@@ -3248,11 +3246,11 @@ def day20b(s, *, part2=False):  # Most compact and fast.
 
 
 check_eq(day20b(s1), 35)
-puzzle.verify(1, day20b)  # ~3 ms.
+puzzle.verify(1, day20b)
 
 day20b_part2 = functools.partial(day20b, part2=True)
 check_eq(day20b_part2(s1), 3351)
-puzzle.verify(2, day20b_part2)  # ~66 ms.
+puzzle.verify(2, day20b_part2)
 
 
 # %%
@@ -3277,16 +3275,16 @@ def day20(s, *, part2=False, visualize=False):  # Same with visualization.
 
   if visualize:
     images = [images[0]] * 5 + images + [images[-1]] * 5
-    media.show_video(images, codec='gif', fps=5)
+    media.show_video(images, codec='gif', fps=5, title='day20')
   return np.count_nonzero(grid)
 
 
 check_eq(day20(s1), 35)
-puzzle.verify(1, day20)  # ~3 ms.
+puzzle.verify(1, day20)
 
 day20_part2 = functools.partial(day20, part2=True)
 check_eq(day20_part2(s1), 3351)
-puzzle.verify(2, day20_part2)  # ~66 ms.
+puzzle.verify(2, day20_part2)
 
 # %%
 _ = day20_part2(puzzle.input, visualize=True)
@@ -3323,7 +3321,7 @@ _ = day20_part2(puzzle.input, visualize=True)
 # In all cases, one small optimization is to precompute a `die_sum_distribution`
 # containing the counts of the sums of 3 die (rather than having 3 nested for loops that sum individual dice.).
 #
-# In the end, the fastest solution is to apply `numba` to a non-vectorized version of approach 2 --- yielding an answer in just 20 ms.
+# In the end, the fastest solution is to apply `numba` to a non-vectorized version of approach 2 --- yielding an answer in just 1 ms.
 
 # %%
 puzzle = advent.puzzle(day=21)
@@ -3354,7 +3352,7 @@ def day21_part1(s):
 
 
 check_eq(day21_part1(s1), 739785)
-puzzle.verify(1, day21_part1)  # ~0 ms.
+puzzle.verify(1, day21_part1)
 
 
 # %%
@@ -3383,7 +3381,7 @@ def day21a_part2(s):  # Simple 3 "for" loops and caching.
 
 
 check_eq(day21a_part2(s1), 444356092776315)
-puzzle.verify(2, day21a_part2)  # ~240 ms.
+puzzle.verify(2, day21a_part2)
 
 
 # %%
@@ -3414,7 +3412,7 @@ def day21b_part2(s):  # Avoiding functools.cache
 
 
 check_eq(day21b_part2(s1), 444356092776315)
-puzzle.verify(2, day21b_part2)  # ~850 ms.
+puzzle.verify(2, day21b_part2)
 
 
 # %%
@@ -3443,7 +3441,7 @@ def day21c_part2(s):  # Numpy, vectorized on pos1.
 
 
 check_eq(day21c_part2(s1), 444356092776315)
-puzzle.verify(2, day21c_part2)  # ~130 ms.
+puzzle.verify(2, day21c_part2)
 
 
 # %%
@@ -3503,21 +3501,27 @@ def day21d_part2(s, *, win_score=21, visualize=False):  # Most compact.
     # fig.tight_layout(pad=0)  # It does not properly handle the colorbar.
     image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
     plt.close(fig)
-    return image
+    title = 'day21' if win_score == 21 else None
+    media.show_image(image, border=True, title=title)
 
   return max(*compute(pos0, pos1, 0, 0))
 
 
 check_eq(day21d_part2(s1), 444356092776315)
-puzzle.verify(2, day21d_part2)  # ~50 ms.
+puzzle.verify(2, day21d_part2)
 
+
+# %%
 # The conclusion is that starting first is a big advantage, but there are some
 # start locations where player 2 still has an advantage.
-media.show_image(day21d_part2(puzzle.input, visualize=True), border=True)
+_ = day21d_part2(puzzle.input, visualize=True)
 
+
+# %%
 # If the winning score is increased from 21 to 100, there is still a 5% edge
 # in starting first with the best position.
-# media.show_image(day21d_part2(puzzle.input, win_score=100, visualize=True))
+if 0:
+  _ = day21d_part2(puzzle.input, visualize=True, win_score=100)
 
 
 # %%
@@ -3556,7 +3560,7 @@ def day21_part2(s):
 
 
 check_eq(day21_part2(s1), 444356092776315)
-puzzle.verify(2, day21_part2)  # ~21 ms.
+puzzle.verify(2, day21_part2)
 
 # %% [markdown]
 # <a name="day22"></a>
@@ -3591,7 +3595,7 @@ puzzle.verify(2, day21_part2)  # ~21 ms.
 # The idea is to **sort the `start, stop` coordinates** of the input boxes (separately on each axis), and use the outer-product of these coordinates to partition the 3D space into a grid of small boxes.
 # For each input box, we identify the sub-grid of small boxes that it contains, and modify their state.
 #
-# I adapt this approach in `numpy` (using the ever-useful `np.unique()` function) and achieve compact code, which automatically generalizes to inputs of arbitrary dimension.  However, the computation is slower than the CSG approach, taking about 2700 ms vs. 95 ms.
+# I adapt this approach in `numpy` (using the ever-useful `np.unique()` function) and achieve compact code, which automatically generalizes to inputs of arbitrary dimension.  However, the computation is slower than the numba-accelerated CSG approach, taking about 2000 ms vs. 18 ms.
 
 # %%
 puzzle = advent.puzzle(day=22)
@@ -3716,7 +3720,7 @@ def day22a_part1(s):  # Initial specialized solution for part 1.
 check_eq(day22a_part1(s1), 39)
 check_eq(day22a_part1(s2), 590784)
 check_eq(day22a_part1(s3), 474140)
-puzzle.verify(1, day22a_part1)  # ~42 ms.
+puzzle.verify(1, day22a_part1)
 
 
 # %%
@@ -3747,11 +3751,11 @@ def day22b(s, *, part2=False):  # Using 3D grid over unique range coordinates.
 check_eq(day22b(s1), 39)
 check_eq(day22b(s2), 590784)
 check_eq(day22b(s3), 474140)
-puzzle.verify(1, day22b)  # ~8 ms.
+puzzle.verify(1, day22b)
 
 day22b_part2 = functools.partial(day22b, part2=True)
-check_eq(day22b_part2(s3), 2758514936282235)  # ~14 ms.
-puzzle.verify(2, day22b_part2)  # ~2700 ms.
+check_eq(day22b_part2(s3), 2758514936282235)
+# puzzle.verify(2, day22b_part2)  # ~2 s.
 
 
 # %%
@@ -3810,11 +3814,11 @@ def day22c(s, *, part2=False):  # Using CSG of boxes.
 check_eq(day22c(s1), 39)
 check_eq(day22c(s2), 590784)
 check_eq(day22c(s3), 474140)
-puzzle.verify(1, day22c)  # ~25 ms.
+puzzle.verify(1, day22c)
 
 day22c_part2 = functools.partial(day22c, part2=True)
 check_eq(day22c_part2(s3), 2758514936282235)
-puzzle.verify(2, day22c_part2)  # ~1350 ms.
+puzzle.verify(2, day22c_part2)
 
 
 # %%
@@ -3895,11 +3899,11 @@ def day22d(s, *, part2=False):  # Faster by reducing CSG fragment count.
 check_eq(day22d(s1), 39)
 check_eq(day22d(s2), 590784)
 check_eq(day22d(s3), 474140)
-puzzle.verify(1, day22d)  # ~9 ms.
+puzzle.verify(1, day22d)
 
 day22d_part2 = functools.partial(day22d, part2=True)
 check_eq(day22d_part2(s3), 2758514936282235)
-puzzle.verify(2, day22d_part2)  # ~380 ms.
+puzzle.verify(2, day22d_part2)
 
 
 # %%
@@ -4170,11 +4174,11 @@ def day22e(s, *, part2=False):  # Using _Kdtree.
 check_eq(day22e(s1), 39)
 check_eq(day22e(s2), 590784)
 check_eq(day22e(s3), 474140)
-puzzle.verify(1, day22e)  # ~14 ms.
+puzzle.verify(1, day22e)
 
 day22e_part2 = functools.partial(day22e, part2=True)
 check_eq(day22e_part2(s3), 2758514936282235)
-puzzle.verify(2, day22e_part2)  # ~330 ms vs. previous ~380 ms.
+puzzle.verify(2, day22e_part2)
 # It looks like the overhead of maintaining the _Kdtree is too great.
 
 
@@ -4276,14 +4280,14 @@ def day22(s, *, part2=False):
   return day22_func(np.array(states), np.array(cuboids))
 
 
-check_eq(day22(s1), 39)  # ~4 s for numba compilation.
+check_eq(day22(s1), 39)  # ~2 s for numba compilation.
 check_eq(day22(s2), 590784)
 check_eq(day22(s3), 474140)
-puzzle.verify(1, day22)  # ~30 ms.
+puzzle.verify(1, day22)
 
 day22_part2 = functools.partial(day22, part2=True)
 check_eq(day22_part2(s3), 2758514936282235)
-puzzle.verify(2, day22_part2)  # ~80 ms (often slower).
+puzzle.verify(2, day22_part2)
 
 # %% [markdown]
 # <a name="day23"></a>
@@ -4300,9 +4304,9 @@ puzzle.verify(2, day22_part2)  # ~80 ms (often slower).
 #
 # I explored two approaches:
 #
-# 1. **Exhaustive** exploration of state moves (using **depth-first search**) to compute the minimum cost from the current state to the end state, with `functools.cache` to cache the obtained cost values.  This solution takes about 5 seconds.
+# 1. **Exhaustive** exploration of state moves (using **depth-first search**) to compute the minimum cost from the current state to the end state, with `functools.cache` to cache the obtained cost values.  This solution takes about 2 seconds.
 #
-# 2. **Dijkstra/A\*** search to explore solution in a breadth-first traversal.  This is more complex to implement, but has the benefit that the search stops as soon as the advancing front reaches the end state, hopefully visiting a smaller subset of reachable states.  This solution is also more compatible with `numba`, and finds a solution in ~400 ms.
+# 2. **Dijkstra/A\*** search to explore solution in a breadth-first traversal.  This is more complex to implement, but has the benefit that the search stops as soon as the advancing front reaches the end state, hopefully visiting a smaller subset of reachable states.  This solution is also more compatible with `numba`, and finds a solution in ~160 ms.
 #
 # It turns out that A\* does not provide much benefit, at least for my puzzle input.  The reason is that the "heavy" `D` pieces (ending in the rightmost room) move last in the optimal move sequence, whereas A\* encourages moving these pieces first.
 
@@ -4392,12 +4396,12 @@ def day23a(s, *, part2=False):  # Compact.
   return compute_cost(start_state)
 
 
-check_eq(day23a(s1), 12521)  # ~700 ms  (~330 s without lru_cache())
-# puzzle.verify(1, day23a)  # ~3.2 s  (>4600 s without lru_cache())
+check_eq(day23a(s1), 12521)
+# puzzle.verify(1, day23a)  # ~1.2 s
 
 day23a_part2 = functools.partial(day23a, part2=True)
-# check_eq(day23a_part2(s1), 44169)  # ~5.1 s.
-# puzzle.verify(2, day23a_part2)  # ~4.8 s.
+# check_eq(day23a_part2(s1), 44169)  # ~1.9 s.
+# puzzle.verify(2, day23a_part2)  # ~1.9 s.
 
 
 # %%
@@ -4525,19 +4529,20 @@ def day23b(s, *, part2=False, visualize=False):  # With visualization.
       state = apply_move(state, i0, i1)
 
     images = [images[0]] * 16 + images + [images[-1]] * 8
-    media.show_video(images, codec='gif', fps=10)
+    media.show_video(images, codec='gif', fps=10, title='day23')
 
   return best[0]
 
 
-check_eq(day23b(s1), 12521)  # ~700 ms
-# puzzle.verify(1, day23b)  # ~3.3 s  (>4600 s without lru_cache())
+check_eq(day23b(s1), 12521)  # ~0.4 s.
+# puzzle.verify(1, day23b)  # ~1.2 s.
 
 day23b_part2 = functools.partial(day23b, part2=True)
-# check_eq(day23b_part2(s1), 44169)  # ~5.1 s.
-# puzzle.verify(2, day23b_part2)  # ~5.0 s.
+# check_eq(day23b_part2(s1), 44169)  # ~1.9 s.
+# puzzle.verify(2, day23b_part2)  # ~1.9 s.
 
-_ = day23b_part2(puzzle.input, visualize=True)  # ~5.0 s.
+# %%
+_ = day23b_part2(puzzle.input, visualize=True)  # ~1.9 s.
 
 
 # %%
@@ -4637,12 +4642,12 @@ def day23c(s, *, part2=False):  # Dijkstra or A* search.
         heapq.heappush(pq, (f, state2))
 
 
-check_eq(day23c(s1), 12521)  # ~0.18 s with A* (~0.7 s with Dijkstra).
-puzzle.verify(1, day23c)  # ~0.8s with A*  (~2.8 s with Dijkstra).
+check_eq(day23c(s1), 12521)
+puzzle.verify(1, day23c)
 
-day23c_part2 = functools.partial(day23c, part2=True)
-# check_eq(day23c_part2(s1), 44169)  # ~4.9 s with A*  (~11 s with Dijkstra).
-# puzzle.verify(2, day23c_part2)  # ~6.0 s with A*  (~5.2 s with Dijkstra).
+# day23c_part2 = functools.partial(day23c, part2=True)
+# check_eq(day23c_part2(s1), 44169)  # ~1.8 s.
+# puzzle.verify(2, day23c_part2)  # ~2.0 s.
 
 
 # %%
@@ -4784,14 +4789,12 @@ def day23(s, *, part2=False):
   return day23_func(nrows, start_state, end_state, state_size)
 
 
-# ~6 s for numba compilation.
-check_eq(day23(s1), 12521)  # ~38 ms with A* (~75 ms with Dijkstra).
-puzzle.verify(1, day23)  # ~85 ms with A*  (~270 ms with Dijkstra).
+check_eq(day23(s1), 12521)  # ~2 s for numba compilation.
+puzzle.verify(1, day23)
 
 day23_part2 = functools.partial(day23, part2=True)
-# ~6 s for numba compilation.
-check_eq(day23_part2(s1), 44169)  # ~330 ms with A*  (~400 ms with Dijkstra).
-puzzle.verify(2, day23_part2)  # ~380 ms with A*  (~390 ms with Dijkstra).
+check_eq(day23_part2(s1), 44169)  # ~2 s for numba compilation.
+puzzle.verify(2, day23_part2)
 
 # %% [markdown]
 # For my particular `puzzle.input`, in Part 2 the A* search algorithm does not provide much benefit because the expensive `'D'` objects cannot be moved until near the end of the move sequence.
@@ -4915,9 +4918,9 @@ def day24a(s, *, part2=False, verbose=0):  # Careful, with emulator verification
   return input
 
 
-puzzle.verify(1, day24a)  # ~0 ms.
+puzzle.verify(1, day24a)
 day24a_part2 = functools.partial(day24a, part2=True)
-puzzle.verify(2, day24a_part2)  # ~1 ms.
+puzzle.verify(2, day24a_part2)
 
 
 # %%
@@ -4942,9 +4945,9 @@ def day24(s, *, part2=False):  # Compact.
   return ''.join(map(str, solution))
 
 
-puzzle.verify(1, day24)  # ~0 ms.
+puzzle.verify(1, day24)
 day24_part2 = functools.partial(day24, part2=True)
-puzzle.verify(2, day24_part2)  # ~0 ms.
+puzzle.verify(2, day24_part2)
 
 
 # %%
@@ -5154,7 +5157,7 @@ def day25a(s):  # Compact and reasonably fast.
 
 
 check_eq(day25a(s1), 58)
-puzzle.verify(1, day25a)  # ~550 ms.  (419 steps)
+puzzle.verify(1, day25a)
 
 
 # %%
@@ -5179,7 +5182,7 @@ def day25b(s):  # Same speed when using indices rather than boolean mask.
 
 
 check_eq(day25b(s1), 58)
-puzzle.verify(1, day25b)  # ~560 ms.
+puzzle.verify(1, day25b)
 
 
 # %%
@@ -5206,7 +5209,7 @@ def day25c(s, *, verbose=False, visualize=False):  # With visualization.
     if not moved:
       if visualize:
         images = [images[0]] * 50 + images + [images[-1]] * 50
-        media.show_video(images, codec='gif', fps=50)  # ~2 MB embedded GIF.
+        media.show_video(images, codec='gif', fps=50, title='day25')  # ~2 MB embedded GIF.
       return step
 
 
@@ -5280,7 +5283,7 @@ def day25(s):
 
 
 check_eq(day25(s1), 58)
-puzzle.verify(1, day25)  # ~180 ms.  (~1100 ms without numba)
+puzzle.verify(1, day25)
 
 # %%
 puzzle.verify(2, lambda s: '')  # (No "Part 2" on last day.)

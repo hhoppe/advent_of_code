@@ -80,7 +80,7 @@ import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
 import matplotlib
 import matplotlib.pyplot as plt
-import mediapy as media
+import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
 import numpy as np
 
@@ -139,8 +139,9 @@ hh.adjust_jupyterlab_markdown_width()
 
 # %%
 check_eq = hh.check_eq
-_ORIGINAL_GLOBALS = list(globals())
 
+# %%
+_ORIGINAL_GLOBALS = list(globals())
 
 # %% [markdown]
 # <a name="day1"></a>

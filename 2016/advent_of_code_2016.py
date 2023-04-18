@@ -66,7 +66,7 @@ from typing import Any
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import advent_of_code_ocr  # https://github.com/bsoyka/advent-of-code-ocr/blob/main/advent_of_code_ocr/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
-import mediapy as media  # https://github.com/google/mediapy
+import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
 import numpy as np
 
@@ -123,6 +123,8 @@ hh.adjust_jupyterlab_markdown_width()
 
 # %%
 check_eq = hh.check_eq
+
+# %%
 _ORIGINAL_GLOBALS = list(globals())
 
 
@@ -2708,7 +2710,9 @@ def day25(s):
 
 _ = day25(puzzle.input)  # For numba compilation.
 puzzle.verify(1, day25)
-puzzle.verify(2, lambda s: '')  # No Part 2 on day 25.
+
+# %%
+puzzle.verify(2, lambda s: '')  # (No "Part 2" on last day.)
 
 # %%
 # You activate all fifty stars and transmit the signal. The star atop the antenna begins to glow.
@@ -2739,11 +2743,14 @@ if 1:  # Look for unwanted pollution of namespace.
 
 # %%
 if 0:  # Lint.
-  hh.run('echo pyink; pyink --diff .')
   hh.run('echo autopep8; autopep8 -j8 -d .')
+  hh.run('echo pyink; pyink --diff .')
   hh.run('echo mypy; mypy . || true')
   hh.run('echo pylint; pylint -j8 . || true')
-  print('All ran.')
+  hh.run(
+      'echo flake8; flake8 --indent-size=2 --exclude .ipynb_checkpoints'
+      ' --extend-ignore E129,E203,E302,E305,E501,E741'
+  )
 
 # %%
 hh.show_notebook_cell_top_times()
