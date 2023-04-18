@@ -32,7 +32,7 @@
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2018/results/day15b.gif" width="150">
 # </p>
 # <p>
-# <a href="#day17">day17</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2018/results/day17.png" width="90%">
+# <a href="#day17">day17</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2018/results/day17.png" width="750">
 # </p>
 # <p>
 # <a href="#day18">day18</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2018/results/day18a.gif" width="200">
@@ -40,7 +40,7 @@
 # <a href="#day20">day20</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2018/results/day20.png" width="250">
 # </p>
 # <p>
-# <a href="#day22">day22</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2018/results/day22.gif" width="90%">
+# <a href="#day22">day22</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2018/results/day22.gif" width="750">
 # </p>
 
 # %% [markdown]
@@ -65,6 +65,7 @@ import heapq
 import importlib
 import itertools
 import math
+import pathlib
 import re
 import sys
 import types
@@ -89,6 +90,8 @@ hh.start_timing_notebook_cells()
 
 # %%
 YEAR = 2018
+if pathlib.Path('results').is_dir():
+  media.set_show_save_dir('results')
 
 # %%
 # (1) To obtain puzzle inputs and answers, we first try these paths/URLs:
@@ -132,6 +135,9 @@ hh.adjust_jupyterlab_markdown_width()
 
 # %%
 check_eq = hh.check_eq
+
+
+# %%
 _ORIGINAL_GLOBALS = list(globals())
 
 
@@ -368,7 +374,7 @@ def day3(s, *, part2=False, visualize=False):  # Faster with numpy.
     if shrink > 1:
       shape = grid.shape[0] // shrink, grid.shape[1] // shrink
       video = media.resize_video(video, shape)
-    media.show_video(video, codec='gif', fps=1)
+    media.show_video(video, codec='gif', fps=1, title='day03')
 
   return claim
 
@@ -635,12 +641,12 @@ def day6(s, *, part2=False, max_sum=10_000, visualize=False):
       image[closest == -1] = 255, 255, 255
       image2 = image.copy()
       image2[closest == i] = 255, 0, 0
-      media.show_video([image, image2], codec='gif', fps=1)
+      media.show_video([image, image2], codec='gif', fps=1, title='day06')
     return count
 
   sum_manhattans = all_manhattans.sum(axis=0)
   if visualize:
-    media.show_image(sum_manhattans < max_sum)
+    media.show_image(sum_manhattans < max_sum, title=None)
   return np.count_nonzero(sum_manhattans < max_sum)
 
 
@@ -1061,10 +1067,11 @@ def day10(s, *, part2=False, visualize=False):  # Quick initial jump; visualize.
 
   grid = hh.grid_from_indices(positions, dtype=np.uint8)
   if visualize:
-    media.show_image(np.pad(grid, 1), height=50, border=True)
+    image = np.pad(grid, 1).repeat(4, axis=0).repeat(4, axis=1)
+    media.show_image(image, border=True, title=None)
     video: Any = hh.grid_from_indices(all_positions, dtype=float)
     video = [video[0]] * 5 + list(video) + [video[-1]] * 10
-    media.show_video(video, codec='gif', fps=5)
+    media.show_video(video, codec='gif', fps=5, title='day10')
   hashed = hashlib.md5(''.join(map(str, grid.flat)).encode()).hexdigest()
   # print(hashed)
   if shape[1] <= 30:
@@ -1144,7 +1151,7 @@ def day11(s, *, part2=False, visualize=False):
     ] *= 0.7
     image = image.repeat(2, axis=0).repeat(2, axis=1)
     image2 = image2.repeat(2, axis=0).repeat(2, axis=1)
-    media.show_video([image, image2], codec='gif', fps=1)
+    media.show_video([image, image2], codec='gif', fps=1, title='day11')
 
   return f'{yx_largest[1] + 1},{yx_largest[0] + 1},{best_size}'
 
@@ -1233,7 +1240,7 @@ def day12(s, *, part2=False, visualize=False):
     xmin, xmax = np.nonzero(grid.any(axis=0))[0][[0, -1]]
     grid = grid[:, max(xmin - 4, 0) : xmax + 5]
     grid = grid.repeat(2, axis=0).repeat(2, axis=1)
-    media.show_image(grid)
+    media.show_image(grid, title='day12')
 
   if not part2:
     return sum_pots(states[-1], pad_len=2 * (len(states) - 1))
@@ -1351,7 +1358,7 @@ def day13(s, *, part2=False, verbose=False, visualize=False):
             images.append(image)
             images = [im.repeat(3, axis=0).repeat(3, axis=1) for im in images]
             images = [images[0]] * 20 + images + [images[-1]] * 40
-            media.show_video(images, codec='gif', fps=20)
+            media.show_video(images, codec='gif', fps=20, title='day13')
             return None
           if 0:
             print(f'first collision at {iteration=}')
@@ -2076,7 +2083,8 @@ def day15_part1(s, visualize=False, elf_attack_power=3, fail_if_elf_dies=False):
   warnings_context.__exit__(None, None, None)
   if visualize:
     images = [images[0]] * 20 + images + [images[-1]] * 30
-    media.show_video(images, codec='gif', fps=10)
+    title = f'day15{"b" if fail_if_elf_dies else "a"}'
+    media.show_video(images, codec='gif', fps=10, title=title)
     return None
   num_rounds = round - 1
   hit_points = [u.hit_points for u in sorted(units, key=lambda u: u.yx)]
@@ -2320,7 +2328,8 @@ def day17(s, *, part2=False, visualize=False):
   if visualize:
     cmap = {'.': (250,) * 3, '#': (0, 0, 0), '~': (0, 0, 255), '|': (150, 150, 255)}
     image = hh.image_from_yx_map(grid, '.', cmap=cmap, pad=1).transpose(1, 0, 2)
-    media.show_image(image, title='(transposed)', border=True)
+    hh.display_html('Transposed image:')
+    media.show_image(image, border=True, title='day17')
     return None
 
   desired = '~' if part2 else '~|'
@@ -2411,12 +2420,13 @@ def day18(s, *, num_minutes=10, part2=False, visualize=False):
 
   if visualize:
     assert period > 0
-    videos = {
-        'Start': [images[0]] * 20 + images[:50] + [images[49]] * 10,
-        f'Cycling {period=}': images[-period:],
-    }
-    media.show_videos(videos, codec='gif', fps=10)
-    return None
+    hh.display_html('Start of evolution:')
+    video = [images[0]] * 20 + images[:50] + [images[49]] * 10
+    media.show_video(video, codec='gif', fps=10, title='day18a')
+    hh.display_html(f'Cycling {period=}:')
+    video = images[-period:]
+    media.show_video(video, codec='gif', fps=10, title='day18b')
+
   return resource_value()
 
 
@@ -2682,7 +2692,7 @@ def day20(s, *, part2=False, visualize=False):
     cmap = {0: (0,) * 3, 1: (250,) * 3, 2: (255, 0, 0), 3: (160, 140, 255)}
     image = hh.image_from_yx_map(map1, 0, cmap=cmap, pad=2)
     image = image.repeat(2, axis=0).repeat(2, axis=1)
-    media.show_image(image, border=True, height=max(60, image.shape[0]))
+    media.show_image(image, border=True, title='day20')
 
   if not part2:
     return max(distances.values())
@@ -3130,7 +3140,7 @@ def day22(s, *, part2=False, pad=60, visualize=False):
     # x_max = (image.sum(2) > 0).max(axis=0).argmin() + 5
     image = image.transpose(1, 0, 2).repeat(2, axis=0).repeat(2, axis=1)
     image2 = image2.transpose(1, 0, 2).repeat(2, axis=0).repeat(2, axis=1)
-    media.show_video([image, image2], codec='gif', fps=1)
+    media.show_video([image, image2], codec='gif', fps=1, title='day22')
   return distance
 
 

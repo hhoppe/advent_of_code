@@ -18,11 +18,11 @@
 # Here are some visualization results:
 #
 # <p>
-# <a href="#day14">day14</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day14.png" width="256"> &emsp;
-# <a href="#day22">day22</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day22.png" width="363">
+# <a href="#day14">day14</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day14.png" width="256"> &emsp;
+# <a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day22.png" width="363">
 # </p>
 # <p>
-# <a href="#day21">day21</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day21.png" width="867">
+# <a href="#day21">day21</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day21.png" width="867">
 # </p>
 
 # %% [markdown]
@@ -33,7 +33,7 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-hhoppe hhoppe-tools mediapy more-itertools numba
+# !pip install -q advent-of-code-hhoppe hhoppe-tools mediapy more-itertools numba numpy
 
 # %%
 from __future__ import annotations
@@ -53,7 +53,7 @@ from typing import Any, Tuple
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
-import mediapy as media
+import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
 import numpy as np
 
@@ -66,6 +66,8 @@ hh.start_timing_notebook_cells()
 
 # %%
 YEAR = 2017
+if pathlib.Path('results').is_dir():
+  media.set_show_save_dir('results')
 
 # %%
 # (1) To obtain puzzle inputs and answers, we first try these paths/URLs:
@@ -82,10 +84,9 @@ INPUT_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}_input.txt'
 ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
 
 # %%
-# (2) If URL is not found, we may try adventofcode.com using a session cookie:
+# (2) If URL is not found, we may try adventofcode.com using a session (auth login) cookie:
 if 0:
-  # # !rm -f ~/.config/aocd/token*; mkdir -p ~/.config/aocd; echo 53616... >~/.config/aocd/token
-  # where "53616..." is the session cookie from "adventofcode.com" (valid 1 month).
+  # echo 53616... >~/.config/aocd/token  # session cookie from "adventofcode.com" (valid 1 month).
   hh.run('pip install -q advent-of-code-data')  # https://github.com/wimglenn/advent-of-code-data
   import aocd  # pylint: disable=unused-import # noqa
 
@@ -109,6 +110,8 @@ hh.adjust_jupyterlab_markdown_width()
 
 # %%
 check_eq = hh.check_eq
+
+# %%
 _ORIGINAL_GLOBALS = list(globals())
 
 # %% [markdown]
@@ -1057,7 +1060,8 @@ def day14(s, *, part2=False, visualize=False):  # Faster, without rotation or re
 
   if not part2:
     if visualize:
-      media.show_image(grid.repeat(2, axis=0).repeat(2, axis=1) == 0, border=True)
+      image = grid.repeat(2, axis=0).repeat(2, axis=1) == 0
+      media.show_image(image, border=True, title='day14')
     return np.sum(grid)
 
   union_find = hh.UnionFind[Tuple[int, int]]()
@@ -1586,7 +1590,7 @@ def day21(s, *, num_iterations=5, visualize=False):
   if visualize:
     combined = hh.assemble_arrays(grids, (1, -1), background=True, spacing=8)
     combined = np.pad(combined, 4, constant_values=True)
-    media.show_image(combined, border=True)
+    media.show_image(combined, border=True, title='day21')
 
   return np.sum(grid)
 
@@ -1645,7 +1649,8 @@ def day22a(s, *, num_iterations=10_000, part2=False, visualize=False):
 
   if visualize:
     # hh.show(max(abs(x) + abs(y) for y, x in grid))  # 335
-    media.show_image(hh.image_from_yx_map(grid, background=' ', cmap=cmap))
+    image = hh.image_from_yx_map(grid, background=' ', cmap=cmap)
+    media.show_image(image, title='day22')
 
   return num_newly_infected
 
@@ -2146,16 +2151,15 @@ def day25(s, *, size=100_000):
 check_eq(day25(s1), 3)
 puzzle.verify(1, day25)
 
+# %%
+puzzle.verify(2, lambda s: '')  # (No "Part 2" on last day.)
+
 # %% [markdown]
 # You deposit all fifty stars and reboot the printer. Suddenly, everything seems a lot less pixelated than before."--raise your priority level enough to send the reboot command and... hey look, it's printing! I'll bring it to Santa. Thanks!" She runs off.
 # Congratulations!  You've finished every puzzle in Advent of Code 2017!  I hope you had as much fun solving them as I had making them for you.  I'd love to hear about your adventure; you can get in touch with me via contact info on my website or through Twitter.
 # If you'd like to see more things like this in the future, please consider supporting Advent of Code and sharing it with others.
 # To hear about future projects, you can follow me on Twitter.
 # I've highlighted the easter eggs in each puzzle, just in case you missed any.  Hover your mouse over them, and the easter egg will appear.
-
-# %%
-puzzle.verify(2, lambda s: '')  # (No "Part 2" on last day.)
-# (aocd does not allow a blank answer; the answer is not submitted)
 
 # %% [markdown]
 # <a name="timings"></a>
@@ -2176,11 +2180,14 @@ if 1:  # Look for unwanted pollution of namespace.
 
 # %%
 if 0:  # Lint.
-  hh.run('echo flake8; flake8')
-  hh.run('echo mypy; mypy . || true')
   hh.run('echo autopep8; autopep8 -j8 -d .')
+  hh.run('echo pyink; pyink --diff .')
+  hh.run('echo mypy; mypy . || true')
   hh.run('echo pylint; pylint -j8 . || true')
-  print('All ran.')
+  hh.run(
+      'echo flake8; flake8 --indent-size=2 --exclude .ipynb_checkpoints'
+      ' --extend-ignore E129,E203,E302,E305,E501,E741'
+  )
 
 # %%
 hh.show_notebook_cell_top_times()
