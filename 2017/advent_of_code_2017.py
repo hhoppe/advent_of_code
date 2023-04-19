@@ -18,11 +18,15 @@
 # Here are some visualization results:
 #
 # <p>
-# <a href="#day14">day14</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day14.png" width="256"> &emsp;
-# <a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day22.png" width="363">
+# <a href="#day11">day11</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day11.png" width="256"> &emsp;
+# <a href="#day14">day14</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day14.png" width="256">
 # </p>
 # <p>
-# <a href="#day21">day21</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day21.png" width="867">
+# <a href="#day19">day19</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day19.gif" width="340"> &emsp;
+# <a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day22.png" width="320">
+# </p>
+# <p>
+# <a href="#day21">day21</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2017/results/day21.png" width="800">
 # </p>
 
 # %% [markdown]
@@ -54,6 +58,8 @@ from typing import Any, Tuple
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
+import matplotlib
+import matplotlib.pyplot as plt
 import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
 import numpy as np
@@ -721,19 +727,42 @@ puzzle = advent.puzzle(day=11)
 
 
 # %%
-def day11(s, *, part2=False):
+def day11(s, *, part2=False, visualize=False):
   steps = s.strip().split(',')
   MOVES = dict(s=(1, 0), se=(0, 1), n=(-1, 0), nw=(0, -1), ne=(-1, 1), sw=(1, -1))
 
-  def hex_radius(y: int, x: int) -> int:
-    return max(abs(y), abs(x)) if y * x < 0 else abs(y) + abs(x)
+  def hex_radius(ss: int, se: int) -> int:
+    return max(abs(ss), abs(se)) if ss * se < 0 else abs(ss) + abs(se)
 
-  y, x = 0, 0
+  ss, se = 0, 0
   radii = []
-  for step in steps:
-    dy, dx = MOVES[step]
-    y, x = y + dy, x + dx
-    radii.append(hex_radius(y, x))
+  xys = []
+  for index, step in enumerate(steps):
+    dss, dse = MOVES[step]
+    ss, se = ss + dss, se + dse
+    radii.append(hex_radius(ss, se))
+    if visualize:
+      xy = se * (math.sqrt(3) / 2), ss + se / 2
+      xys.append(xy)
+
+  if visualize:
+    array = np.array(xys)
+    fig, ax = plt.subplots(figsize=(5, 5), dpi=90)
+    ax.set(aspect='equal')
+    ax.plot(array[:, 0], array[:, 1])
+    xy1 = xys[-1]
+    _, xy2 = max(zip(radii, xys))
+    params = dict(fontsize=15, arrowprops=dict(arrowstyle='->', lw=1))
+    ax.annotate('start', xy=(0, 0), xytext=(-250, 150), ha='center', **params)
+    ax.annotate('end', xy=xy1, xytext=(xy1[0] + 200, xy1[1]), ha='left', **params)
+    ax.annotate('farthest', xy=xy2, xytext=(xy2[0] + 350, xy2[1]), ha='left', **params)
+    tick_spacing = 250
+    for axis in [ax.xaxis, ax.yaxis]:
+      axis.set_major_locator(matplotlib.ticker.MultipleLocator(tick_spacing))
+    fig.tight_layout(pad=0)
+    image = hh.bounding_crop(hh.image_from_plt(fig), 255)
+    media.show_image(image, title='day11')
+    plt.close(fig)
 
   return max(radii) if part2 else radii[-1]
 
@@ -746,6 +775,9 @@ puzzle.verify(1, day11)
 
 day11_part2 = functools.partial(day11, part2=True)
 puzzle.verify(2, day11_part2)
+
+# %%
+_ = day11(puzzle.input, visualize=True)
 
 # %% [markdown]
 # <a name="day12"></a>
@@ -883,7 +915,7 @@ def day13a_part2(s):  # Brute-force simplistic approach.
 
 check_eq(day13a_part2(s1), 10)
 if 0:
-  puzzle.verify(2, day13a_part2)  # ~56 s (e.g. result 3966414)
+  puzzle.verify(2, day13a_part2)  # ~56 s
 
 
 # %%
@@ -913,7 +945,7 @@ def day13c_part2(s, *, chunk=3_000):  # Use numpy vectorized over chunks of dela
 
 
 check_eq(day13c_part2(s1), 10)
-puzzle.verify(2, day13c_part2)  # ~0.5 s.
+puzzle.verify(2, day13c_part2)
 
 
 # %%
@@ -931,7 +963,7 @@ def day13d_part2(s, *, chunk=80_000):  # Use numpy sieve; iterate on scanners ov
 
 
 check_eq(day13d_part2(s1), 10)
-puzzle.verify(2, day13d_part2)  # ~0.4 s.
+puzzle.verify(2, day13d_part2)
 
 
 # %%
@@ -949,7 +981,7 @@ def day13_part2(s, *, chunk=100_000):  # Use numpy sieve (~Eratosthenes) with ar
 
 
 check_eq(day13_part2(s1, chunk=4), 10)
-puzzle.verify(2, day13_part2)  # ~0.005 s.
+puzzle.verify(2, day13_part2)
 
 # %% [markdown]
 # <a name="day14"></a>
@@ -1476,6 +1508,42 @@ day19_part2 = functools.partial(day19, part2=True)
 check_eq(day19_part2(s1), 38)
 puzzle.verify(2, day19_part2)
 
+
+# %%
+def day19_visualize(s):
+  grid = hh.grid_from_string(s)  # shape=(201, 201).
+  grid = np.pad(grid, ((0, 1), (0, 1)), constant_values=' ')
+  ((y, x),) = np.argwhere(grid[:1] == '|')
+  dy, dx = 1, 0
+  letters = []
+  num_steps = 0
+  images = []
+  image = hh.to_image((grid == '|') | (grid == '-') | (grid == '+'), 245, 180)
+  image[np.char.isalpha(grid)] = 255, 0, 0
+
+  while (ch := grid[y, x]) != ' ':
+    ch = grid[y, x]
+    if ch.isalpha():
+      letters.append(ch)
+    elif ch == '+':
+      dy, dx = dx, dy  # One of the two 90-degree rotations.
+      if grid[y + dy, x + dx] == ' ':
+        dy, dx = -dy, -dx  # The other possible 90-degree rotation.
+    image[y, x] = (255, 0, 0) if ch.isalpha() else (20, 40, 180)
+    y, x = y + dy, x + dx
+    if num_steps % 47 == 0 or grid[y, x] == ' ':
+      image2 = image.repeat(2, axis=0).repeat(2, axis=1)
+      text = f'Steps:{num_steps + 1:5}  Letters:{"".join(letters):10}'
+      hh.overlay_text(image2, (50, 50), text, fontsize=18, align='tl', margin=((5, 2), (2, 2)))
+      images.append(image2)
+    num_steps += 1
+
+  images = [images[0]] * 60 + images + [images[-1]] * 80
+  media.show_video(images, codec='gif', fps=50, title='day19')
+
+
+_ = day19_visualize(puzzle.input)
+
 # %% [markdown]
 # <a name="day20"></a>
 # ## Day 20: Accelerating 3D particles
@@ -1666,6 +1734,7 @@ check_eq(day22a_part2(s1, num_iterations=100), 26)
 # check_eq(day22a_part2(s1), 2_511_944)
 # puzzle.verify(2, day22a_part2)  # ~2.2 s.
 
+# %%
 _ = day22a_part2(puzzle.input, visualize=True)
 
 
@@ -1926,7 +1995,8 @@ puzzle.verify(1, day24a)
 
 day24a_part2 = functools.partial(day24a, part2=True)
 check_eq(day24a_part2(s1), 19)
-puzzle.verify(2, day24a_part2)
+if 0:
+  puzzle.verify(2, day24a_part2)  # ~1.8 s.
 
 
 # %%
@@ -2116,7 +2186,7 @@ def day25a(s):  # Slow version using dicts and Python.
 
 
 check_eq(day25a(s1), 3)
-puzzle.verify(1, day25a)  # ~1.1 s.
+puzzle.verify(1, day25a)
 
 
 # %%
