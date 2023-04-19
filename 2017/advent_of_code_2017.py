@@ -915,7 +915,7 @@ def day13a_part2(s):  # Brute-force simplistic approach.
 
 check_eq(day13a_part2(s1), 10)
 if 0:
-  puzzle.verify(2, day13a_part2)  # ~56 s
+  puzzle.verify(2, day13a_part2)  # ~56 s.
 
 
 # %%
@@ -1282,8 +1282,8 @@ def day17_compute_part2(step: int) -> int:
 
   return after_zero
   # Comparable to C++:
-  # https://ideone.com/HLrQCx  0.4 s
-  # https://www.online-cpp.com/rluemsc5ha  1.2 s
+  # https://ideone.com/HLrQCx  0.4 s.
+  # https://www.online-cpp.com/rluemsc5ha  1.2 s.
 
 
 def day17(s, *, part2=False):

@@ -2969,11 +2969,11 @@ def day19b(s, *, part2=False):  # Brute-force; encode 3D point/vector as integer
 
 
 check_eq(day19b(s1), 79)
-# puzzle.verify(1, day19b)  # ~4 s
+# puzzle.verify(1, day19b)  # ~4 s.
 
 day19b_part2 = functools.partial(day19b, part2=True)
 check_eq(day19b_part2(s1), 3621)
-# puzzle.verify(2, day19b_part2)  # ~4 s
+# puzzle.verify(2, day19b_part2)  # ~4 s.
 
 
 # %%
@@ -4397,7 +4397,7 @@ def day23a(s, *, part2=False):  # Compact.
 
 
 check_eq(day23a(s1), 12521)
-# puzzle.verify(1, day23a)  # ~1.2 s
+# puzzle.verify(1, day23a)  # ~1.2 s.
 
 day23a_part2 = functools.partial(day23a, part2=True)
 # check_eq(day23a_part2(s1), 44169)  # ~1.9 s.

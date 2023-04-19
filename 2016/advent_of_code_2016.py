@@ -529,11 +529,11 @@ def day5(s, *, part2=False):
 
 
 check_eq(day5('abc'), '18f47a30')
-puzzle.verify(1, day5)  # ~0.4 s using _md5 (~0.5 s using hashlib).
+puzzle.verify(1, day5)
 
 day5_part2 = functools.partial(day5, part2=True)
 # check_eq(day5_part2('abc'), '05ace8e3')
-puzzle.verify(2, day5_part2)  # ~1.0 s using _md5 (~1.25 s using hashlib).
+puzzle.verify(2, day5_part2)
 
 # %% [markdown]
 # <a name="day6"></a>
@@ -1171,11 +1171,11 @@ def day11(s, *, part2=False):
 
 check_eq(day11(s1), 11)
 _ = day11(s1)  # For numba compilation on particular tuple length.
-puzzle.verify(1, day11)  # ~0.007 s
+puzzle.verify(1, day11)
 
 day11_part2 = functools.partial(day11, part2=True)
 _ = day11(puzzle.input)  # For numba compilation on particular tuple length.
-puzzle.verify(2, day11_part2)  # ~0.037 s
+puzzle.verify(2, day11_part2)
 
 # %% [markdown]
 # <a name="day12"></a>
@@ -1231,7 +1231,7 @@ def day12a(s, *, part2=False):
 
 
 check_eq(day12a(s1), 42)
-puzzle.verify(1, day12a)  # ~0.2 s.
+puzzle.verify(1, day12a)
 
 day12a_part2 = functools.partial(day12a, part2=True)
 # puzzle.verify(2, day12a_part2)  # ~5.5 s.
@@ -1304,7 +1304,7 @@ def day12b(s, *, part2=False):  # Disappointingly not much faster.
 
 
 check_eq(day12b(s1), 42)
-puzzle.verify(1, day12b)  # ~0.16 s.
+puzzle.verify(1, day12b)
 
 day12b_part2 = functools.partial(day12b, part2=True)
 # puzzle.verify(2, day12b_part2)  # ~4.6 s.
@@ -1572,7 +1572,7 @@ puzzle.verify(1, day14a)
 
 day14a_part2 = functools.partial(day14a, part2=True)
 # check_eq(day14a_part2('abc'), 22551)  # ~10 s.
-# puzzle.verify(2, day14a_part2)  # ~10 s
+# puzzle.verify(2, day14a_part2)  # ~10 s.
 
 
 # %%
@@ -1721,7 +1721,7 @@ check_eq(day16a('10000', length=20), '01100')
 puzzle.verify(1, day16a)
 
 day16a_part2 = functools.partial(day16a, length=35_651_584)
-puzzle.verify(2, day16a_part2)  # ~1.8 s.
+puzzle.verify(2, day16a_part2)
 
 
 # %%
@@ -1749,7 +1749,7 @@ check_eq(day16('10000', length=20), '01100')
 puzzle.verify(1, day16)
 
 day16_part2 = functools.partial(day16, length=35_651_584)
-puzzle.verify(2, day16_part2)  # ~0.06 s.
+puzzle.verify(2, day16_part2)
 
 # %% [markdown]
 # <a name="day17"></a>
