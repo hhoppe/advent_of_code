@@ -34,11 +34,17 @@ Some **conclusions**:
 Here are some visualization results:
 
 <p>
-<a href="#day11">day11</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day11a.gif" height="150">
-<img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day11b.gif" height="150">
-<a href="#day20">day20</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day20a.png" height="150">
-<img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day20b.png" height="150">
+<a href="#day5">day5</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day5.png" width="200">&emsp;
+<a href="#day11">day11</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day11a.gif" width="200">&emsp;
+<img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day11b.gif" width="200">
 </p>
 <p>
-<a href="#day24">day24</a><img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day24.gif" height="150">
+<a href="#day17">day17</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day17a.gif" width="40">&emsp;
+<img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day17b.gif" width="340">&emsp;
+<img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day17c.gif" width="340">
+</p>
+<p>
+<a href="#day20">day20</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day20a.png" width="250">&emsp;
+<img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day20b.png" width="200">&emsp;
+<a href="#day24">day24</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day24c.gif" width="250">
 </p>

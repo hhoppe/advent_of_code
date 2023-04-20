@@ -8,6 +8,8 @@ with Python solutions to the
 completed in December 2022,
 by [Hugues Hoppe](http://hhoppe.com/).
 
+See [reddit](https://www.reddit.com/r/adventofcode/comments/108taz7/2022_advent_notebook_with_gif_visualizations/).
+
 The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 
 For the fast solutions, the cumulative time across all 25 puzzles is less than 1 s on my PC.<br/>
