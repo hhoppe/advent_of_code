@@ -142,6 +142,12 @@ hh.adjust_jupyterlab_markdown_width()
 # %%
 check_eq = hh.check_eq
 
+# %%
+try:
+  import networkx
+except ModuleNotFoundError:
+  print('Module networkx is unavailable.')
+
 
 # %%
 def from_xyz(d: dict[str, float], /) -> np.ndarray:
@@ -289,8 +295,7 @@ def tilt_video(fig: Any) -> list[np.ndarray]:
 # %%
 def graph_layout(graph: Any, *, prog: str) -> dict[Any, tuple[float, float]]:
   """Return dictionary of 2D coordinates for layout of graph nodes."""
-  import networkx as nx
-
+  nx = networkx
   try:
     args = '-Gstart=1'  # Deterministically seed the graphviz random number generator.
     return nx.nx_agraph.graphviz_layout(graph, prog=prog, args=args)  # Requires package pygraphviz.
@@ -992,8 +997,7 @@ puzzle.verify(2, day7b_part2)
 
 # %%
 def day7v(s):  # Visualization
-  import networkx as nx
-
+  nx = networkx
   graph = nx.DiGraph()
   graph.add_node('/', label='/', node_color='red', size=0)
   dirs: collections.defaultdict[str, int] = collections.defaultdict(int)
@@ -1032,7 +1036,8 @@ def day7v(s):  # Visualization
   plt.close(fig)
 
 
-day7v(puzzle.input)
+if 'networkx' in globals():
+  day7v(puzzle.input)
 
 
 # %%
@@ -2776,8 +2781,6 @@ check_eq(day16b_part2(s1), 1707)
 # %%
 # Adapted for visualization.
 def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'):
-  import networkx as nx
-
   rate, dsts = {}, {}
   for line in s.splitlines():
     node, s_rate, *dsts[node] = re.findall(r'([A-Z][A-Z]|[0-9]+)', line)
@@ -2815,6 +2818,7 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
     v = search(t, u, vs=vs, e=e)[1]
     return get_path(path + [v], t - valve_distance(u)[v], v, vs - {v}, e) if v else (path, vs)
 
+  nx = networkx
   graph = nx.Graph()
   for node, dsts1 in dsts.items():
     rate1 = rate[node]
@@ -2906,20 +2910,22 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
   return total_flow
 
 
-check_eq(day16c(s1), 1651)
-# puzzle.verify(1, day16c)  # ~0.4 s.
+if 'networkx' in globals():
+  check_eq(day16c(s1), 1651)
+  # puzzle.verify(1, day16c)  # ~0.4 s.
 
-day16c_part2 = functools.partial(day16c, part2=True)
-check_eq(day16c_part2(s1), 1707)
-# puzzle.verify(2, day16c_part2)  # ~16 s.
-
-# %%
-media.show_image(
-    day16c(puzzle.input, visualize=True, only_last_frame=True)[0], border=True, title='day16a'
-)
+  day16c_part2 = functools.partial(day16c, part2=True)
+  check_eq(day16c_part2(s1), 1707)
+  # puzzle.verify(2, day16c_part2)  # ~16 s.
 
 # %%
-if SHOW_BIG_MEDIA:  # Slow due to search(); ~16 s.
+if 'networkx' in globals():
+  media.show_image(
+      day16c(puzzle.input, visualize=True, only_last_frame=True)[0], border=True, title='day16a'
+  )
+
+# %%
+if 'networkx' in globals() and SHOW_BIG_MEDIA:  # Slow due to search(); ~16 s.
   media.show_video(
       day16c_part2(puzzle.input, visualize=True), codec='gif', fps=2, border=True, title='day16b'
   )
@@ -4369,8 +4375,6 @@ else:
 # %%
 # Visualize graphs.
 def day21v(s, *, simplify=False, directed=True, prog='dot', figsize=(3, 3)) -> np.ndarray:
-  import networkx as nx
-
   assert prog in 'dot neato'.split()  # Possibly also 'sfdp'.
   monkeys = dict(line.split(': ') for line in s.splitlines())
   operators = {'+': operator.add, '-': operator.sub, '*': operator.mul, '/': operator.truediv}
@@ -4394,6 +4398,7 @@ def day21v(s, *, simplify=False, directed=True, prog='dot', figsize=(3, 3)) -> n
   if simplify:
     recursively_simplify('root')
 
+  nx = networkx
   graph = nx.DiGraph() if directed else nx.Graph()
 
   def create_node(monkey: str) -> int:
@@ -4433,9 +4438,7 @@ def day21v(s, *, simplify=False, directed=True, prog='dot', figsize=(3, 3)) -> n
   return image
 
 
-if not importlib.util.find_spec('networkx'):
-  print('Module networkx is unavailable.')
-else:
+if 'networkx' in globals():
   media.show_image(day21v(s1))
   media.show_image(day21v(s1, simplify=True))
   media.show_image(
