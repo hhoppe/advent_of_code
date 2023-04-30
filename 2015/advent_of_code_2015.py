@@ -1935,9 +1935,10 @@ def day19_test_pyparsing3(s):
 check_eq(day19_test_pyparsing3(s2 + '\nHOH\n'), 3)
 check_eq(day19_test_pyparsing3(s2 + '\nHOHOHO\n'), 6)
 
-day19_test_pyparsing3(puzzle.input)
+# day19_test_pyparsing3(puzzle.input)
 # Gets ParseException: ... , found 'LOLFBEKLFBMLEEEM'  (at char 231), (line:1, col:232) so it
 # got reasonably far down the string.
+# On Google Colab, at seed=7, gets KeyError and infinite recursion.
 
 # %% [markdown]
 # <a name="day20"></a>
