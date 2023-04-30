@@ -809,16 +809,16 @@ def day8(s, *, part2=False):
     visited = set()
     while 0 <= pc < len(ops) and pc not in visited:
       visited.add(pc)
-      operation, operand = ops[pc]
-      if operation == 'nop':
-        pc += 1
-      elif operation == 'acc':
-        acc += operand
-        pc += 1
-      elif operation == 'jmp':
-        pc += operand
-      else:
-        raise AssertionError
+      match ops[pc]:
+        case 'nop', _:
+          pc += 1
+        case 'acc', operand:
+          acc += operand
+          pc += 1
+        case 'jmp', offset:
+          pc += offset
+        case x:
+          raise ValueError(x)
     return pc, acc
 
   ops = [(line[:3], int(line[4:])) for line in s.splitlines()]
@@ -1240,24 +1240,28 @@ def day12_part1(s):
 
   for instruction in s.split():
     action, value = instruction[:1], int(instruction[1:])
-    if action == 'N':
-      y -= value
-    elif action == 'S':
-      y += value
-    elif action == 'E':
-      x += value
-    elif action == 'W':
-      x -= value
-    elif action == 'L':
-      while value:
-        dy, dx = -dx, +dy
-        value -= 90
-    elif action == 'R':
-      while value:
-        dy, dx = +dx, -dy
-        value -= 90
-    elif action == 'F':
-      y, x = y + dy * value, x + dx * value
+    match action:
+      case 'N':
+        y -= value
+      case 'S':
+        y += value
+      case 'E':
+        x += value
+      case 'W':
+        x -= value
+      case 'L':
+        while value:
+          dy, dx = -dx, +dy
+          value -= 90
+      case 'R':
+        while value:
+          dy, dx = +dx, -dy
+          value -= 90
+      case 'F':
+        y, x = y + dy * value, x + dx * value
+      case _:
+        raise ValueError(action)
+
   return abs(y) + abs(x)
 
 
@@ -1273,25 +1277,29 @@ def day12_part2(s):
 
   for instruction in s.split():
     action, value = instruction[:1], int(instruction[1:])
-    if action == 'N':
-      waypoint_y -= value
-    elif action == 'S':
-      waypoint_y += value
-    elif action == 'E':
-      waypoint_x += value
-    elif action == 'W':
-      waypoint_x -= value
-    elif action == 'L':
-      while value:
-        waypoint_y, waypoint_x = -waypoint_x, +waypoint_y
-        value -= 90
-    elif action == 'R':
-      while value:
-        waypoint_y, waypoint_x = +waypoint_x, -waypoint_y
-        value -= 90
-    elif action == 'F':
-      ship_y += waypoint_y * value
-      ship_x += waypoint_x * value
+    match action:
+      case 'N':
+        waypoint_y -= value
+      case 'S':
+        waypoint_y += value
+      case 'E':
+        waypoint_x += value
+      case 'W':
+        waypoint_x -= value
+      case 'L':
+        while value:
+          waypoint_y, waypoint_x = -waypoint_x, +waypoint_y
+          value -= 90
+      case 'R':
+        while value:
+          waypoint_y, waypoint_x = +waypoint_x, -waypoint_y
+          value -= 90
+      case 'F':
+        ship_y += waypoint_y * value
+        ship_x += waypoint_x * value
+      case _:
+        raise ValueError(action)
+
   return abs(ship_y) + abs(ship_x)
 
 
@@ -1845,16 +1853,16 @@ def day17(s, *, num_cycles=6, dim=3, visualize=False, magnify=2):
     add_image()
 
   def neighbors(index):
-    i = index
-    if dim == 3:  # Optional specialization for speed.
-      for o in offsets:
-        yield i[0] + o[0], i[1] + o[1], i[2] + o[2]
-    elif dim == 4:  # Optional specialization for speed.
-      for o in offsets:
-        yield i[0] + o[0], i[1] + o[1], i[2] + o[2], i[3] + o[3]
-    else:
-      for o in offsets:
-        yield tuple(map(sum, zip(i, o)))
+    match dim:
+      case 3:  # Optional specialization for speed.
+        for offset in offsets:
+          yield index[0] + offset[0], index[1] + offset[1], index[2] + offset[2]
+      case 4:  # Optional specialization for speed.
+        for o in offsets:
+          yield index[0] + o[0], index[1] + o[1], index[2] + o[2], index[3] + o[3]
+      case _:
+        for offset in offsets:
+          yield tuple(map(sum, zip(index, offset)))
 
   for _ in range(num_cycles):
     # Adapted from collections.Counter() algorithm in
@@ -1926,21 +1934,22 @@ def day18a(strings, *, part2=False):  # Slower, more readable.
       if s[i].isdigit():
         value = int(s[i])
         return value, i + 1
-      raise AssertionError
+      raise ValueError(s[i])
 
     def parse_sequence(i):
       value, i = parse_term(i)
       while i < len(s) and s[i] != ')':
         check_eq(s[i], ' ')
         check_eq(s[i + 2], ' ')
-        if s[i + 1] == '+':
-          value2, i = parse_term(i + 3)
-          value += value2
-        elif s[i + 1] == '*':
-          value2, i = (parse_sequence if part2 else parse_term)(i + 3)
-          value *= value2
-        else:
-          raise AssertionError
+        match s[i + 1]:
+          case '+':
+            value2, i = parse_term(i + 3)
+            value += value2
+          case '*':
+            value2, i = (parse_sequence if part2 else parse_term)(i + 3)
+            value *= value2
+          case ch:
+            raise ValueError(ch)
       return value, i
 
     value, i = parse_sequence(0)
@@ -2384,7 +2393,7 @@ def day20(s, *, part2=False, visualize=False):
       pattern_view = rotate(pattern_uint8, rotation)
       pattern_indices = pattern_view.nonzero()
       corr = scipy.signal.correlate2d(grid_uint8, pattern_view, mode='valid')
-      locations = zip(*np.nonzero(corr == pattern_view.sum()))
+      locations = np.argwhere(corr == pattern_view.sum())
       for y, x in locations:
         grid[y:, x:][pattern_indices] = 'O'
 

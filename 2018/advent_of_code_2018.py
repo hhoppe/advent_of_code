@@ -248,7 +248,7 @@ def day1_part2(s):
     total += value
     if total in found:
       return total
-  assert False
+  raise ValueError
 
 
 check_eq(day1_part2('+1, -1'), 0)
@@ -443,7 +443,7 @@ def day4(s, *, part2=False):
     elif 'wakes up' in line:
       asleep[row][asleep_minute:minute] = 1
     else:
-      raise AssertionError()
+      raise ValueError(line)
 
   guards = set(date_guard)
 
@@ -1317,7 +1317,7 @@ def day13(s, *, part2=False, verbose=False, visualize=False):
   grid = hh.grid_from_string(s)
   carts = []
   for ch in '<>v^':
-    for yx in zip(*np.nonzero(grid == ch)):
+    for yx in map(tuple, np.argwhere(grid == ch)):
       grid[yx] = {'<': '-', '>': '-', 'v': '|', '^': '|'}[ch]
       carts.append(Cart(yx, ch))  # type: ignore[arg-type]
 
@@ -1367,31 +1367,35 @@ def day13(s, *, part2=False, verbose=False, visualize=False):
           crashed_cart.yx = -1, -1
         continue
       ch = grid[new_yx]
-      assert ch in '/\\+-|', ord(ch)
-      if ch in '/\\':
-        cart.direction = {
-            '</': 'v',
-            '<\\': '^',
-            '>/': '^',
-            '>\\': 'v',
-            '^/': '>',
-            '^\\': '<',
-            'v/': '<',
-            'v\\': '>',
-        }[cart.direction + ch]
-      elif ch == '+':
-        if cart.next_turn in (0, 2):
+      match ch:
+        case '/' | '\\':
           cart.direction = {
-              '<0': 'v',
-              '<2': '^',
-              '>0': '^',
-              '>2': 'v',
-              '^0': '<',
-              '^2': '>',
-              'v0': '>',
-              'v2': '<',
-          }[cart.direction + str(cart.next_turn)]
-        cart.next_turn = (cart.next_turn + 1) % 3
+              '</': 'v',
+              '<\\': '^',
+              '>/': '^',
+              '>\\': 'v',
+              '^/': '>',
+              '^\\': '<',
+              'v/': '<',
+              'v\\': '>',
+          }[cart.direction + ch]
+        case '+':
+          if cart.next_turn in (0, 2):
+            cart.direction = {
+                '<0': 'v',
+                '<2': '^',
+                '>0': '^',
+                '>2': 'v',
+                '^0': '<',
+                '^2': '>',
+                'v0': '>',
+                'v2': '<',
+            }[cart.direction + str(cart.next_turn)]
+          cart.next_turn = (cart.next_turn + 1) % 3
+        case '-' | '|':
+          pass
+        case _:
+          raise ValueError(ch)
       cart.yx = new_yx
     carts = [cart for cart in carts if cart.yx[0] != -1]
     if part2 and len(carts) == 1:
@@ -1842,7 +1846,7 @@ def day15a_part1(s, verbose=False, elf_attack_power=3, fail_if_elf_dies=False):
 
   show = hh.show if verbose else lambda *a, **k: None
   grid = hh.grid_from_string(s)
-  units = [Unit(yx, ch) for ch in 'GE' for yx in zip(*np.nonzero(grid == ch))]  # type: ignore
+  units = [Unit((y, x), ch) for ch in 'GE' for y, x in np.argwhere(grid == ch)]
 
   def get_opponents(unit):
     return (u for u in units if u.ch != unit.ch)
@@ -2008,7 +2012,7 @@ def day15_part1(s, visualize=False, elf_attack_power=3, fail_if_elf_dies=False):
     hit_points: int = 200
 
   grid = hh.grid_from_string(s)
-  units = [Unit(yx, ch) for ch in 'GE' for yx in zip(*np.nonzero(grid == ch))]  # type: ignore
+  units = [Unit((y, x), ch) for ch in 'GE' for y, x in np.argwhere(grid == ch)]
 
   def get_opponents(unit):
     return (u for u in units if u.ch != unit.ch)
@@ -2296,34 +2300,37 @@ def day17(s, *, part2=False, visualize=False):
       continue
     y1x = yx[0] + 1, yx[1]
     ch = grid.get(y1x, '.')
-    if ch == '|':
-      heapq.heappop(sources)
-      continue
-    if ch == '.':
-      grid[y1x] = '|'
-      heapq.heappush(sources, encode(y1x))
-      continue
-    assert ch in '~#'
-    heapq.heappop(sources)
-    bounded = []
-    for dx in (-1, 1):
-      yx2 = yx
-      while True:
-        yx2 = yx2[0], yx2[1] + dx
-        ch2 = grid.get(yx2, '.')
-        assert ch2 != '~'
-        if ch2 == '#':
-          bounded.append(yx2[1])
-          break
-        grid[yx2] = '|'
-        y1x2 = yx2[0] + 1, yx2[1]
-        if ch2 == '.' and y1x2 not in grid:
-          heapq.heappush(sources, encode(yx2))
-        if grid.get(y1x2, '.') not in '~#':
-          break
-    if len(bounded) == 2:
-      for x in range(bounded[0] + 1, bounded[1]):
-        grid[yx[0], x] = '~'
+    match ch:
+      case '|':
+        heapq.heappop(sources)
+        continue
+      case '.':
+        grid[y1x] = '|'
+        heapq.heappush(sources, encode(y1x))
+        continue
+      case '~' | '#':
+        heapq.heappop(sources)
+        bounded = []
+        for dx in (-1, 1):
+          yx2 = yx
+          while True:
+            yx2 = yx2[0], yx2[1] + dx
+            ch2 = grid.get(yx2, '.')
+            assert ch2 != '~'
+            if ch2 == '#':
+              bounded.append(yx2[1])
+              break
+            grid[yx2] = '|'
+            y1x2 = yx2[0] + 1, yx2[1]
+            if ch2 == '.' and y1x2 not in grid:
+              heapq.heappush(sources, encode(yx2))
+            if grid.get(y1x2, '.') not in '~#':
+              break
+        if len(bounded) == 2:
+          for x in range(bounded[0] + 1, bounded[1]):
+            grid[yx[0], x] = '~'
+      case _:
+        raise ValueError(ch)
 
   if visualize:
     cmap = {'.': (250,) * 3, '#': (0, 0, 0), '~': (0, 0, 255), '|': (150, 150, 255)}
@@ -2633,20 +2640,21 @@ def day20(s, *, part2=False, visualize=False):
       doors_s, doors_e = set(), set()
       y, x = 0, 0
       for ch in elem:
-        if ch == 'S':
-          doors_s.add((y, x))
-          y += 1
-        elif ch == 'N':
-          y -= 1
-          doors_s.add((y, x))
-        elif ch == 'E':
-          doors_e.add((y, x))
-          x += 1
-        elif ch == 'W':
-          x -= 1
-          doors_e.add((y, x))
-        else:
-          raise AssertionError(ch)
+        match ch:
+          case 'S':
+            doors_s.add((y, x))
+            y += 1
+          case 'N':
+            y -= 1
+            doors_s.add((y, x))
+          case 'E':
+            doors_e.add((y, x))
+            x += 1
+          case 'W':
+            x -= 1
+            doors_e.add((y, x))
+          case '_':
+            raise ValueError(ch)
       return doors_s, doors_e, {(y, x)}
     # isinstance(elem, list)
     # Return the three unions of the respective sets from all child nodes.
@@ -3096,7 +3104,7 @@ def day22_dijkstra(grid, target_yx, visualize):
       consider((tool, y, x + 1), 1)
     consider((tool_change[tool, grid[y, x]], y, x), 7)
   else:
-    assert False
+    raise RuntimeError
 
   path = [node]
   while node in parents:
@@ -3354,7 +3362,7 @@ def day23b(s, *, part2=False):
       if n_out < len(rs):
         heapq.heappush(priority_queue, (n_out, s, abs(row).sum(), *row))
   else:
-    assert False
+    raise RuntimeError
 
   # Search around neighborhood of x0.
   r = 8

@@ -940,7 +940,7 @@ def day7a(s, *, part2=False):  # Overly general solution.
           filesize += int(field)
       filesize_of_dir[path] = filesize
     else:
-      raise AssertionError(command)
+      raise ValueError(command)
 
   def dirs(dir='/'):
     yield dir
@@ -964,26 +964,33 @@ day7a_part2 = functools.partial(day7a, part2=True)
 check_eq(day7a_part2(s1), 24933642)
 puzzle.verify(2, day7a_part2)
 
+
 # %%
-if sys.version_info >= (3, 10):  # Using match/case.
-  # pylint: disable-next=exec-used
-  exec(
-      """
 # From https://www.reddit.com/r/adventofcode/comments/zesk40/comment/iz8fww6/
 def day7b(s, *, part2=False):
   dirs: collections.defaultdict[str, int] = collections.defaultdict(int)
   for line in s.splitlines():
     match line.split():
-      case '$', 'cd', '/': curr = ['/']
-      case '$', 'cd', '..': curr.pop()
-      case '$', 'cd', x: curr.append(x + '/')
-      case '$', 'ls': pass
-      case 'dir', _: pass
+      case '$', 'cd', '/':
+        curr = ['/']
+      case '$', 'cd', '..':
+        curr.pop()
+      case '$', 'cd', x:
+        curr.append(x + '/')
+      case '$', 'ls':
+        pass
+      case 'dir', _:
+        pass
       case size, _:
         for p in itertools.accumulate(curr):
           dirs[p] += int(size)
-  return (sum(v for v in dirs.values() if v <= 100_000) if not part2 else
-          min(v for v in dirs.values() if v >= dirs['/'] - 40_000_000))
+
+  return (
+      sum(v for v in dirs.values() if v <= 100_000)
+      if not part2
+      else min(v for v in dirs.values() if v >= dirs['/'] - 40_000_000)
+  )
+
 
 check_eq(day7b(s1), 95437)
 puzzle.verify(1, day7b)
@@ -991,8 +998,6 @@ puzzle.verify(1, day7b)
 day7b_part2 = functools.partial(day7b, part2=True)
 check_eq(day7b_part2(s1), 24933642)
 puzzle.verify(2, day7b_part2)
-  """
-  )
 
 
 # %%
@@ -4236,11 +4241,8 @@ day21a_part2 = functools.partial(day21a, part2=True)
 check_eq(day21a_part2(s1), 301)
 puzzle.verify(2, day21a_part2)
 
+
 # %%
-if sys.version_info >= (3, 10):  # Using match/case and graphlib.TopologicalSorter.
-  # pylint: disable-next=exec-used
-  exec(
-      """
 def day21b(s, *, part2=False, mode='graphlib'):  # Topo-sort or top-down, for single-pass.
   dependencies, ops, assigned = {}, {}, {}
   for line in s.splitlines():
@@ -4261,28 +4263,39 @@ def day21b(s, *, part2=False, mode='graphlib'):  # Topo-sort or top-down, for si
     if dep[0] in assigned and dep[1] in assigned:
       a, b, op = assigned[dep[0]], assigned[dep[1]], ops[dst]
       match op:
-        case '+': assigned[dst] = a + b
-        case '-': assigned[dst] = a - b
-        case '*': assigned[dst] = a * b
-        case '/': assigned[dst] = a // b
-        case _: raise AssertionError(op)
+        case '+':
+          assigned[dst] = a + b
+        case '-':
+          assigned[dst] = a - b
+        case '*':
+          assigned[dst] = a * b
+        case '/':
+          assigned[dst] = a // b
+        case _:
+          raise ValueError(op)
 
   # In a single pass, assign nodes whose children are assigned.
-  if mode == 'graphlib':  # Using topological sort ordering.
-    import graphlib  # pylint: disable=import-error # Python 3.9.
-    for dst in graphlib.TopologicalSorter(dependencies).static_order():
-      if dst in dependencies:
-        consider_node(dst)
+  match mode:
+    case 'graphlib':  # Using topological sort ordering.
+      import graphlib  # pylint: disable=import-error # Python 3.9.
 
-  elif mode == 'topdown':  # Using DFS ordering (assumes not a dag).
-    def assign_node(dst):
-      if dst not in assigned and dst in dependencies:
-        dep = dependencies[dst]
-        assign_node(dep[0])
-        assign_node(dep[1])
-        consider_node(dst)
+      for dst in graphlib.TopologicalSorter(dependencies).static_order():
+        if dst in dependencies:
+          consider_node(dst)
 
-    assign_node('root')
+    case 'topdown':  # Using DFS ordering (assumes not a dag).
+
+      def assign_node(dst):
+        if dst not in assigned and dst in dependencies:
+          dep = dependencies[dst]
+          assign_node(dep[0])
+          assign_node(dep[1])
+          consider_node(dst)
+
+      assign_node('root')
+
+    case _:
+      raise ValueError(mode)
 
   if not part2:
     return assigned['root']
@@ -4294,22 +4307,34 @@ def day21b(s, *, part2=False, mode='graphlib'):  # Topo-sort or top-down, for si
     if dep[0] in assigned:
       a = assigned[dep[0]]
       match op:
-        case '=': value = a
-        case '+': value = value - a
-        case '-': value = a - value
-        case '*': value = value // a
-        case '/': value = a // value
-        case _: raise AssertionError(op)
+        case '=':
+          value = a
+        case '+':
+          value = value - a
+        case '-':
+          value = a - value
+        case '*':
+          value = value // a
+        case '/':
+          value = a // value
+        case _:
+          raise ValueError(op)
       dst = dep[1]
     else:
       b = assigned[dep[1]]
       match op:
-        case '=': value = b
-        case '+': value = value - b
-        case '-': value = value + b
-        case '*': value = value // b
-        case '/': value = value * b
-        case _: raise AssertionError(op)
+        case '=':
+          value = b
+        case '+':
+          value = value - b
+        case '-':
+          value = value + b
+        case '*':
+          value = value // b
+        case '/':
+          value = value * b
+        case _:
+          raise ValueError(op)
       dst = dep[0]
 
   return value
@@ -4331,8 +4356,6 @@ puzzle.verify(1, day21c)
 day21c_part2 = functools.partial(day21c, part2=True)
 check_eq(day21c_part2(s1), 301)
 puzzle.verify(2, day21c_part2)
-  """
-  )
 
 
 # %%
@@ -4548,36 +4571,37 @@ def day22(s, *, part2=False, visualize=False, background=(252,) * 3):
   num_steps = 0
 
   for instruction in re.findall(r'\d+|[LR]', instructions):
-    if instruction == 'L':
-      dy, dx = -dx, dy
-    elif instruction == 'R':
-      dy, dx = dx, -dy
-    else:
-      for _ in range(int(instruction)):
-        y2, x2, dy2, dx2 = y + dy, x + dx, dy, dx
-        if not part2:
-          while not (0 <= y2 < shape[0] and 0 <= x2 < shape[1] and grid[y2, x2] != ' '):
-            y2, x2 = (y2 + dy) % shape[0], (x2 + dx) % shape[1]
-        elif not (0 <= y2 < shape[0] and 0 <= x2 < shape[1] and grid[y2, x2] != ' '):
-          y2, x2, dy2, dx2 = day22_wrap_on_cube(shape, y2, x2, dy, dx)
-        # assert 0 <= y2 < shape[0] and 0 <= x2 < shape[1] and grid[y2, x2] != ' '
-        if grid[y2, x2] == '#':
-          break
-        y, x, dy, dx = y2, x2, dy2, dx2
-        grid[y, x] = '@'
-        if visualize:
-          num_steps += 1
-          # Various animation acceleration schedules:
-          # if num_steps % 30 == 1:
-          # if math.log(num_steps, 1.018) >= len(images):
-          if 25 * num_steps**0.33 >= len(images):
-            grid2 = np.pad(grid, 4, constant_values=' ')
-            cmap = {' ': background, '.': (244,) * 3, '#': (20, 20, 20), '@': (100, 130, 255)}
-            image = np.array([cmap[ch] for ch in grid2.flat], np.uint8).reshape(*grid2.shape, 3)
-            image = image.repeat(2, axis=0).repeat(2, axis=1)
-            text = f'Step {num_steps:5}'
-            hh.overlay_text(image, (386, 140), text, fontsize=18, background=background)
-            images.append(image)
+    match instruction:
+      case 'L':
+        dy, dx = -dx, dy
+      case 'R':
+        dy, dx = dx, -dy
+      case _:
+        for _ in range(int(instruction)):
+          y2, x2, dy2, dx2 = y + dy, x + dx, dy, dx
+          if not part2:
+            while not (0 <= y2 < shape[0] and 0 <= x2 < shape[1] and grid[y2, x2] != ' '):
+              y2, x2 = (y2 + dy) % shape[0], (x2 + dx) % shape[1]
+          elif not (0 <= y2 < shape[0] and 0 <= x2 < shape[1] and grid[y2, x2] != ' '):
+            y2, x2, dy2, dx2 = day22_wrap_on_cube(shape, y2, x2, dy, dx)
+          # assert 0 <= y2 < shape[0] and 0 <= x2 < shape[1] and grid[y2, x2] != ' '
+          if grid[y2, x2] == '#':
+            break
+          y, x, dy, dx = y2, x2, dy2, dx2
+          grid[y, x] = '@'
+          if visualize:
+            num_steps += 1
+            # Various animation acceleration schedules:
+            # if num_steps % 30 == 1:
+            # if math.log(num_steps, 1.018) >= len(images):
+            if 25 * num_steps**0.33 >= len(images):
+              grid2 = np.pad(grid, 4, constant_values=' ')
+              cmap = {' ': background, '.': (244,) * 3, '#': (20, 20, 20), '@': (100, 130, 255)}
+              image = np.array([cmap[ch] for ch in grid2.flat], np.uint8).reshape(*grid2.shape, 3)
+              image = image.repeat(2, axis=0).repeat(2, axis=1)
+              text = f'Step {num_steps:5}'
+              hh.overlay_text(image, (386, 140), text, fontsize=18, background=background)
+              images.append(image)
 
   if visualize:
     images = [images[0]] * 30 + images + [images[-1]] * 50
@@ -4967,7 +4991,8 @@ def day24b_min_time_at_dst(grid, time, start_yx, dst_yx):
           if time + remaining_dist <= max_time:
             new_active.add(yx2)
     active = new_active
-  raise AssertionError('No path found; try increasing max_time.')
+
+  raise ValueError('No path found; try increasing max_time.')
 
 
 def day24b(s, *, part2=False):
@@ -5026,7 +5051,8 @@ def day24_min_time_at_dst(
         ):
           new_active.add(yx2)
     active = new_active
-  raise AssertionError('No path found; try increasing prune_size.')
+
+  raise ValueError('No path found; try increasing prune_size.')
 
 
 def day24(s, *, part2=False):

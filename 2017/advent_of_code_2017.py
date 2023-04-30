@@ -307,7 +307,8 @@ def day3_part2(s, *, size=41):
     grid[y, x] = count
     if count > value:
       return count
-  raise AssertionError
+
+  raise ValueError('No solution found.')
 
 
 check_eq(day3_part2('1'), 2)
@@ -401,7 +402,8 @@ def day5a(s, *, part2=False):  # Slow.
     pos += offset
     if not 0 <= pos < len(values):
       return num_steps
-  raise AssertionError
+
+  raise ValueError('No solution found.')
 
 
 check_eq(day5a(s1), 5)
@@ -624,16 +626,19 @@ def day9(s, *, part2=False):
     groups: list[Any] = []
     while True:
       i += 1
-      if s[i] == '}':
-        return groups, i
-      if s[i] == '<':
-        i += 1
-        while s[i] != '>':
-          num_garbage += 1
+      match s[i]:
+        case '}':
+          return groups, i
+        case '<':
           i += 1
-      elif s[i] != ',':
-        group, i = read_group(s, i)
-        groups.append(group)
+          while s[i] != '>':
+            num_garbage += 1
+            i += 1
+        case ',':
+          pass
+        case _:
+          group, i = read_group(s, i)
+          groups.append(group)
 
   group, i = read_group(s, 0)
   check_eq(i + 1, len(s))
@@ -737,7 +742,7 @@ def day11(s, *, part2=False, visualize=False):
   ss, se = 0, 0
   radii = []
   xys = []
-  for index, step in enumerate(steps):
+  for step in steps:
     dss, dse = MOVES[step]
     ss, se = ss + dss, se + dse
     radii.append(hex_radius(ss, se))
@@ -1188,19 +1193,20 @@ def day16a_part1(s, *, num=16):  # Simpler version supporting only Part 1.
 
   for move in s.strip().split(','):
     operation, operands = move[0], move[1:]
-    if operation == 's':
-      size = int(operands)
-      assert 1 <= size < num
-      state = state[-size:] + state[:-size]
-    elif operation == 'x':
-      pos0, pos1 = (int(s2) for s2 in operands.split('/'))
-      state[pos0], state[pos1] = state[pos1], state[pos0]
-    elif operation == 'p':
-      ch0, ch1 = operands.split('/')
-      index0, index1 = state.index(ch0), state.index(ch1)
-      state[index0], state[index1] = ch1, ch0
-    else:
-      raise AssertionError
+    match operation:
+      case 's':
+        size = int(operands)
+        assert 1 <= size < num
+        state = state[-size:] + state[:-size]
+      case 'x':
+        pos0, pos1 = (int(s2) for s2 in operands.split('/'))
+        state[pos0], state[pos1] = state[pos1], state[pos0]
+      case 'p':
+        ch0, ch1 = operands.split('/')
+        index0, index1 = state.index(ch0), state.index(ch1)
+        state[index0], state[index1] = ch1, ch0
+      case _:
+        raise ValueError(move)
 
   return ''.join(state)
 
@@ -1217,21 +1223,22 @@ def day16(s, *, num=16, num_permutations=1):
 
   for move in s.strip().split(','):
     operation, operands = move[0], move[1:]
-    if operation == 'p':
-      sym0, sym1 = (ord(ch) - ord('a') for ch in operands.split('/'))
-      index0, index1 = perm_sym.index(sym0), perm_sym.index(sym1)
-      perm_sym[index0], perm_sym[index1] = sym1, sym0
-    elif operation == 's':
-      size = int(operands)
-      assert 1 <= size < num
-      for i, pos in enumerate(perm_pos):
-        perm_pos[i] = pos + (size if pos < num - size else size - num)
-    elif operation == 'x':
-      pos0, pos1 = (int(s2) for s2 in operands.split('/'))
-      index0, index1 = perm_pos.index(pos0), perm_pos.index(pos1)
-      perm_pos[index0], perm_pos[index1] = pos1, pos0
-    else:
-      raise AssertionError
+    match operation:
+      case 'p':
+        sym0, sym1 = (ord(ch) - ord('a') for ch in operands.split('/'))
+        index0, index1 = perm_sym.index(sym0), perm_sym.index(sym1)
+        perm_sym[index0], perm_sym[index1] = sym1, sym0
+      case 's':
+        size = int(operands)
+        assert 1 <= size < num
+        for i, pos in enumerate(perm_pos):
+          perm_pos[i] = pos + (size if pos < num - size else size - num)
+      case 'x':
+        pos0, pos1 = (int(s2) for s2 in operands.split('/'))
+        index0, index1 = perm_pos.index(pos0), perm_pos.index(pos1)
+        perm_pos[index0], perm_pos[index1] = pos1, pos0
+      case _:
+        raise ValueError(move)
 
   def evaluate(perm_sym: list[int], perm_pos: list[int]) -> str:
     # Invert permutation using https://stackoverflow.com/a/11649931.
@@ -1361,27 +1368,25 @@ def day18(s):
 
   while True:
     assert 0 <= pc < len(instructions)
-    operation, operand, *rest = instructions[pc]
-    if operation == 'snd':
-      assert not rest
-      sound = get(operand)
-    elif operation == 'rcv':
-      assert not rest
-      if get(operand) != 0:
-        return sound
-    elif operation == 'set':
-      registers[operand] = get(*rest)
-    elif operation == 'add':
-      registers[operand] += get(*rest)
-    elif operation == 'mul':
-      registers[operand] *= get(*rest)
-    elif operation == 'mod':
-      registers[operand] %= get(*rest)
-    elif operation == 'jgz':
-      if get(operand) > 0:
-        pc += get(*rest) - 1
-    else:
-      raise AssertionError
+    match instructions[pc]:
+      case 'snd', operand:
+        sound = get(operand)
+      case 'rcv', operand:
+        if get(operand) != 0:
+          return sound
+      case 'set', dst, src:
+        registers[dst] = get(src)
+      case 'add', dst, src:
+        registers[dst] += get(src)
+      case 'mul', dst, src:
+        registers[dst] *= get(src)
+      case 'mod', dst, src:
+        registers[dst] %= get(src)
+      case 'jgz', predicate, offset:
+        if get(predicate) > 0:
+          pc += get(offset) - 1
+      case x:
+        raise ValueError(x)
     pc += 1
 
 
@@ -1420,22 +1425,22 @@ def day18_part2(s):
     def execute(self) -> bool:
       if not 0 <= self.pc < len(instructions):
         return False
-      operation, operand, *rest = instructions[self.pc]
-      if operation == 'snd':
-        assert not rest
-        other_program = programs[1 - self.program_id]
-        other_program.queue.append(self.get(operand))
-        self.total_sends += 1
-      elif operation == 'rcv':
-        assert not rest
-        if not self.queue:
-          return False
-        self.registers[operand] = self.queue.popleft()
-      elif operation == 'jgz':
-        if self.get(operand) > 0:
-          self.pc += self.get(*rest) - 1
-      else:
-        self.registers[operand] = evaluate[operation](self.registers[operand], self.get(*rest))
+      match instructions[self.pc]:
+        case 'snd', operand:
+          other_program = programs[1 - self.program_id]
+          other_program.queue.append(self.get(operand))
+          self.total_sends += 1
+        case 'rcv', operand:
+          if not self.queue:
+            return False
+          self.registers[operand] = self.queue.popleft()
+        case 'jgz', predicate, offset:
+          if self.get(predicate) > 0:
+            self.pc += self.get(offset) - 1
+        case operation, dst, src:
+          self.registers[dst] = evaluate[operation](self.registers[dst], self.get(src))
+        case x:
+          raise ValueError(x)
       self.pc += 1
       return True
 
@@ -1480,25 +1485,26 @@ def day19(s, *, part2=False):
   # (y,), (x,) = np.nonzero(grid[:1] == '|')
   ((y, x),) = np.argwhere(grid[:1] == '|')
   dy, dx = 1, 0
-  letters = []
+  letters: list[str] = []
   num_steps = 0
 
   while True:
     num_steps += 1
     y, x = y + dy, x + dx
-    ch = grid[y, x]
-    if ch.isalpha():
-      letters.append(ch)
-    elif ch == '+':
-      dy, dx = dx, dy  # One of the two 90-degree rotations.
-      if grid[y + dy, x + dx] == ' ':
-        dy, dx = -dy, -dx  # The other possible 90-degree rotation.
-      if grid[y + dy, x + dx] == ' ':
-        raise AssertionError
-    elif ch == ' ':
-      return num_steps if part2 else ''.join(letters)
-    else:
-      assert ch in '|-', ch
+    match grid[y, x]:
+      case '+':
+        dy, dx = dx, dy  # One of the two 90-degree rotations.
+        if grid[y + dy, x + dx] == ' ':
+          dy, dx = -dy, -dx  # The other possible 90-degree rotation.
+        if grid[y + dy, x + dx] == ' ':
+          raise ValueError
+      case ' ':
+        return num_steps if part2 else ''.join(letters)
+      case '|' | '-':
+        pass
+      case ch:
+        assert ch.isalpha()
+        letters.append(ch)
 
 
 check_eq(day19(s1), 'ABCDEF')
@@ -1542,7 +1548,7 @@ def day19_visualize(s):
   media.show_video(images, codec='gif', fps=50, title='day19')
 
 
-_ = day19_visualize(puzzle.input)
+day19_visualize(puzzle.input)
 
 # %% [markdown]
 # <a name="day20"></a>
@@ -1706,12 +1712,13 @@ def day22a(s, *, num_iterations=10_000, part2=False, visualize=False):
 
   for _ in range(num_iterations):
     state = grid.get((y, x), ' ')
-    if state == ' ':
-      dy, dx = -dx, dy  # Turn left.
-    elif state == '#':
-      dy, dx = dx, -dy  # Turn right.
-    elif state == 'F':
-      dy, dx = -dy, -dx  # Make U-turn.
+    match state:
+      case ' ':
+        dy, dx = -dx, dy  # Turn left.
+      case '#':
+        dy, dx = dx, -dy  # Turn right.
+      case 'F':
+        dy, dx = -dy, -dx  # Make U-turn.
     grid[y, x] = new_state = UPDATE[state]
     num_newly_infected += new_state == '#'
     y, x = y + dy, x + dx
@@ -1746,12 +1753,13 @@ def day22_compute(grid: np.ndarray, num_iterations: int, update: tuple[int, ...]
   num_newly_infected = 0
   for _ in range(num_iterations):
     state = grid[y, x]
-    if state == 0:
-      dy, dx = -dx, dy  # Turn left.
-    elif state == 1:
-      dy, dx = dx, -dy  # Turn right.
-    elif state == 3:
-      dy, dx = -dy, -dx  # Make U-turn.
+    match state:
+      case 0:
+        dy, dx = -dx, dy  # Turn left.
+      case 1:
+        dy, dx = dx, -dy  # Turn right.
+      case 3:
+        dy, dx = -dy, -dx  # Make U-turn.
     grid[y, x] = new_state = update[state]
     num_newly_infected += new_state == 1
     y, x = y + dy, x + dx
@@ -1809,19 +1817,19 @@ def day23(s, *, part2=False):
       # Big optimization: directly compute the number of non-primes in range(b, c + 1, 17).
       result = sum(not is_prime(i) for i in range(get('b'), get('c') + 1, 17))
       return result
-    operation, operand, operand2 = instructions[pc]
-    if operation == 'set':
-      registers[operand] = get(operand2)
-    elif operation == 'sub':
-      registers[operand] -= get(operand2)
-    elif operation == 'mul':
-      registers[operand] *= get(operand2)
-      num_mul += 1
-    elif operation == 'jnz':
-      if get(operand) != 0:
-        pc += get(operand2) - 1
-    else:
-      raise AssertionError
+    match instructions[pc]:
+      case 'set', dst, src:
+        registers[dst] = get(src)
+      case 'sub', dst, src:
+        registers[dst] -= get(src)
+      case 'mul', dst, src:
+        registers[dst] *= get(src)
+        num_mul += 1
+      case 'jnz', predicate, offset:
+        if get(predicate) != 0:
+          pc += get(offset) - 1
+      case x:
+        raise ValueError(x)
     pc += 1
 
   return num_mul

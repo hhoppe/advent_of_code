@@ -195,50 +195,55 @@ class _PyMachine(_Machine):
 
     def address(i):
       mode = (code // (10 ** (i + 1))) % 10
-      if mode == 0:  # position mode
-        return self.mem[self._pc + i]
-      if mode == 2:  # relative mode
-        return self._relative_base + self.mem[self._pc + i]
-      raise RuntimeError(f'Unrecognized lhs mode {mode})')
+      match mode:
+        case 0:  # position mode
+          return self.mem[self._pc + i]
+        case 2:  # relative mode
+          return self._relative_base + self.mem[self._pc + i]
+        case _:
+          raise ValueError(f'Unrecognized lhs mode {mode})')
 
     def operand(i):
       mode = (code // (10 ** (i + 1))) % 10
-      if mode in (0, 2):
-        return read(address(i))
-      if mode == 1:  # immediate mode
-        return self.mem[self._pc + i]
-      raise RuntimeError(f'Unrecognized rhs mode {mode})')
+      match mode:
+        case 0 | 2:
+          return read(address(i))
+        case 1:  # immediate mode
+          return self.mem[self._pc + i]
+        case _:
+          raise ValueError(f'Unrecognized rhs mode {mode})')
 
-    if opcode == 99:  # End
-      assert not self._input
-      self.terminated = True
-    elif opcode == 1:  # Add
-      write(address(3), operand(1) + operand(2))
-      self._pc += 4
-    elif opcode == 2:  # Multiply
-      write(address(3), operand(1) * operand(2))
-      self._pc += 4
-    elif opcode == 3:  # Input
-      write(address(1), self._input.pop(0))
-      self._pc += 2
-    elif opcode == 4:  # Output
-      self._output.append(operand(1))
-      self._pc += 2
-    elif opcode == 5:  # Jump if true
-      self._pc = operand(2) if operand(1) != 0 else self._pc + 3
-    elif opcode == 6:  # Jump if false
-      self._pc = operand(2) if operand(1) == 0 else self._pc + 3
-    elif opcode == 7:  # Less
-      write(address(3), int(operand(1) < operand(2)))
-      self._pc += 4
-    elif opcode == 8:  # Equal
-      write(address(3), int(operand(1) == operand(2)))
-      self._pc += 4
-    elif opcode == 9:  # Adjust relative base
-      self._relative_base += operand(1)
-      self._pc += 2
-    else:
-      raise RuntimeError(f'Unrecognized opcode {opcode} (pc={self._pc})')
+    match opcode:
+      case 99:  # End
+        assert not self._input
+        self.terminated = True
+      case 1:  # Add
+        write(address(3), operand(1) + operand(2))
+        self._pc += 4
+      case 2:  # Multiply
+        write(address(3), operand(1) * operand(2))
+        self._pc += 4
+      case 3:  # Input
+        write(address(1), self._input.pop(0))
+        self._pc += 2
+      case 4:  # Output
+        self._output.append(operand(1))
+        self._pc += 2
+      case 5:  # Jump if true
+        self._pc = operand(2) if operand(1) != 0 else self._pc + 3
+      case 6:  # Jump if false
+        self._pc = operand(2) if operand(1) == 0 else self._pc + 3
+      case 7:  # Less
+        write(address(3), int(operand(1) < operand(2)))
+        self._pc += 4
+      case 8:  # Equal
+        write(address(3), int(operand(1) == operand(2)))
+        self._pc += 4
+      case 9:  # Adjust relative base
+        self._relative_base += operand(1)
+        self._pc += 2
+      case _:
+        raise ValueError(f'Unrecognized {opcode=} (pc={self._pc})')
 
   def run_until_need_input(self, input: list[int]) -> list[int]:
     def next_opcode_is_input():
@@ -353,7 +358,7 @@ class _NumbaMachine(_Machine):
         relative_base += operand(1)
         pc += 2
       else:
-        assert False
+        raise ValueError
 
     return pc, relative_base, terminated, output
 
@@ -480,14 +485,15 @@ def day2a(s, *, part2=False):  # Original implementation before _Machine.
     l[2] = b
     i = 0
     while l[i] != 99:
-      if l[i] == 1:
-        l[l[i + 3]] = l[l[i + 1]] + l[l[i + 2]]
-        i += 4
-      elif l[i] == 2:
-        l[l[i + 3]] = l[l[i + 1]] * l[l[i + 2]]
-        i += 4
-      else:
-        raise RuntimeError(f'? {l}')
+      match l[i]:
+        case 1:
+          l[l[i + 3]] = l[l[i + 1]] + l[l[i + 2]]
+          i += 4
+        case 2:
+          l[l[i + 3]] = l[l[i + 1]] * l[l[i + 2]]
+          i += 4
+        case _:
+          raise ValueError(f'? {l}')
     return l[0]
 
   if not part2:
@@ -567,15 +573,17 @@ def day3a_part1(s):  # Abandoned slow version, using large 2D images.
 
   def vec_from_move(move: str) -> np.ndarray:
     dir, mag = move[:1], int(move[1:])
-    if dir == 'L':
-      return np.array((0, -mag))
-    if dir == 'R':
-      return np.array((0, +mag))
-    if dir == 'U':
-      return np.array((-mag, 0))
-    if dir == 'D':
-      return np.array((+mag, 0))
-    raise RuntimeError(f'Unrecognized move {move}')
+    match dir:
+      case 'L':
+        return np.array((0, -mag))
+      case 'R':
+        return np.array((0, +mag))
+      case 'U':
+        return np.array((-mag, 0))
+      case 'D':
+        return np.array((+mag, 0))
+      case _:
+        raise ValueError(f'Unrecognized move {move}')
 
   def rasterize(path: str):
     moves = path.split(',')
@@ -1127,7 +1135,8 @@ def day10_is_visible(dst_yx, src_yx, grid):
 
 def day10(s, *, part2=False, return_final=True, index_vaporized=199, visualize=False):
   grid = hh.grid_from_string(s, {'.': 0, '#': 1}) == 1
-  indices = list(zip(*grid.nonzero()))
+  # indices = np.argwhere(grid)
+  indices = list(zip(*grid.nonzero()))  # list[tuple[int, int]]
 
   def count_visible_from(yx):
     return sum(yx2 != yx and day10_is_visible(yx2, yx, grid) for yx2 in indices)
@@ -1986,7 +1995,7 @@ s1 = """\
 # %%
 def day17_parse_scaffold_grid(s):
   grid = hh.grid_from_string(s, {'.': 0, '#': 1, '^': 2})
-  (start,) = zip(*np.nonzero(grid == 2))
+  (start,) = np.argwhere(grid == 2)
   return grid, start
 
 
@@ -3243,12 +3252,10 @@ class _Deck:
     for line in shuffle.splitlines():
       if line == 'deal into new stack':
         deck = deck.deal_into_new_stack()
-      elif line.startswith('cut '):
-        (n,) = hh.re_groups(r'^cut ([\d-]+)', line)
-        deck = deck.cut_n_cards(int(n))
-      elif line.startswith('deal with increment '):
-        (n,) = hh.re_groups(r'^deal with increment (\d+)', line)
-        deck = deck.deal_with_increment(int(n))
+      elif match := re.fullmatch(r'cut ([\d-]+)', line):
+        deck = deck.cut_n_cards(int(match.group(1)))
+      elif match := re.fullmatch(r'deal with increment (\d+)', line):
+        deck = deck.deal_with_increment(int(match.group(1)))
       else:
         assert line.startswith('Result:')
     return deck
@@ -3474,7 +3481,7 @@ def day25(s, *, num_steps=4000):
       continue
     command = random.choice(doors)
   else:
-    assert False
+    raise RuntimeError('We did not reach Security Checkpoint.')
 
   if 0:
     print('\n'.join(sorted(locations)))

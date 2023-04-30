@@ -233,14 +233,16 @@ def day2_part1(s):
   for line in s.splitlines():
     command, value = line.split(' ')
     value = int(value)
-    if command == 'forward':
-      x += value
-    elif command == 'down':
-      y += value
-    elif command == 'up':
-      y -= value
-    else:
-      assert False
+    match command:
+      case 'forward':
+        x += value
+      case 'down':
+        y += value
+      case 'up':
+        y -= value
+      case _:
+        raise ValueError(command)
+
   return x * y
 
 
@@ -254,15 +256,17 @@ def day2_part2(s):
   for line in s.splitlines():
     command, value = line.split(' ')
     value = int(value)
-    if command == 'forward':
-      x += value
-      y += aim * value
-    elif command == 'down':
-      aim += value
-    elif command == 'up':
-      aim -= value
-    else:
-      assert False
+    match command:
+      case 'forward':
+        x += value
+        y += aim * value
+      case 'down':
+        aim += value
+      case 'up':
+        aim -= value
+      case _:
+        raise ValueError(command)
+
   return x * y
 
 
@@ -2651,7 +2655,7 @@ def day18(s, *, part2=False, return_snail=False):
         check_eq(stack[-1], 2)
         stack.pop()
       else:
-        assert False
+        raise ValueError
       if value == -2 or value >= 0:
         stack[-1] += 1
     return ''.join(result)
@@ -4851,40 +4855,40 @@ def day24a(s, *, part2=False, verbose=0):  # Careful, with emulator verification
   lines = s.splitlines()
 
   def simulate(input):
-    regs = [0] * 4
+    registers = dict(w=0, x=0, y=0, z=0)
+
+    def get(arg: str) -> int:
+      return registers[arg] if arg.isalpha() else int(arg)
+
     for line in lines:
       if verbose >= 2:
         highlight = '  ****' if 'inp' in line else ''
-        print(f'{str(regs):34} {line}{highlight}')
-      args = line.split()
-      op = args[0]
-      if op == 'inp':
-        reg = ord(args[1]) - ord('w')
-        assert 0 <= reg < 4
-        regs[reg] = int(input[0])
-        assert 1 <= regs[reg] <= 9
-        input = input[1:]
-      else:
-        reg1 = ord(args[1]) - ord('w')
-        value = regs[ord(args[2]) - ord('w')] if args[2] in 'wxyz' else int(args[2])
-        if op == 'add':
-          regs[reg1] += value
-        elif op == 'mul':
-          regs[reg1] *= value
-        elif op == 'div':
+        print(f'{str(registers):34} {line}{highlight}')  # ??
+      match line.split():
+        case 'inp', dst:
+          registers[dst] = int(input[0])
+          assert 1 <= registers[dst] <= 9
+          input = input[1:]
+        case 'add', dst, src:
+          registers[dst] += get(src)
+        case 'mul', dst, src:
+          registers[dst] *= get(src)
+        case 'div', dst, src:
+          value = get(src)
           assert value != 0
-          regs[reg1] = int(float(regs[reg1] / value))  # Round towards zero.
-        elif op == 'mod':
-          assert regs[reg1] >= 0 and value > 0
-          regs[reg1] %= value
-        elif op == 'eql':
-          regs[reg1] = int(regs[reg1] == value)
-        else:
-          assert False, op
+          registers[dst] = int(float(registers[dst] / value))  # Round towards zero.
+        case 'mod', dst, src:
+          value = get(src)
+          assert registers[dst] >= 0 and value > 0
+          registers[dst] %= value
+        case 'eql', dst, src:
+          registers[dst] = int(registers[dst] == get(src))
+        case x:
+          raise ValueError(x)
 
-    valid = regs[3] == 0
+    valid = registers['z'] == 0
     if verbose >= 1:
-      print(f'{str(regs):34} {valid=}')
+      print(f'{str(registers):34} {valid=}')  # ??
     return valid
 
   assert len(lines) == 14 * 18 == 252
@@ -4895,21 +4899,22 @@ def day24a(s, *, part2=False, verbose=0):  # Careful, with emulator verification
   solution: list[int | None] = [None] * 14
   stack = []
   for i in range(14):
-    if a[i] == 1:
-      stack.append((i, c[i]))
-    elif a[i] == 26:
-      j, old_c = stack.pop()
-      diff = old_c + b[i]
-      # The constraint is that solution[i] - solution[j] == diff.
-      assert -8 <= diff <= 8 and solution[i] is None and solution[j] is None
-      if part2:
-        solution[i] = 1 + diff if diff >= 0 else 1
-        solution[j] = 1 if diff >= 0 else 1 - diff
-      else:
-        solution[i] = 9 if diff >= 0 else 9 + diff
-        solution[j] = 9 - diff if diff >= 0 else 9
-    else:
-      assert False
+    match a[i]:
+      case 1:
+        stack.append((i, c[i]))
+      case 26:
+        j, old_c = stack.pop()
+        diff = old_c + b[i]
+        # The constraint is that solution[i] - solution[j] == diff.
+        assert -8 <= diff <= 8 and solution[i] is None and solution[j] is None
+        if part2:
+          solution[i] = 1 + diff if diff >= 0 else 1
+          solution[j] = 1 if diff >= 0 else 1 - diff
+        else:
+          solution[i] = 9 if diff >= 0 else 9 + diff
+          solution[j] = 9 - diff if diff >= 0 else 9
+      case x:
+        raise ValueError(x)
   assert not stack
   solution = [e if e is not None else 1 if part2 else 9 for e in solution]
 
@@ -4969,7 +4974,7 @@ def day24_test2():  # Extract the parameters of the 14 code blocks.
   params = {4: 'div z ', 5: 'add x ', 15: 'add y '}
   a, b, c = [[int(lines[i].split()[-1]) for i in range(m, 253, 18)] for m in params]
   print(f'a = {a}')
-  print(list(zip(range(14), a, b, c)))
+  print(list(zip(range(14), a, b, c, strict=True)))
 
 
 if 0:
@@ -5172,10 +5177,13 @@ def day25b(s):  # Same speed when using indices rather than boolean mask.
       grid[can_move_indices] = '.'
       moved |= len(can_move_indices[0]) > 0
       y, x = can_move_indices
-      if ch == '>':
-        x = (x + 1) % grid.shape[1]
-      else:
-        y = (y + 1) % grid.shape[0]
+      match ch:
+        case '>':
+          x = (x + 1) % grid.shape[1]
+        case 'v':
+          y = (y + 1) % grid.shape[0]
+        case _:
+          raise AssertionError(ch)
       grid[y, x] = ch
     if not moved:
       return step

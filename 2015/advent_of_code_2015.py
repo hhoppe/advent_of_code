@@ -449,7 +449,7 @@ def day5_part1(s):
     num_vowels = sum(letter in 'aeiou' for letter in line)
     if num_vowels < 3:
       return False
-    has_repeated_letter = any(a == b for a, b in more_itertools.pairwise(line))
+    has_repeated_letter = any(a == b for a, b in itertools.pairwise(line))
     if not has_repeated_letter:
       return False
     if any(s2 in line for s2 in ['ab', 'cd', 'pq', 'xy']):
@@ -527,7 +527,7 @@ def day6_part1(s, *, visualize=False):
       case 'toggle':
         window[:] = ~window[:]
       case _:
-        raise AssertionError(line)
+        raise ValueError(line)
     if visualize:
       images.append(get_image())
 
@@ -571,7 +571,7 @@ def day6_part2(s, *, visualize=False):
       case 'toggle':
         window[:] += 2
       case _:
-        raise AssertionError(line)
+        raise ValueError(line)
     if visualize:
       images.append(get_image())
 
@@ -637,7 +637,7 @@ def day7(s, *, part2=False, output='a'):
           assert dst not in graph
           graph[dst] = [src]
         case _:
-          raise AssertionError(line)
+          raise ValueError(line)
 
     sorted_nodes = list(graphlib.TopologicalSorter(graph).static_order())
     node_index = {node: index for index, node in enumerate(sorted_nodes)}
@@ -666,7 +666,7 @@ def day7(s, *, part2=False, output='a'):
             case 'OR':
               wires[dst] = value1 | value2
             case _:
-              raise AssertionError(operator)
+              raise ValueError(operator)
         case 'NOT', src, '->', dst:
           wires[dst] = 65535 - get_value(src)
 
@@ -800,7 +800,7 @@ def day9(s, *, part2=False):
     graph[node2][node1] = int(s_distance)
 
   def path_length(path: Sequence[str]) -> int:
-    return sum(graph[node1][node2] for node1, node2 in more_itertools.pairwise(path))
+    return sum(graph[node1][node2] for node1, node2 in itertools.pairwise(path))
 
   if 1:  # Faster because number is roughly half.
     permutations = _permutations_ignoring_reflections(graph)
@@ -968,7 +968,7 @@ def day11a(s, *, part2=False):  # Brute-force.
   def legal_password(state: list[int]) -> bool:
     if not any(a + 2 == b + 1 == c for a, b, c in more_itertools.sliding_window(state, 3)):
       return False
-    num_pairs = len(set(a for a, b in more_itertools.pairwise(state) if a == b))
+    num_pairs = len(set(a for a, b in itertools.pairwise(state) if a == b))
     if num_pairs < 2:
       return False
     return True
@@ -1020,7 +1020,7 @@ def day11(s, *, part2=False):  # Fast early culling.
     return any(a + 2 == b + 1 == c for a, b, c in more_itertools.sliding_window(state, 3))
 
   def consider(state: list[int], start: list[int]) -> list[int] | None:
-    num_pairs = len(set(a for a, b in more_itertools.pairwise(state) if a == b))
+    num_pairs = len(set(a for a, b in itertools.pairwise(state) if a == b))
     if num_pairs == 0 and len(state) == 6:
       return None
     need_pair = (num_pairs == 0 and len(state) == 5) or (num_pairs == 1 and len(state) == 7)
@@ -1198,7 +1198,7 @@ def day13(s, *, part2=False):
 
   def benefit(ordering: tuple[str, ...]) -> int:
     value = undirected_edges[ordering[-1], ordering[0]]
-    for node1, node2 in more_itertools.pairwise(ordering):
+    for node1, node2 in itertools.pairwise(ordering):
       value += undirected_edges[node1, node2]
     return value
 
@@ -1845,7 +1845,7 @@ def day19_test_pyparsing1(swap=False):  # Using set_parse_action().
           case Action.COMPUTE_SUM:
             return 1 + sum(token for token in tokens if isinstance(token, int))
           case x:
-            raise AssertionError(x)
+            raise ValueError(x)
 
       return parse_action
 
@@ -2314,7 +2314,7 @@ def day23(s, *, part2=False):
         if registers[register] == 1:
           program_counter += int(offset) - 1
       case x:
-        raise AssertionError(x)
+        raise ValueError(x)
     program_counter += 1
 
   return registers['b']

@@ -176,12 +176,13 @@ def day1(s, *, part2=False):
   dy, dx = -1, 0  # Up.
   visited = set()
   for op in s.split(', '):
-    if op[0] == 'L':
-      dy, dx = -dx, dy
-    elif op[0] == 'R':
-      dy, dx = dx, -dy
-    else:
-      raise ValueError(op)
+    match op[0]:
+      case 'L':
+        dy, dx = -dx, dy
+      case 'R':
+        dy, dx = dx, -dy
+      case _:
+        raise ValueError(op)
     distance = int(op[1:])
     if not part2:
       y, x = y + dy * distance, x + dx * distance
@@ -212,10 +213,11 @@ def day1_visualize(s, *, repeat=2):
   points_list = []
   distances = []
   for op in s.split(', '):
-    if op[0] == 'L':
-      dy, dx = -dx, dy
-    elif op[0] == 'R':
-      dy, dx = dx, -dy
+    match op[0]:
+      case 'L':
+        dy, dx = -dx, dy
+      case 'R':
+        dy, dx = dx, -dy
     distance = int(op[1:])
     for _ in range(distance):
       y, x = y + dy, x + dx
@@ -292,16 +294,17 @@ def day2a_part1(s):  # Hardcoded implementation for Part 1.
   code = ''
   for line in s.splitlines():
     for ch in line:
-      if ch == 'L':
-        x = max(x - 1, 0)
-      elif ch == 'R':
-        x = min(x + 1, 2)
-      elif ch == 'U':
-        y = max(y - 1, 0)
-      elif ch == 'D':
-        y = min(y + 1, 2)
-      else:
-        raise AssertionError(ch)
+      match ch:
+        case 'L':
+          x = max(x - 1, 0)
+        case 'R':
+          x = min(x + 1, 2)
+        case 'U':
+          y = max(y - 1, 0)
+        case 'D':
+          y = min(y + 1, 2)
+        case _:
+          raise ValueError(ch)
     code += str(1 + y * 3 + x)
   return code
 
@@ -319,16 +322,17 @@ def day2(s, *, part2=False):  # More general constraints and lookup to also supp
     for ch in line:
       radius_y = 2 - abs(x - 2) if part2 else 1
       radius_x = 2 - abs(y - 2) if part2 else 1
-      if ch == 'L':
-        x = max(x - 1, center_x - radius_x)
-      elif ch == 'R':
-        x = min(x + 1, center_x + radius_x)
-      elif ch == 'U':
-        y = max(y - 1, center_y - radius_y)
-      elif ch == 'D':
-        y = min(y + 1, center_y + radius_y)
-      else:
-        raise AssertionError(ch)
+      match ch:
+        case 'L':
+          x = max(x - 1, center_x - radius_x)
+        case 'R':
+          x = min(x + 1, center_x + radius_x)
+        case 'U':
+          y = max(y - 1, center_y - radius_y)
+        case 'D':
+          y = min(y + 1, center_y + radius_y)
+        case _:
+          raise ValueError(ch)
     code += '  1   234 56789 ABC   D  '[y * 5 + x] if part2 else str(1 + y * 3 + x)
   return code
 
@@ -603,18 +607,19 @@ def day7_part1(s):
     found_valid = False
     in_bracket = False
     for i, ch in enumerate(line[:-3]):
-      if ch == '[':
-        assert not in_bracket
-        in_bracket = True
-      elif ch == ']':
-        assert in_bracket
-        in_bracket = False
-      else:
-        ch1, ch2, ch3 = line[i + 1], line[i + 2], line[i + 3]
-        if ch == ch3 and ch1 == ch2 and ch != ch1 and ch1 not in '[]':
-          if in_bracket:
-            return False
-          found_valid = True
+      match ch:
+        case '[':
+          assert not in_bracket
+          in_bracket = True
+        case ']':
+          assert in_bracket
+          in_bracket = False
+        case _:
+          ch1, ch2, ch3 = line[i + 1], line[i + 2], line[i + 3]
+          if ch == ch3 and ch1 == ch2 and ch != ch1 and ch1 not in '[]':
+            if in_bracket:
+              return False
+            found_valid = True
     return found_valid
 
   check_eq(is_valid('abba[mnop]qrst'), True)
@@ -634,24 +639,27 @@ def day7_part2(s):
     found_inside = set()  # Contains 'aba' iff 'bab' is inside any brackets.
     in_bracket = False
     for i, ch in enumerate(line[:-2]):
-      if ch == '[':
-        in_bracket = True
-      elif ch == ']':
-        in_bracket = False
-      elif in_bracket:
-        s3 = line[i : i + 3]
-        if ch == s3[2] and ch != s3[1] and s3[1] not in '[]':
-          found_inside.add(s3[1] + s3[0] + s3[1])
+      match ch:
+        case '[':
+          in_bracket = True
+        case ']':
+          in_bracket = False
+        case _:
+          if in_bracket:
+            s3 = line[i : i + 3]
+            if ch == s3[2] and ch != s3[1] and s3[1] not in '[]':
+              found_inside.add(s3[1] + s3[0] + s3[1])
 
     in_bracket = False
     for i, ch in enumerate(line[:-2]):
-      if ch == '[':
-        in_bracket = True
-      elif ch == ']':
-        in_bracket = False
-      else:
-        if not in_bracket and ch == line[i + 2] and line[i : i + 3] in found_inside:
-          return True
+      match ch:
+        case '[':
+          in_bracket = True
+        case ']':
+          in_bracket = False
+        case _:
+          if not in_bracket and ch == line[i + 2] and line[i : i + 3] in found_inside:
+            return True
 
     return False
 
@@ -1086,7 +1094,7 @@ def day11c(s, *, part2=False):  # BFS; list of floors; equivalency; unpruned.
     queue = queue2
     steps += 1
 
-  raise AssertionError
+  raise ValueError('No solution exists.')
 
 
 check_eq(day11c(s1), 11)
@@ -1155,7 +1163,7 @@ def day11_compute(positions0: np.ndarray) -> int:
     queue = queue2
     steps += 1
 
-  raise AssertionError
+  raise ValueError('No solution exists.')
 
 
 def day11(s, *, part2=False):
@@ -1223,7 +1231,7 @@ def day12a(s, *, part2=False):
         if get_value(predicate) != 0:
           program_counter += int(offset) - 1
       case x:
-        raise AssertionError(x)
+        raise ValueError(x)
     program_counter += 1
 
   assert set(registers) <= set('abcd')
@@ -1244,8 +1252,8 @@ def day12b(s, *, part2=False):  # Disappointingly not much faster.
     registers[2] = 1
   program_counter = 0
 
-  def get_register(operand):
-    return 'abcd'.index(operand)
+  def get(register):
+    return 'abcd'.index(register)
 
   def cpy_reg(src, dst):
     registers[dst] = registers[src]
@@ -1270,31 +1278,27 @@ def day12b(s, *, part2=False):  # Disappointingly not much faster.
 
   instructions: list[Callable[[], None]] = []
   for line in s.splitlines():
-    operation, *args = line.split()
-    if operation == 'cpy':
-      if args[0].isalpha():
-        instructions.append(
-            functools.partial(cpy_reg, src=get_register(args[0]), dst=get_register(args[1]))
-        )
-      else:
-        instructions.append(
-            functools.partial(cpy_val, value=int(args[0]), dst=get_register(args[1]))
-        )
-    elif operation == 'inc':
-      instructions.append(functools.partial(increment, register=get_register(args[0])))
-    elif operation == 'dec':
-      instructions.append(functools.partial(decrement, register=get_register(args[0])))
-    elif operation == 'jnz':
-      if args[0].isalpha():
-        instructions.append(
-            functools.partial(jnz_reg, register=get_register(args[0]), offset=int(args[1]))
-        )
-      elif int(args[0]) != 0:
-        instructions.append(functools.partial(jump, offset=int(args[1])))
-      else:
-        instructions.append(lambda: None)
-    else:
-      raise AssertionError(line)
+    match line.split():
+      case 'cpy', src, dst:
+        if src.isalpha():
+          instructions.append(functools.partial(cpy_reg, src=get(src), dst=get(dst)))
+        else:
+          instructions.append(functools.partial(cpy_val, value=int(src), dst=get(dst)))
+      case 'inc', register:
+        instructions.append(functools.partial(increment, register=get(register)))
+      case 'dec', register:
+        instructions.append(functools.partial(decrement, register=get(register)))
+      case 'jnz', predicate, offset:
+        if predicate.isalpha():
+          instructions.append(
+              functools.partial(jnz_reg, register=get(predicate), offset=int(offset))
+          )
+        elif int(predicate) != 0:
+          instructions.append(functools.partial(jump, offset=int(offset)))
+        else:
+          instructions.append(lambda: None)
+      case _:
+        raise ValueError(line)
 
   while 0 <= program_counter < len(instructions):
     instructions[program_counter]()
@@ -2019,7 +2023,8 @@ def day20_part1(s):  # Part 1: Search over sorted candidates just below disallow
   for x in candidates:
     if not any(start <= x < stop for start, stop in disallowed):
       return x
-  raise AssertionError
+
+  raise ValueError('No solution found.')
 
 
 check_eq(day20_part1(s1), 3)
@@ -2162,7 +2167,7 @@ def day21(s, *, initial=None, part2=False, debug=False):
       state = state[:i0] + state[i0 + 1 :]
       state = state[:i1] + [ch] + state[i1:]
     else:
-      raise AssertionError(line)
+      raise ValueError(line)
     return state
 
   def scramble(state: list[str], lines: list[str], invert: bool) -> list[str]:
@@ -2339,7 +2344,7 @@ def day23(s, *, part2=False, debug=False):
             registers['c'] -= 2
             program_counter -= 1
         case x:
-          raise AssertionError(x)
+          raise ValueError(x)
       program_counter += 1
 
     assert set(registers) <= set('abcd')
@@ -2462,7 +2467,7 @@ def day24a(s, *, part2=False, visualize=False):  # Find shortest path over all n
     return len(get_paths(node0)[node1])
 
   def node_sequence_distance(sequence: Iterable[int]) -> int:
-    return sum(node_distance(node0, node1) for node0, node1 in more_itertools.pairwise(sequence))
+    return sum(node_distance(node0, node1) for node0, node1 in itertools.pairwise(sequence))
 
   def node_sequence(permutation: Iterable[int]) -> list[int]:
     return [0] + list(permutation) + [0] if part2 else [0] + list(permutation)
@@ -2473,7 +2478,7 @@ def day24a(s, *, part2=False, visualize=False):  # Find shortest path over all n
   def permutation_path(permutation: Iterable[int]) -> list[tuple[int, int]]:
     sequence = node_sequence(permutation)
     path = [node_yx[sequence[0]]]
-    for node0, node1 in more_itertools.pairwise(sequence):
+    for node0, node1 in itertools.pairwise(sequence):
       path.extend(get_paths(node0)[node1])
     return path
 
@@ -2557,7 +2562,7 @@ def day24(s, *, part2=False):  # Use Dijkstra where the state includes the set o
         distances[state2] = distance2
         heapq.heappush(priority_queue, (distance2, state2))
 
-  raise AssertionError
+  raise ValueError('No solution found.')
 
 
 check_eq(day24(s1), 14)
@@ -2608,12 +2613,12 @@ def day25a(s, debug=False):
         case 'out', src:
           yield get_value(src)
         case x:
-          raise AssertionError(x)
+          raise ValueError(x)
       program_counter += 1
 
   def equal_prefix(values1: Iterable[int], values2: Iterable[int], length: int) -> bool:
     prefix1, prefix2 = itertools.islice(values1, length), itertools.islice(values2, length)
-    return all(e1 == e2 for e1, e2 in zip(prefix1, prefix2))
+    return more_itertools.iequals(prefix1, prefix2)
 
   if debug:
     for initial_a in range(180, 200):
@@ -2646,6 +2651,7 @@ def day25_compute(instructions: np.ndarray, initial_a: int) -> Iterator[int]:
     assert 0 <= program_counter < len(instructions)
     instruction = instructions[program_counter]
     op, args = instruction[0], instruction[1:]
+    # Unfortunately, "numba" does not yet have match/case control structure.
     if op == Day25Op.CPY_REG:
       registers[args[1]] = registers[args[0]]
     elif op == Day25Op.CPY_VAL:
@@ -2663,7 +2669,7 @@ def day25_compute(instructions: np.ndarray, initial_a: int) -> Iterator[int]:
     elif op == Day25Op.OUT:
       yield registers[args[0]]
     else:
-      raise AssertionError
+      raise ValueError
     program_counter += 1
 
 
@@ -2692,7 +2698,7 @@ def day25(s):
       case 'out', register:
         instructions.append([Day25Op.OUT, encode(register), 0])
       case x:
-        raise AssertionError(x)
+        raise ValueError(x)
 
   def compute_output(initial_a: int) -> Iterator[int]:
     yield from day25_compute(np.array(instructions), initial_a)
@@ -2702,7 +2708,7 @@ def day25(s):
 
   def equal_prefix(values1: Iterable[int], values2: Iterable[int], length: int) -> bool:
     prefix1, prefix2 = itertools.islice(values1, length), itertools.islice(values2, length)
-    return all(e1 == e2 for e1, e2 in zip(prefix1, prefix2))
+    return more_itertools.iequals(prefix1, prefix2)
 
   for initial_a in range(1, 2000):
     if equal_prefix(compute_output(initial_a), desired_output(), 30):
