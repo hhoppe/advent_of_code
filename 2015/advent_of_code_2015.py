@@ -82,6 +82,7 @@ hh.start_timing_notebook_cells()
 
 # %%
 YEAR = 2015
+SHOW_BIG_MEDIA = False
 if pathlib.Path('results').is_dir():
   media.set_show_save_dir('results')
 
@@ -587,7 +588,12 @@ check_eq(day6_part2('toggle 0,0 through 999,999'), 2_000_000)
 puzzle.verify(2, day6_part2)
 
 # %%
-_ = day6_part2(puzzle.input, visualize=True)
+if SHOW_BIG_MEDIA:
+  _ = day6_part2(puzzle.input, visualize=True)
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day6b.gif">
 
 # %% [markdown]
 # <a name="day7"></a>
@@ -1068,16 +1074,19 @@ puzzle = advent.puzzle(day=12)
 # %%
 def day12a(s, *, part2=False):
   def sum_numbers(expr: Any) -> int:
-    if isinstance(expr, list):
-      return sum(sum_numbers(e) for e in expr)
-    if isinstance(expr, dict):
-      if part2 and 'red' in expr.values():
+    match expr:
+      case list():
+        return sum(sum_numbers(e) for e in expr)
+      case dict():
+        if part2 and 'red' in expr.values():
+          return 0
+        return sum(sum_numbers(value) for value in expr.values())
+      case int():
+        return expr
+      case str():
         return 0
-      return sum(sum_numbers(value) for value in expr.values())
-    if isinstance(expr, int):
-      return expr
-    assert isinstance(expr, str)
-    return 0
+      case _:
+        raise ValueError(expr)
 
   return sum_numbers(json.loads(s.strip()))
 
@@ -2431,13 +2440,15 @@ def day25b(s, *, row=None, column=None, initial_value=20_151_125, base=252_533, 
 
   @functools.cache
   def exponentiate(base: int, exponent: int, mod: int) -> int:
-    if exponent > 1:
-      exponent1, exponent2 = (exponent + 1) // 2, exponent // 2
-      return (exponentiate(base, exponent1, mod) * exponentiate(base, exponent2, mod)) % mod
-    if exponent == 1:
-      return base
-    assert exponent == 0
-    return 1
+    match exponent:
+      case 0:
+        return 1
+      case 1:
+        return base
+      case _:
+        assert exponent > 1
+        exponent1, exponent2 = (exponent + 1) // 2, exponent // 2
+        return (exponentiate(base, exponent1, mod) * exponentiate(base, exponent2, mod)) % mod
 
   return (initial_value * exponentiate(base, index - 1, mod)) % mod
 

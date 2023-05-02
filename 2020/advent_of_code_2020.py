@@ -1927,14 +1927,15 @@ puzzle = advent.puzzle(day=18)
 def day18a(strings, *, part2=False):  # Slower, more readable.
   def evaluate_line(s):
     def parse_term(i):
-      if s[i] == '(':
-        value, i = parse_sequence(i + 1)
-        check_eq(s[i], ')')
-        return value, i + 1
-      if s[i].isdigit():
-        value = int(s[i])
-        return value, i + 1
-      raise ValueError(s[i])
+      match s[i]:
+        case '(':
+          value, i = parse_sequence(i + 1)
+          check_eq(s[i], ')')
+          return value, i + 1
+        case ch:
+          assert ch.isdigit()
+          value = int(ch)
+          return value, i + 1
 
     def parse_sequence(i):
       value, i = parse_term(i)
