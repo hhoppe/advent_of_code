@@ -58,11 +58,9 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-hhoppe hhoppe-tools mediapy more-itertools numba
+# !pip install -q advent-of-code-hhoppe hhoppe-tools matplotlib mediapy more-itertools numba numpy scipy
 
 # %%
-from __future__ import annotations
-
 import bisect
 import collections
 from collections.abc import Iterable
@@ -72,8 +70,6 @@ import math
 import operator
 import pathlib
 import re
-import sys
-import types
 from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -82,7 +78,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
+import numba
 import numpy as np
+import scipy.signal
 
 # %%
 if not media.video_is_available():
@@ -118,15 +116,6 @@ if 0:
   # where "53616..." is the session cookie from "adventofcode.com" (valid 1 month).
   hh.run('pip install -q advent-of-code-data')  # https://github.com/wimglenn/advent-of-code-data
   import aocd  # pylint: disable=unused-import # noqa
-
-# %%
-try:
-  import numba
-except ModuleNotFoundError:
-  print('Package numba is unavailable.')
-  numba = sys.modules['numba'] = types.ModuleType('numba')
-  numba.njit = hh.noop_decorator
-using_numba = hasattr(numba, 'jit')
 
 # %%
 advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)
@@ -1141,7 +1130,7 @@ check_eq(day11a(s1), 37)
 day11a_part2 = functools.partial(day11a, part2=True)
 check_eq(day11a_part2(s1), 26)
 
-if not using_numba:  # Best non-numba solutions.
+if 0:  # Best non-numba solutions.
   puzzle.verify(1, day11a)  # ~0.8 s.
   puzzle.verify(2, day11a_part2)  # ~2.0 s.
 
@@ -1200,14 +1189,12 @@ check_eq(day11(s1), 37)  # ~0.5 s for numba compilation.
 day11_part2 = functools.partial(day11, part2=True)
 check_eq(day11_part2(s1), 26)
 
-if using_numba:
-  puzzle.verify(1, day11)
-  puzzle.verify(2, day11_part2)
+puzzle.verify(1, day11)
+puzzle.verify(2, day11_part2)
 
 # %%
-if using_numba:
-  _ = day11(puzzle.input, visualize=True, part2=False)
-  _ = day11(puzzle.input, visualize=True, part2=True)
+_ = day11(puzzle.input, visualize=True, part2=False)
+_ = day11(puzzle.input, visualize=True, part2=True)
 
 # %% [markdown]
 # <a name="day12"></a>
@@ -1595,7 +1582,7 @@ def day15b(s, *, num_turns=2020):  # Faster, using List.
 check_eq(day15b(s1), 436)
 puzzle.verify(1, day15b)
 
-if not using_numba:
+if 0:  # Non-numba solutions.
   day15b_part2 = functools.partial(day15b, num_turns=30_000_000)
   # check_eq(day15b_part2(s1), 175594)  # Slow; ~3 s.
   puzzle.verify(2, day15b_part2)  # Slow; ~3 s.
@@ -1627,19 +1614,18 @@ def day15(s, *, num_turns=2020):
 check_eq(day15(s1), 436)  # ~0.1 s for numba compilation.
 puzzle.verify(1, day15)
 
-if using_numba:
-  day15_part2 = functools.partial(day15, num_turns=30_000_000)
-  check_eq(day15_part2(s1), 175594)  # ~0.1 s for numba compilation.
-  if 0:
-    check_eq(day15_part2('1,3,2'), 2578)
-    check_eq(day15_part2('2,1,3'), 3544142)
-    check_eq(day15_part2('1,2,3'), 261214)
-    check_eq(day15_part2('2,3,1'), 6895259)
-    check_eq(day15_part2('3,2,1'), 18)
-    check_eq(day15_part2('3,1,2'), 362)
-  puzzle.verify(2, day15_part2)  # ~0.4 s with numba, ~64 s without numba.
-  # (Without numba, accessing individual elements is much faster within a Python list than
-  # within an np.array.)
+day15_part2 = functools.partial(day15, num_turns=30_000_000)
+check_eq(day15_part2(s1), 175594)  # ~0.1 s for numba compilation.
+if 0:
+  check_eq(day15_part2('1,3,2'), 2578)
+  check_eq(day15_part2('2,1,3'), 3544142)
+  check_eq(day15_part2('1,2,3'), 261214)
+  check_eq(day15_part2('2,3,1'), 6895259)
+  check_eq(day15_part2('3,2,1'), 18)
+  check_eq(day15_part2('3,1,2'), 362)
+puzzle.verify(2, day15_part2)  # ~0.4 s with numba, ~64 s without numba.
+# (Without numba, accessing individual elements is much faster within a Python list than
+# within an np.array.)
 
 # %% [markdown]
 # <a name="day16"></a>
@@ -2300,15 +2286,17 @@ def day20(s, *, part2=False, visualize=False):
     # return rotate(tile, rotation)[0]  # equivalent but slower
     tile = tile if rotation < 4 else tile[::-1]
     rotation = rotation % 4
-    return (
-        tile[0]
-        if rotation == 0
-        else tile[:, -1]
-        if rotation == 1
-        else tile[-1, ::-1]
-        if rotation == 2
-        else tile[::-1, 0]
-    )
+    match rotation:
+      case 0:
+        return tile[0]
+      case 1:
+        return tile[:, -1]
+      case 2:
+        return tile[-1, ::-1]
+      case 3:
+        return tile[::-1, 0]
+      case _:
+        raise AssertionError
 
   # List of (index, rotation) for up to 2 tiles whose top row matches the key.
   edge_list = collections.defaultdict(list)
@@ -2386,8 +2374,6 @@ def day20(s, *, part2=False, visualize=False):
           subgrid_view_1d[pattern_indices_1d] = 'O'
 
   else:  # fastest, using 2d correlation
-    import scipy.signal
-
     pattern_uint8 = pattern.astype(np.uint8)
     grid_uint8 = (grid == '#').astype(np.uint8)
     for rotation in rotations:
@@ -2705,7 +2691,7 @@ def day23_func(l, max_num, num_moves, next_cup):
 
 
 def day23(s, *, max_num=0, num_moves=100):
-  dtype = np.int32 if using_numba else np.int64
+  dtype = np.int32  # For numba, else np.int64.
   l = np.array(list(map(int, s.strip())), dtype)
   next_cup = np.empty(1 + max(len(l), max_num), l.dtype)
   day23_func(l, max_num, num_moves, next_cup)
@@ -2724,8 +2710,7 @@ check_eq(day23(s1), '67384529')
 puzzle.verify(1, day23)
 
 day23_part2 = functools.partial(day23, num_moves=10_000_000, max_num=1_000_000)
-if using_numba:
-  check_eq(day23_part2(s1), 149245887792)  # Numba compilation.
+check_eq(day23_part2(s1), 149245887792)  # Numba compilation.
 puzzle.verify(2, day23_part2)  # ~0.2 s with numba; ~58 s without numba.
 
 # %%

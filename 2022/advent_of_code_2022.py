@@ -50,11 +50,9 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools kaleido mediapy more-itertools numba numpy plotly resampler
+# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools kaleido matplotlib mediapy more-itertools numba numpy plotly resampler scipy
 
 # %%
-from __future__ import annotations
-
 import ast
 import collections
 from collections.abc import Callable
@@ -69,9 +67,7 @@ import pathlib
 import re
 import string
 import subprocess
-import sys
 import textwrap
-import types
 from typing import Any, NamedTuple
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -80,6 +76,7 @@ import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hh
 import matplotlib.pyplot as plt
 import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
+import numba
 import numpy as np
 import plotly
 import plotly.graph_objects as go
@@ -120,15 +117,6 @@ if 0:
   # echo 53616... >~/.config/aocd/token  # session cookie from "adventofcode.com" (valid 1 month).
   hh.run('pip install -q advent-of-code-data')  # https://github.com/wimglenn/advent-of-code-data
   import aocd  # pylint: disable=unused-import # noqa
-
-# %%
-try:
-  import numba
-except ModuleNotFoundError:
-  print('Package numba is unavailable.')
-  numba = sys.modules['numba'] = types.ModuleType('numba')
-  numba.njit = hh.noop_decorator
-using_numba = hasattr(numba, 'jit')
 
 # %%
 advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)
@@ -985,11 +973,9 @@ def day7b(s, *, part2=False):
         for p in itertools.accumulate(curr):
           dirs[p] += int(size)
 
-  return (
-      sum(v for v in dirs.values() if v <= 100_000)
-      if not part2
-      else min(v for v in dirs.values() if v >= dirs['/'] - 40_000_000)
-  )
+  if not part2:
+    return sum(v for v in dirs.values() if v <= 100_000)
+  return min(v for v in dirs.values() if v >= dirs['/'] - 40_000_000)
 
 
 check_eq(day7b(s1), 95437)
@@ -1058,11 +1044,9 @@ def day7(s, *, part2=False):  # Solution assuming depth-first traversal.
     elif line[0].isdigit():
       stack[-1] += int(line.split()[0])
   sizes.extend(itertools.accumulate(stack[::-1]))
-  return (
-      sum(n for n in sizes if n <= 100_000)
-      if not part2
-      else min(n for n in sizes if n >= max(sizes) - 40_000_000)
-  )
+  if not part2:
+    return sum(n for n in sizes if n <= 100_000)
+  return min(n for n in sizes if n >= max(sizes) - 40_000_000)
 
 
 check_eq(day7(s1), 95437)
@@ -4204,31 +4188,35 @@ def day21a(s, *, part2=False):  # Brute-force assignments.
     if dep0 in assigned:
       a = assigned[dep0]
       value: int
-      value = (
-          a
-          if op == '='
-          else value - a
-          if op == '+'
-          else a - value
-          if op == '-'
-          else value // a
-          if op == '*'
-          else a // value
-      )  # if op == '/'
+      match op:
+        case '=':
+          value = a
+        case '+':
+          value -= a
+        case '-':
+          value = a - value
+        case '*':
+          value //= a
+        case '/':
+          value = a // value
+        case _:
+          raise ValueError(op)
       dst = dep1
     else:
       b = assigned[dep1]
-      value = (
-          b
-          if op == '='
-          else value - b
-          if op == '+'
-          else value + b
-          if op == '-'
-          else value // b
-          if op == '*'
-          else value * b
-      )  # if op == '/'
+      match op:
+        case '=':
+          value = b
+        case '+':
+          value -= b
+        case '-':
+          value += b
+        case '*':
+          value //= b
+        case '/':
+          value *= b
+        case _:
+          raise ValueError(op)
       dst = dep0
 
   return value

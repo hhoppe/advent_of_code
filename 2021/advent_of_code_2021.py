@@ -46,11 +46,9 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools mediapy more-itertools numba parse
+# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools matplotlib mediapy more-itertools numba numpy parse
 
 # %%
-from __future__ import annotations
-
 import ast
 import collections
 from collections.abc import Callable, Iterable, Iterator
@@ -62,8 +60,6 @@ import itertools
 import math
 import pathlib
 import re
-import sys
-import types
 import typing
 from typing import Any, Generic, Tuple, TypeVar
 
@@ -73,6 +69,7 @@ import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hh
 import matplotlib.pyplot as plt
 import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
+import numba
 import numpy as np
 import parse
 
@@ -113,15 +110,6 @@ if 0:
   # where "53616..." is the session cookie from "adventofcode.com" (valid 1 month).
   hh.run('pip install -q advent-of-code-data')  # https://github.com/wimglenn/advent-of-code-data
   import aocd  # pylint: disable=unused-import # noqa
-
-# %%
-try:
-  import numba
-except ModuleNotFoundError:
-  print('Package numba is unavailable.')
-  numba = sys.modules['numba'] = types.ModuleType('numba')
-  numba.njit = hh.noop_decorator
-using_numba = hasattr(numba, 'jit')
 
 # %%
 advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)
@@ -2564,7 +2552,7 @@ puzzle.verify(1, day18b)
 
 day18b_part2 = functools.partial(day18b, part2=True)
 check_eq(day18b_part2(s5), 3993)
-if not using_numba:
+if 0:  # Non-numba solution.
   puzzle.verify(2, day18b_part2)  # ~0.7 s.
 
 
@@ -2685,8 +2673,7 @@ puzzle.verify(1, day18)
 
 day18_part2 = functools.partial(day18, part2=True)
 check_eq(day18_part2(s5), 3993)
-if using_numba:
-  puzzle.verify(2, day18_part2)
+puzzle.verify(2, day18_part2)
 
 # %% [markdown]
 # <a name="day19"></a>
@@ -3219,7 +3206,7 @@ def day20a(s, *, part2=False):  # Slow.
     grid = new_grid[1:-1, 1:-1]
 
   if 0:
-    with np.printoptions(linewidth=1000, threshold=sys.maxsize):
+    with np.printoptions(linewidth=1000, threshold=10**9):
       print(grid.astype(int))
 
   return np.count_nonzero(grid)
@@ -4203,16 +4190,14 @@ def day22_func(states, cuboids):
     )
 
   def replace(tuple_, index, value):
-    if using_numba:
-      setitem = numba.cpython.unsafe.tuple.tuple_setitem
-      return setitem(tuple_, index, value)  # pylint: disable=no-value-for-parameter
-    return tuple_[:index] + (value,) + tuple_[index + 1 :]
+    # return tuple_[:index] + (value,) + tuple_[index + 1 :]
+    setitem = numba.cpython.unsafe.tuple.tuple_setitem
+    return setitem(tuple_, index, value)  # pylint: disable=no-value-for-parameter
 
   def to_tuple(array):
-    if using_numba:
-      to_fixed = numba.np.unsafe.ndarray.to_fixed_tuple  # pylint: disable=no-member
-      return to_fixed(array[0], 2), to_fixed(array[1], 2), to_fixed(array[2], 2)
-    return tuple(array[0]), tuple(array[1]), tuple(array[2])
+    # return tuple(array[0]), tuple(array[1]), tuple(array[2])
+    to_fixed = numba.np.unsafe.ndarray.to_fixed_tuple  # pylint: disable=no-member
+    return to_fixed(array[0], 2), to_fixed(array[1], 2), to_fixed(array[2], 2)
 
   def subdivide_a_subtracting_b(a, b):  # Faster; smaller number of subcells.
     boxes = [a]
@@ -4665,7 +4650,7 @@ def day23_func(nrows, start_state, end_state, state_size):
     id = state[i0]
     # assert 0 <= id < 4 and state[i1] < 0
     # assert i1 < 7 or id == (i1 - 7) % 4
-    if using_numba:
+    if 1:
       # https://numba.discourse.group/t/how-to-use-a-sequence-as-dict-key/431/11
       # https://github.com/numba/numba/blob/master/numba/tests/test_unsafe_intrinsics.py
       if 1:  # Fast.

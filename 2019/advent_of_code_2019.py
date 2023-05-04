@@ -47,11 +47,9 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-ocr advent-of-code-hhoppe hhoppe-tools mediapy more-itertools numba
+# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools mediapy more-itertools numba numpy
 
 # %%
-from __future__ import annotations
-
 import abc
 import collections
 from collections.abc import Iterable, Sequence
@@ -64,8 +62,6 @@ import math
 import pathlib
 import random
 import re
-import sys
-import types
 from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -73,6 +69,7 @@ import advent_of_code_ocr  # https://github.com/bsoyka/advent-of-code-ocr/blob/m
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
 import mediapy as media
 import more_itertools
+import numba
 import numpy as np
 
 # %%
@@ -109,15 +106,6 @@ if 0:
   # where "53616..." is the session cookie from "adventofcode.com" (valid 1 month).
   hh.run('pip install -q advent-of-code-data')  # https://github.com/wimglenn/advent-of-code-data
   import aocd  # pylint: disable=unused-import # noqa
-
-# %%
-try:
-  import numba
-except ModuleNotFoundError:
-  print('Package numba is unavailable.')
-  numba = sys.modules['numba'] = types.ModuleType('numba')
-  numba.njit = hh.noop_decorator
-using_numba = hasattr(numba, 'jit')
 
 # %%
 advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)
@@ -160,7 +148,7 @@ class _Machine:
 
   @staticmethod
   def make(*args, **kwargs):
-    if using_numba:
+    if 1:
       return _NumbaMachine(*args, **kwargs)
     return _PyMachine(*args, **kwargs)
 
@@ -1376,12 +1364,38 @@ puzzle.verify(1, day12)
 
 
 # %%
+def day12a_part2(s):  # Using numpy.
+  def period_for_1d(initial_position):
+    position = initial_position.copy()
+    velocity = np.full_like(position, 0)
+    step = 0
+    while True:
+      step += 1
+      all_vectors = position[:, None] - position
+      acceleration = np.sign(all_vectors).sum(axis=0)
+      velocity += acceleration
+      position += velocity
+      if np.all(velocity == 0.0) and np.all(position == initial_position):
+        return step
+
+  initial_position = np.array(re.findall(r'<x=(.*), y=(.*), z=(.*)>', s), np.int64)
+  periods = [period_for_1d(initial_position[:, coord]) for coord in range(3)]
+  return math.lcm(*periods)
+
+
+check_eq(day12a_part2(s1), 2772)
+check_eq(day12a_part2(s2), 4686774924)
+# puzzle.verify(2, day12a_part2)  # ~3.7 s.
+
+
+# %%
+# Using numba.
 @numba.njit
 def day12_period_for_1d(initial_position):
   position = initial_position.copy()
   velocity = np.full_like(position, 0)
   n = len(position)
-  for step in range(1, sys.maxsize):  # numba does not recognize "itertools.count(1)".
+  for step in range(1, 10**9):  # numba does not recognize "itertools.count(1)".
     for i in range(n):
       for j in range(n):
         diff = position[j] - position[i]
@@ -1392,25 +1406,8 @@ def day12_period_for_1d(initial_position):
 
 
 def day12_part2(s):
-  def period_for_1d(initial_position):
-    position = initial_position.copy()
-    velocity = np.full_like(position, 0)
-    step = 0
-    while True:
-      step += 1
-      # (Note that "position[:, None]" is not supported in numba)
-      all_vectors = position.reshape(-1, 1) - position
-      acceleration = np.sign(all_vectors).sum(axis=0)
-      velocity += acceleration
-      position += velocity
-      if np.all(velocity == 0.0) and np.all(position == initial_position):
-        return step
-
-  if using_numba:
-    period_for_1d = day12_period_for_1d  # noqa
-
   initial_position = np.array(re.findall(r'<x=(.*), y=(.*), z=(.*)>', s), np.int64)
-  periods = [period_for_1d(initial_position[:, coord]) for coord in range(3)]
+  periods = [day12_period_for_1d(initial_position[:, coord]) for coord in range(3)]
   return math.lcm(*periods)
 
 
@@ -1895,8 +1892,33 @@ if 0:
 
 
 # %%
+def day16a_part2(s, *, repeat_input=10_000):
+  def fft_transform_helper(l, num_phases=100):
+    for phase in range(num_phases):
+      np.cumsum(l[::-1], out=l[::-1])
+      # As an optimization, we skip the mod() operation for 2 phases.
+      # (If we skip more than 2 phases, the numbers overflow int64.)
+      if phase % 3 == 0:
+        np.mod(l, 10, out=l)
+    np.mod(l, 10, out=l)
+
+  index = int(s[:7])
+  l = list(map(int, s.strip())) * repeat_input
+  assert index > len(l) * 0.51  # output is only valid over last half
+  l = np.array(l[index:])  # (Setting dtype has no effect on numba performance.)
+  fft_transform_helper(l)
+  return ''.join(map(str, l[:8]))
+
+
+check_eq(day16a_part2(s2), '84462026')
+check_eq(day16a_part2(s3), '78725270')
+check_eq(day16a_part2(s4), '53553731')
+puzzle.verify(2, day16a_part2)
+
+
+# %%
 @numba.njit
-def day16_fft_transform2_helper(l, num_phases=100):
+def day16_fft_transform_helper(l, num_phases=100):
   mod10 = np.arange(20) % 10
   for _ in range(num_phases):
     total = 0
@@ -1906,23 +1928,11 @@ def day16_fft_transform2_helper(l, num_phases=100):
 
 
 def day16_part2(s, *, repeat_input=10_000):
-  def fft_transform2_helper(l, num_phases=100):
-    for phase in range(num_phases):
-      np.cumsum(l[::-1], out=l[::-1])
-      # As an optimization, we skip the mod() operation for 2 phases.
-      # (If we skip more than 2 phases, the numbers overflow int64.)
-      if phase % 3 == 0:
-        np.mod(l, 10, out=l)
-    np.mod(l, 10, out=l)
-
-  if using_numba:
-    fft_transform2_helper = day16_fft_transform2_helper  # noqa
-
   index = int(s[:7])
   l = list(map(int, s.strip())) * repeat_input
   assert index > len(l) * 0.51  # output is only valid over last half
   l = np.array(l[index:])  # (Setting dtype has no effect on numba performance.)
-  fft_transform2_helper(l)
+  day16_fft_transform_helper(l)
   return ''.join(map(str, l[:8]))
 
 
@@ -2783,11 +2793,11 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
       return (l2, *yx2) if yx2 and 0 <= l2 <= max_level else None
 
     # Slow version that walks one grid node at a time:
-    def shortest_path_old(self, max_level=sys.maxsize):
+    def shortest_path_old(self, max_level=10**9):
       src_lyx = (0, *self.yx_of_portal[0]['AA'])  # (level, y, x)
       dst_lyx = (0, *self.yx_of_portal[0]['ZZ'])
       to_visit = collections.deque([src_lyx])
-      distance = collections.defaultdict(lambda: sys.maxsize)  # for Dijkstra
+      distance = collections.defaultdict(lambda: 10**9)  # for Dijkstra
       distance[src_lyx] = 0
       parent: dict[tuple[int, int, int], tuple[int, int, int]] = {}
 
@@ -2820,7 +2830,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
       src_lyx = (0, *self.yx_of_portal[0]['AA'])  # (level, y, x)
       dst_lyx = (0, *self.yx_of_portal[0]['ZZ'])
       pq = [(0, src_lyx)]
-      distance = collections.defaultdict(lambda: sys.maxsize)  # for Dijkstra
+      distance = collections.defaultdict(lambda: 10**9)  # for Dijkstra
       distance[src_lyx] = 0
       parent: dict[tuple[int, int, int], tuple[int, int, int]] = {}
 
@@ -2913,7 +2923,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
       media.show_video(images, codec='gif', fps=50, title=f'day20{"b" if part2 else "a"}')
 
   if part2:
-    max_level = sys.maxsize
+    max_level = 10**9
   if visualize:
     return Maze(s).visualize(max_level)
   path = Maze(s).shortest_path(max_level)

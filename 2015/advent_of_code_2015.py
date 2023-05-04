@@ -40,11 +40,9 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-hhoppe hhoppe-tools mediapy more-itertools pyparsing
+# !pip install -q advent-of-code-hhoppe hhoppe-tools matplotlib mediapy more-itertools numba numpy pyparsing
 
 # %%
-from __future__ import annotations
-
 import ast
 import collections
 from collections.abc import Callable, Iterable, Iterator, Sequence
@@ -61,8 +59,6 @@ import operator
 import pathlib
 import random
 import re
-import sys
-import types
 from typing import Any, TypeVar
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -70,6 +66,7 @@ import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hh
 import matplotlib.pyplot as plt
 import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
+import numba
 import numpy as np
 import pyparsing
 
@@ -106,15 +103,6 @@ if 0:
   # echo 53616... >~/.config/aocd/token  # session cookie from "adventofcode.com" (valid 1 month).
   hh.run('pip install -q advent-of-code-data')  # https://github.com/wimglenn/advent-of-code-data
   import aocd  # pylint: disable=unused-import # noqa
-
-# %%
-try:
-  import numba
-except ModuleNotFoundError:
-  print('Package numba is unavailable.')
-  numba = sys.modules['numba'] = types.ModuleType('numba')
-  numba.njit = hh.noop_decorator
-using_numba = hasattr(numba, 'jit')
 
 # %%
 advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)
@@ -909,7 +897,7 @@ check_eq(day10b('1', num_iterations=5), len('312211'))
 puzzle.verify(1, day10b)
 
 day10b_part2 = functools.partial(day10b, num_iterations=50)
-if not using_numba:
+if 0:
   puzzle.verify(2, day10b_part2)  # ~2.1 s.
 
 
@@ -944,8 +932,7 @@ check_eq(day10('1', num_iterations=5), len('312211'))
 puzzle.verify(1, day10)
 
 day10_part2 = functools.partial(day10, num_iterations=50)
-if using_numba:
-  puzzle.verify(2, day10_part2)
+puzzle.verify(2, day10_part2)
 
 # %% [markdown]
 # <a name="day11"></a>
@@ -1268,16 +1255,20 @@ def day14(s, *, time=2503, part2=False, visualize=False, part1_closed_form=False
       reindeer.distance = motions * reindeer.speed
     return max(reindeer.distance for reindeer in reindeers)
 
-  tyxs = {}
-
-  for index in range(time):
+  def add_visualized_points(index):
     if visualize:
+      max_distance = max(reindeer.distance for reindeer in reindeers)
       for i, reindeer in enumerate(reindeers):
         y, x = divmod(reindeer.distance, 750)
         y2 = y * (len(reindeers) * 3 + 8) + i * 3
+        color = (255, 165, 0) if reindeer.distance == max_distance else (255, 0, 0)
         for dy, dx in np.ndindex(3, 3):
-          tyxs[index, y2 + dy, x + dx] = 255, 0, 0
+          tyxs[index, y2 + dy, x + dx] = color
 
+  tyxs: dict[tuple[int, int, int], tuple[int, int, int]] = {}
+  add_visualized_points(0)
+
+  for index in range(time):
     for reindeer in reindeers:
       active = (index % (reindeer.interval + reindeer.rest)) < reindeer.interval
       if active:
@@ -1288,6 +1279,8 @@ def day14(s, *, time=2503, part2=False, visualize=False, part1_closed_form=False
       for reindeer in reindeers:
         if reindeer.distance == max_distance:
           reindeer.score += 1
+
+    add_visualized_points(index + 1)
 
   if visualize:
     video: Any = hh.grid_from_indices(tyxs, pad=0, background=(245,) * 3, dtype=np.uint8)

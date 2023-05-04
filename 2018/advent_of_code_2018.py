@@ -51,7 +51,7 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-hhoppe hhoppe-tools more_itertools mediapy numba
+# !pip install -q advent-of-code-hhoppe hhoppe-tools mediapy more_itertools numba numpy scipy
 
 # %%
 from __future__ import annotations
@@ -67,8 +67,6 @@ import itertools
 import math
 import pathlib
 import re
-import sys
-import types
 from typing import Any
 import warnings
 
@@ -76,6 +74,7 @@ import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
 import mediapy as media
 import more_itertools
+import numba
 import numpy as np
 import scipy.optimize
 import scipy.signal
@@ -114,15 +113,6 @@ if 0:
   # where "53616..." is the session cookie from "adventofcode.com" (valid 1 month).
   hh.run('pip install -q advent-of-code-data')  # https://github.com/wimglenn/advent-of-code-data
   import aocd  # pylint: disable=unused-import # noqa
-
-# %%
-try:
-  import numba
-except ModuleNotFoundError:
-  print('Package numba is unavailable.')
-  numba = sys.modules['numba'] = types.ModuleType('numba')
-  numba.njit = hh.noop_decorator
-using_numba = hasattr(numba, 'jit')
 
 # %%
 advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)

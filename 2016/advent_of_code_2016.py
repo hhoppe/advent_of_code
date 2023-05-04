@@ -45,8 +45,6 @@
 # !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools mediapy more-itertools numba numpy
 
 # %%
-from __future__ import annotations
-
 import collections
 from collections.abc import Callable, Iterable, Iterator
 import dataclasses
@@ -59,8 +57,6 @@ import math
 import multiprocessing
 import pathlib
 import re
-import sys
-import types
 from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -68,6 +64,7 @@ import advent_of_code_ocr  # https://github.com/bsoyka/advent-of-code-ocr/blob/m
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
 import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
+import numba
 import numpy as np
 
 # %%
@@ -102,15 +99,6 @@ if 0:
   # echo 53616... >~/.config/aocd/token  # session cookie from "adventofcode.com" (valid 1 month).
   hh.run('pip install -q advent-of-code-data')  # https://github.com/wimglenn/advent-of-code-data
   import aocd  # pylint: disable=unused-import # noqa
-
-# %%
-try:
-  import numba
-except ModuleNotFoundError:
-  print('Package numba is unavailable.')
-  numba = sys.modules['numba'] = types.ModuleType('numba')
-  numba.njit = hh.noop_decorator
-using_numba = hasattr(numba, 'jit')
 
 # %%
 advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)
@@ -1905,8 +1893,7 @@ check_eq(day18('.^^.^.^^^^', num_rows=10), 38)
 puzzle.verify(1, day18)
 
 day18_part2 = functools.partial(day18, num_rows=400_000)
-if using_numba:
-  puzzle.verify(2, day18_part2)
+puzzle.verify(2, day18_part2)
 
 # %% [markdown]
 # <a name="day19"></a>
@@ -2542,7 +2529,7 @@ def day24(s, *, part2=False):  # Use Dijkstra where the state includes the set o
 
   all_nodes = frozenset(range(1, num_nodes))
   state: tuple[int, frozenset[int]] = 0, frozenset()  # node, visited
-  distances = collections.defaultdict(lambda: sys.maxsize)  # for Dijkstra
+  distances = collections.defaultdict(lambda: 10**9)  # for Dijkstra
   distances[state] = 0
   priority_queue = [(0, state)]
   while priority_queue:
