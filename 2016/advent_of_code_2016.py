@@ -72,36 +72,21 @@ if not media.video_is_available():
   media.show_videos = lambda *a, **kw: print('Creating video is unavailable.')
 
 # %%
-hh.start_timing_notebook_cells()
-
-# %%
-YEAR = 2016
 if pathlib.Path('results').is_dir():
   media.set_show_save_dir('results')
 
 # %%
-# (1) To obtain puzzle inputs and answers, we first try these paths/URLs:
+hh.start_timing_notebook_cells()
+
+# %%
+YEAR = 2016
 PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
+# # echo 53616... >~/.config/aocd/token  # session cookie from "adventofcode.com" (valid 1 month).
+
+# %%
 TAR_URL = f'https://github.com/hhoppe/advent_of_code/raw/main/{YEAR}/data/{PROFILE}.tar.gz'
-if 1:
-  hh.run(
-      '{ [ -d data ] || mkdir data; } && cd data &&'
-      f' {{ [ -f {PROFILE}.tar.gz ] || wget -q {TAR_URL}; }} &&'
-      f' tar xzf {PROFILE}.tar.gz'
-  )
-INPUT_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}_input.txt'
-ANSWER_URL = f'data/{PROFILE}/{{year}}_{{day:02d}}{{part_letter}}_answer.txt'
-
-# %%
-# (2) If URL is not found, we may try adventofcode.com using a session (auth login) cookie:
-if 0:
-  # echo 53616... >~/.config/aocd/token  # session cookie from "adventofcode.com" (valid 1 month).
-  hh.run('pip install -q advent-of-code-data')  # https://github.com/wimglenn/advent-of-code-data
-  import aocd  # pylint: disable=unused-import # noqa
-
-# %%
-advent = advent_of_code_hhoppe.Advent(year=YEAR, input_url=INPUT_URL, answer_url=ANSWER_URL)
+advent = advent_of_code_hhoppe.Advent(year=YEAR, tar_url=TAR_URL)
 
 # %%
 hh.adjust_jupyterlab_markdown_width()
