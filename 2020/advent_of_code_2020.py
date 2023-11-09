@@ -2786,10 +2786,11 @@ def day24(s, *, part2=False, num_days=100, visualize=False, radius=57):
 
     # For hexagon rendering in matplotlib, see https://stackoverflow.com/a/59042263.
     def create_hexagons(indices):
-      params = dict(numVertices=6, radius=math.sqrt(1 / 3), edgecolor=None)
+      params = dict(radius=math.sqrt(1 / 3), edgecolor=None)
       for sw, e in indices:
         xy = e - sw / 2, sw * (math.sqrt(3) / 2)
-        yield matplotlib.patches.RegularPolygon(xy, **params)
+        num_vertices = 6
+        yield matplotlib.patches.RegularPolygon(xy, num_vertices, **params)  # type: ignore
 
     if 1:
       fig, ax = plt.subplots(figsize=(6, 6), dpi=90)

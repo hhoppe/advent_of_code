@@ -28,6 +28,7 @@ disable = [
     "too-many-branches", "too-many-statements", "multiple-statements", "condition-evals-to-constant",
     "too-many-return-statements", "too-many-nested-blocks", "too-many-boolean-expressions",
     "too-many-instance-attributes",
+    "duplicate-code",
     # Buggy pylint:
     "inconsistent-return-statements", "redundant-keyword-arg", "unbalanced-tuple-unpacking",
     "unnecessary-direct-lambda-call", "undefined-loop-variable",
@@ -43,3 +44,6 @@ good-names-rgxs = "^[a-z][a-z0-9]?|[A-Z]([A-Z_]*[A-Z])?$"
 [tool.pylint.format]
 indent-string = "  "
 expected-line-ending-format = "LF"
+
+[tool.pytype]
+keep_going = true

@@ -128,6 +128,7 @@ class _Machine:
   ip_register: int | None = None
   instructions: list[_Machine.Instruction] = dataclasses.field(default_factory=list)
   ip: int = 0
+  operations: dict[str, Callable[..., None]] = dataclasses.field(default_factory=dict)
 
   @dataclasses.dataclass
   class Instruction:
@@ -142,7 +143,7 @@ class _Machine:
       assert 0 <= output < len(registers)
       registers[output] = int(value)
 
-    self.operations: dict[str, Callable[..., None]] = {
+    self.operations = {
         'addr': lambda r, o: assign(r, o, r[o[0]] + r[o[1]]),
         'addi': lambda r, o: assign(r, o, r[o[0]] + o[1]),
         'mulr': lambda r, o: assign(r, o, r[o[0]] * r[o[1]]),
@@ -736,7 +737,7 @@ puzzle = advent.puzzle(day=8)
 def day8(s, *, part2=False):
   @dataclasses.dataclass
   class TreeNode:
-    children: list[TreeNode]
+    children: Any  # list['TreeNode'] fails for pytype.
     metadatas: list[int]
 
   values = map(int, s.split())
@@ -3426,7 +3427,7 @@ def day24(s, *, verbose=False, boost=0, immune_must_win=False):
     attack_type: str
     initiative: int  # Higher initiative attacks first and wins ties.
     attributes: dict[str, set[str]]  # ['immune'] and ['weak']
-    target: Group | None
+    target: 'Group' | None
     targeted: bool
 
     def __init__(self, army, id, line):

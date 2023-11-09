@@ -110,7 +110,7 @@ _ORIGINAL_GLOBALS = list(globals())
 # # %timeit _md5.md5(b'hello world')  # ~55 ns.
 def _get_md5() -> Any:
   try:
-    import _md5
+    import _md5  # pytype: disable=import-error
 
     return _md5.md5
 
@@ -870,7 +870,7 @@ def day11a(s, *, part2=False):  # Simplest but slow; BFS with queue; set[str]; u
     )
 
   seen = set([encode(*start_state)])
-  queue = collections.deque([(*start_state, 0)])
+  queue = collections.deque([(start_state[0], start_state[1], 0)])  # Expand to help pytype.
 
   while queue:
     floor, contents, distance = queue.popleft()
@@ -1825,7 +1825,7 @@ def day18b(s, *, num_rows=40):  # Using numpy.
   state = np.array([False] + [ch == '^' for ch in s.strip()] + [False])
   num_safe = 0
   for _ in range(num_rows):
-    num_safe += np.sum(~state[1:-1])
+    num_safe += np.sum(~state[1:-1]).item()
     state[1:-1] = state[2:] ^ state[:-2]
   return num_safe
 

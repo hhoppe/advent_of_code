@@ -231,10 +231,10 @@ def wobble_video(fig: Any, /, *, amplitude: float = 1.0) -> list[np.ndarray]:
     new_eye = eye + (new_planar_from_center - planar_from_center)
     camera2 = camera.copy()
     camera2['eye'] = to_xyz(new_eye)
-    fig.update_layout(scene_camera=camera2)
+    fig.layout.update(scene_camera=camera2)
     image_for_rotation[rotation_fraction] = image_from_plotly(fig)
 
-  fig.update_layout(scene_camera=camera)
+  fig.layout.update(scene_camera=camera)
   return [image_for_rotation[rotation_fraction] for rotation_fraction in rotation_fractions]
 
 
@@ -258,10 +258,10 @@ def tilt_video(fig: Any) -> list[np.ndarray]:
     new_eye = center + np.linalg.norm(from_center) * new_unit_from_center
     camera2 = camera.copy()
     camera2['eye'] = to_xyz(new_eye)
-    fig.update_layout(scene_camera=camera2)
+    fig.layout.update(scene_camera=camera2)
     image_for_rotation[rotation_fraction] = image_from_plotly(fig)
 
-  fig.update_layout(scene_camera=camera)
+  fig.layout.update(scene_camera=camera)
   return [image_for_rotation[rotation_fraction] for rotation_fraction in rotation_fractions]
 
 
@@ -942,6 +942,7 @@ puzzle.verify(2, day7a_part2)
 # From https://www.reddit.com/r/adventofcode/comments/zesk40/comment/iz8fww6/
 def day7b(s, *, part2=False):
   dirs: collections.defaultdict[str, int] = collections.defaultdict(int)
+  curr: list[str]
   for line in s.splitlines():
     match line.split():
       case '$', 'cd', '/':
@@ -1208,7 +1209,7 @@ def day8w(s):  # Use plotly to create 3D visualization.
     camera = dict(center=dict(x=0, y=0, z=-20 * a), eye=eye)
     no_axes = dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False))
     scene = dict(aspectratio=aspectratio, camera=camera, **no_axes)
-    fig.update_layout(width=700, height=350, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
+    fig.layout.update(width=700, height=350, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
 
   set_fig_layout(for_tilt=False)
   if SHOW_BIG_MEDIA:
@@ -1980,7 +1981,7 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
   )
   no_axes = dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False))
   scene = dict(aspectratio=aspectratio, camera=camera, **no_axes)
-  fig.update_layout(
+  fig.layout.update(
       width=700, height=350, margin=dict(l=0, r=0, b=0, t=0), scene=scene, showlegend=False
   )
 
@@ -2515,7 +2516,7 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
   xys = dict(x0=pp[0] - 0.5, y0=pp[1] - 0.5, x1=pp[0] + 0.5, y1=pp[1] + 0.5)
   fig.add_shape(type='rect', **xys, line_width=0, fillcolor='red')
 
-  fig.update_layout(
+  fig.layout.update(
       width=500,
       height=500,
       margin=dict(l=0, r=0, b=0, t=0),
@@ -3529,7 +3530,7 @@ def day18v(s):  # Visualize Part 1 using plotly 3D rendering.
   camera = dict(center=dict(x=-0.03, y=0, z=-0.03), eye=dict(x=0.47, y=-0.99, z=0.74))
   no_axes = dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False))
   scene = dict(aspectratio=dict(x=1, y=1, z=1), camera=camera, **no_axes)
-  fig.update_layout(width=400, height=400, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
+  fig.layout.update(width=400, height=400, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
 
   if SHOW_BIG_MEDIA:
     hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
@@ -3564,9 +3565,10 @@ def day18w(s, *, part2=False, visualize=False):
 
   if visualize:
     ax = plt.figure().add_subplot(projection='3d')
-    _ = ax.voxels(grid, facecolors='#B0B0B0')
+    _ = ax.voxels(grid, facecolors='#B0B0B0')  # type: ignore  # attribute of Axes3D
     if hasattr(ax, 'set_box_aspect'):
-      ax.set_box_aspect(grid.shape)  # https://stackoverflow.com/a/64453375
+      # https://stackoverflow.com/a/64453375; aspect for Axes3D is 3-tuple.
+      ax.set_box_aspect(grid.shape)  # type: ignore
 
   if part2:
     grid = scipy.ndimage.binary_fill_holes(grid)
@@ -4168,11 +4170,11 @@ def day21a(s, *, part2=False):  # Brute-force assignments.
 
   # Trace a path from the root down, deriving the value of each unassigned node.
   dst = 'root'
+  value: int
   while dst != 'humn':
     dep0, op, dep1 = fields[dst]
     if dep0 in assigned:
       a = assigned[dep0]
-      value: int
       match op:
         case '=':
           value = a
@@ -4275,6 +4277,7 @@ def day21b(s, *, part2=False, mode='graphlib'):  # Topo-sort or top-down, for si
 
   # Trace a path from the root down, deriving the value of each unassigned node.
   dst = 'root'
+  value = -1  # Dummy initialization.
   while dst != 'humn':
     dep, op = dependencies[dst], ops[dst]
     if dep[0] in assigned:
@@ -4556,7 +4559,7 @@ def day22(s, *, part2=False, visualize=False, background=(252,) * 3):
             while not (0 <= y2 < shape[0] and 0 <= x2 < shape[1] and grid[y2, x2] != ' '):
               y2, x2 = (y2 + dy) % shape[0], (x2 + dx) % shape[1]
           elif not (0 <= y2 < shape[0] and 0 <= x2 < shape[1] and grid[y2, x2] != ' '):
-            y2, x2, dy2, dx2 = day22_wrap_on_cube(shape, y2, x2, dy, dx)
+            y2, x2, dy2, dx2 = day22_wrap_on_cube(shape, y2, x2, dy, dx)  # pytype:disable=attribute-error
           # assert 0 <= y2 < shape[0] and 0 <= x2 < shape[1] and grid[y2, x2] != ' '
           if grid[y2, x2] == '#':
             break

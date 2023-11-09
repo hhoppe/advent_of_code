@@ -2234,7 +2234,7 @@ puzzle.verify(2, day17a_part2)
 
 # %%
 # Fast with numba.
-@numba.jit
+@numba.njit
 def day17_simulations(x1, x2, y1, y2):
   highest = -1000
   winners = []
@@ -3736,6 +3736,7 @@ check_eq(day22b_part2(s3), 2758514936282235)
 # %%
 def day22c(s, *, part2=False):  # Using CSG of boxes.
   # Adapted simpler logic of https://github.com/shaeberling/euler/blob/master/kotlin/src/com/s13g/aoc/aoc2021/Day22.kt.
+  # pytype: disable=unsupported-operands,annotation-type-mismatch
   lines = s.splitlines()
   state_cuboids = []
   for line in lines:
@@ -3784,6 +3785,7 @@ def day22c(s, *, part2=False):  # Using CSG of boxes.
     cells = (cells - cells_to_delete) | cells_to_add
 
   return sum((np.diff(cell).T[0] + 1).prod() for cell in cells)
+  # pytype: enable=unsupported-operands,annotation-type-mismatch
 
 
 check_eq(day22c(s1), 39)
@@ -3798,6 +3800,7 @@ puzzle.verify(2, day22c_part2)
 
 # %%
 def day22d(s, *, part2=False):  # Faster by reducing CSG fragment count.
+  # pytype: disable=unsupported-operands,annotation-type-mismatch,container-type-mismatch,bad-unpacking
   lines = s.splitlines()
   state_cuboids = []
   for line in lines:
@@ -3869,6 +3872,7 @@ def day22d(s, *, part2=False):  # Faster by reducing CSG fragment count.
     cells = (cells - cells_to_delete) | cells_to_add
 
   return sum((np.diff(cell).T[0] + 1).prod() for cell in cells)
+  # pytype: enable=unsupported-operands,annotation-type-mismatch,container-type-mismatch,bad-unpacking
 
 
 check_eq(day22d(s1), 39)
@@ -4006,7 +4010,7 @@ class _Kdtree(Generic[_T]):
             if e0 > b1 or e1 < b0:
               break
           else:
-            yield entry.bb0, entry.bb1, typing.cast(_T, entry.data)
+            yield entry.bb0, entry.bb1, typing.cast(Any, entry.data)  # typing.cast(_T, ...)
         axis = node.axis
         value = node.value
         want_l = node.l >= 0 and bb0[axis] <= value
@@ -4054,6 +4058,7 @@ _test_kdtree()
 
 # %%
 def day22e(s, *, part2=False):  # Using _Kdtree.
+  # pytype: disable=bad-unpacking,container-type-mismatch
   lines = s.splitlines()
   state_cuboids = []
   for line in lines:
@@ -4144,6 +4149,7 @@ def day22e(s, *, part2=False):  # Using _Kdtree.
 
   cells = [from_bbox(entry.bb0, entry.bb1) for entry in kdtree.entries if entry.bb0[0] >= 0.0]
   return (np.diff(list(cells)) + 1)[..., 0].prod(axis=-1).sum()
+  # pytype: enable=bad-unpacking,container-type-mismatch
 
 
 check_eq(day22e(s1), 39)
@@ -4832,7 +4838,7 @@ def day24a(s, *, part2=False, verbose=0):  # Careful, with emulator verification
     for line in lines:
       if verbose >= 2:
         highlight = '  ****' if 'inp' in line else ''
-        print(f'{str(registers):34} {line}{highlight}')  # ??
+        print(f'{str(registers):34} {line}{highlight}')
       match line.split():
         case 'inp', dst:
           registers[dst] = int(input[0])
@@ -4857,7 +4863,7 @@ def day24a(s, *, part2=False, verbose=0):  # Careful, with emulator verification
 
     valid = registers['z'] == 0
     if verbose >= 1:
-      print(f'{str(registers):34} {valid=}')  # ??
+      print(f'{str(registers):34} {valid=}')
     return valid
 
   assert len(lines) == 14 * 18 == 252

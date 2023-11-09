@@ -133,7 +133,7 @@ def graph_layout(graph: Any, *, prog: str) -> dict[Any, tuple[float, float]]:
 # # # %timeit _md5.md5(b'hello world')  # ~55 ns.
 def _get_md5() -> Any:
   try:
-    import _md5
+    import _md5  # pytype: disable=import-error
 
     return _md5.md5
 

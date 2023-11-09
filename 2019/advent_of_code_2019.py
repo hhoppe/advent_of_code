@@ -114,7 +114,7 @@ _ORIGINAL_GLOBALS = list(globals())
 
 # %%
 # Also called `IntCode` _Machine in the puzzles.
-class _Machine:
+class _Machine(abc.ABC):
 
   def __init__(self):
     self.mem: Sequence[int] = ()
