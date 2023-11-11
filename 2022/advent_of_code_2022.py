@@ -80,7 +80,7 @@ import numba
 import numpy as np
 import plotly
 import plotly.graph_objects as go
-import resampler  # https://github.com/hhoppe/resampler/blob/main/resampler/__init__.py
+import resampler  # https://github.com/hhoppe/resampler/
 import scipy.ndimage
 import scipy.signal
 
@@ -1770,7 +1770,7 @@ def day11_process(itemss1, ops, args, divisible_bys, throwss, activities, part2,
       itemss[i].clear()
 
 
-def day11(s, *, part2=False):  # Using collections.namedtuple.
+def day11(s, *, part2=False):
   ss = s.split('\n\n')
   itemss = []
   ops = np.full(len(ss), ' ')
