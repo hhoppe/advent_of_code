@@ -3568,7 +3568,7 @@ def day18w(s, *, part2=False, visualize=False):
     _ = ax.voxels(grid, facecolors='#B0B0B0')  # type: ignore  # attribute of Axes3D
     if hasattr(ax, 'set_box_aspect'):
       # https://stackoverflow.com/a/64453375; aspect for Axes3D is 3-tuple.
-      ax.set_box_aspect(grid.shape)  # type: ignore
+      ax.set(box_aspect=grid.shape)  # type: ignore
 
   if part2:
     grid = scipy.ndimage.binary_fill_holes(grid)
