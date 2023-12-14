@@ -2632,7 +2632,7 @@ def day20(s, *, part2=False, visualize=False):
       return doors_s, doors_e, {(y, x)}
     # isinstance(elem, list)
     # Return the three unions of the respective sets from all child nodes.
-    return (set().union(*tup) for tup in zip(*map(traverse, elem)))
+    return (set.union(*tup) for tup in zip(*map(traverse, elem)))
 
   doors_s, doors_e, _ = traverse(l)
 

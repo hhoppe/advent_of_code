@@ -1498,7 +1498,7 @@ def day12(s, *, part2=False):  # Much faster using lru_cache and frozenset.
       elif not node2.islower():
         count += recurse(node2, visited, seen_twice)
       elif node2 not in visited:
-        count += recurse(node2, visited.union([node2]), seen_twice)
+        count += recurse(node2, visited.union([node2]), seen_twice)  # Numba cannot use "| {node2}".
       elif not seen_twice:
         count += recurse(node2, visited, True)
     return count
@@ -4233,7 +4233,7 @@ def day22_func(states, cuboids):
 
     if state:
       cells_to_add.append(cuboid)
-    cells = cells.difference(set(cells_to_delete)).union(set(cells_to_add))
+    cells = cells.difference(set(cells_to_delete)).union(set(cells_to_add))  # Numba needs set(...).
 
   total = 0
   for cell in cells:

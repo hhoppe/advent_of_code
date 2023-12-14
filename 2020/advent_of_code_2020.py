@@ -1400,7 +1400,7 @@ def day13_part2(s):  # Using built-in modular inverses and general Chinese Remai
       moduli: Positive integers, which must be coprime.
 
     >>> solve_mod_congruences([3, 6, 6], [5, 7, 11])
-    39
+    83
     """
     values, moduli = tuple(values), tuple(moduli)
     assert len(values) == len(moduli) > 0
