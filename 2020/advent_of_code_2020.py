@@ -401,16 +401,16 @@ def day4(s, *, part2=False):
           and 2020 <= year('eyr') <= 2030
           and (unit != 'cm' or 150 <= int(value) <= 193)
           and (unit != 'in' or 59 <= int(value) <= 76)
-          and re.fullmatch(r'#[0-9a-f]{6}', fields['hcl'])
+          and re.fullmatch(r'#[\da-f]{6}', fields['hcl'])
           and fields['ecl'] in 'amb blu brn gry grn hzl oth'.split()
-          and re.fullmatch(r'[0-9]{9}', fields['pid'])
+          and re.fullmatch(r'\d{9}', fields['pid'])
       )
     except (KeyError, ValueError):
       return False
 
   num_valid = 0
   for passport in passports:
-    fields: dict[str, str] = dict(
+    fields = dict[str, str](
         hh.re_groups(r'^(\w\w\w):(\S+)$', s_field)  # type: ignore[misc]
         for s_field in passport.split()
     )
@@ -2751,7 +2751,7 @@ def day24(s, *, part2=False, num_days=100, visualize=False, radius=57):
   offsets = dict(e=(0, 1), w=(0, -1), sw=(1, 0), se=(1, 1), nw=(-1, -1), ne=(-1, 0))
   tuple_offsets = tuple(offsets.values())  # slightly faster
   regex = re.compile('|'.join(offsets))
-  indices: set[tuple[int, int]] = set()
+  indices = set[tuple[int, int]]()
   for line in s.splitlines():
     y, x = 0, 0
     for s2 in regex.findall(line):

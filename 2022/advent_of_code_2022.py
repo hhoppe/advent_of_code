@@ -941,7 +941,7 @@ puzzle.verify(2, day7a_part2)
 # %%
 # From https://www.reddit.com/r/adventofcode/comments/zesk40/comment/iz8fww6/
 def day7b(s, *, part2=False):
-  dirs: collections.defaultdict[str, int] = collections.defaultdict(int)
+  dirs = collections.defaultdict[str, int](int)
   curr: list[str]
   for line in s.splitlines():
     match line.split():
@@ -977,7 +977,7 @@ def day7v(s):  # Visualization
   nx = networkx
   graph = nx.DiGraph()
   graph.add_node('/', label='/', node_color='red', size=0)
-  dirs: collections.defaultdict[str, int] = collections.defaultdict(int)
+  dirs = collections.defaultdict[str, int](int)
   for line in s.splitlines():
     fields = line.split()
     if line == '$ cd /':
@@ -2671,7 +2671,7 @@ Valve JJ has flow rate=21; tunnel leads to valve II
 def day16a(s, *, part2=False):  # First solution; DFS; no pruning; very slow on Part 2.
   rate, dsts = {}, {}
   for line in s.splitlines():
-    node, s_rate, *dsts[node] = re.findall(r'([A-Z][A-Z]|[0-9]+)', line)
+    node, s_rate, *dsts[node] = re.findall(r'([A-Z]{2}|\d+)', line)
     rate[node] = int(s_rate)
   assert rate['AA'] == 0  # Stated in problem.
 
@@ -2758,7 +2758,7 @@ check_eq(day16b_part2(s1), 1707)
 def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'):
   rate, dsts = {}, {}
   for line in s.splitlines():
-    node, s_rate, *dsts[node] = re.findall(r'([A-Z][A-Z]|[0-9]+)', line)
+    node, s_rate, *dsts[node] = re.findall(r'([A-Z]{2}|\d+)', line)
     rate[node] = int(s_rate)
   valves = {node: rate for node, rate in rate.items() if rate > 0}
 
@@ -2814,7 +2814,7 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
     paths[1], _ = get_path([], time, vs=vs)
   current = {worker: start for worker in paths}
   to_visit: dict[int, list[str]] = {worker: [] for worker in paths}
-  enabled_valves: set[str] = set()
+  enabled_valves = set[str]()
   total_flow = 0
   images = []
 
@@ -2915,7 +2915,7 @@ if 'networkx' in globals() and SHOW_BIG_MEDIA:  # Slow due to search(); ~16 s.
 def day16d(s, *, part2=False):  # Heuristically order edges and add branch-and-bound pruning.
   rate, dsts = {}, {}
   for line in s.splitlines():
-    node, s_rate, *dsts[node] = re.findall(r'([A-Z][A-Z]|[0-9]+)', line)
+    node, s_rate, *dsts[node] = re.findall(r'([A-Z]{2}|\d+)', line)
     rate[node] = int(s_rate)
   best_benefit_found = 0
 
@@ -2979,7 +2979,7 @@ check_eq(day16d_part2(s1), 1707)
 def day16e(s, *, part2=False):  # Heuristically order edges and add heuristic pruning.
   rate, dsts = {}, {}
   for line in s.splitlines():
-    node, s_rate, *dsts[node] = re.findall(r'([A-Z][A-Z]|[0-9]+)', line)
+    node, s_rate, *dsts[node] = re.findall(r'([A-Z]{2}|\d+)', line)
     rate[node] = int(s_rate)
   best_benefit_found = 0
 
@@ -3039,7 +3039,7 @@ puzzle.verify(2, day16e_part2)  # ~0.15 or 0.54 s.
 def day16(s, *, part2=False):
   rate, dsts = {}, {}
   for line in s.splitlines():
-    node, s_rate, *dsts[node] = re.findall(r'([A-Z][A-Z]|[0-9]+)', line)
+    node, s_rate, *dsts[node] = re.findall(r'([A-Z]{2}|\d+)', line)
     rate[node] = int(s_rate)
   best_benefit_found = 0
   best_nodes_found = set()

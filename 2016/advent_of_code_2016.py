@@ -394,7 +394,7 @@ def day4(s, *, part2=False):
 
   sum_sectors = 0
   for line in s.splitlines():
-    pattern = r'^([a-z-]+)-([0-9]+)\[([a-z]+)\]$'
+    pattern = r'^([a-z-]+)-(\d+)\[([a-z]+)\]$'
     name, sector, checksum = hh.re_groups(pattern, line)
     counter = collections.Counter(sorted(ch for ch in name if ch.islower()))
     expected = ''.join(dict(counter.most_common(len(checksum))).keys())
@@ -793,8 +793,8 @@ value 2 goes to bot 2
 # %%
 def day10(s, *, part2=False, values=(17, 61)):
   low_high_for_bot: dict[str, tuple[str, str]] = {}
-  values_for_node: collections.defaultdict[str, set[int]] = collections.defaultdict(set)
-  queue: collections.deque[tuple[str, int]] = collections.deque()
+  values_for_node = collections.defaultdict[str, set[int]](set)
+  queue = collections.deque[tuple[str, int]]()
   for line in s.splitlines():
     if 'goes to' in line:
       s_value, bot = line[6:].split(' goes to ')
@@ -2513,14 +2513,13 @@ def day24(s, *, part2=False):  # Use Dijkstra where the state includes the set o
     return get_distances(node0)[node1]
 
   all_nodes = frozenset(range(1, num_nodes))
-  state: tuple[int, frozenset[int]] = 0, frozenset()  # node, visited
-  distances = collections.defaultdict(lambda: 10**9)  # for Dijkstra
+  state = 0, frozenset[int]()  # node, visited
+  distances = {}
   distances[state] = 0
   priority_queue = [(0, state)]
   while priority_queue:
-    _, state = heapq.heappop(priority_queue)
+    distance, state = heapq.heappop(priority_queue)
     node, visited = state
-    distance = distances[state]
     if len(visited) == (num_nodes - (0 if part2 else 1)):
       return distance
     candidates = all_nodes - visited
@@ -2530,7 +2529,7 @@ def day24(s, *, part2=False):  # Use Dijkstra where the state includes the set o
       visited2 = visited | {node2}
       state2 = node2, visited2
       distance2 = distance + get_distance(node, node2)
-      if distance2 < distances[state2]:
+      if distance2 < distances.get(state2, 10**9):
         distances[state2] = distance2
         heapq.heappush(priority_queue, (distance2, state2))
 

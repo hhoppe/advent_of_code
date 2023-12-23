@@ -554,7 +554,7 @@ def day8(s, *, part2=False):
       '==': operator.eq,
       '!=': operator.ne,
   }
-  registers: collections.defaultdict[str, int] = collections.defaultdict(int)
+  registers = collections.defaultdict[str, int](int)
   max_value = 0
 
   for line in s.splitlines():
@@ -1333,7 +1333,7 @@ rcv d
 def day18(s):
   instructions = [tuple(line.split(' ')) for line in s.splitlines()]
   pc = 0
-  registers: collections.defaultdict[str, int] = collections.defaultdict(int)
+  registers = collections.defaultdict[str, int](int)
   sound: int | None = None
 
   def get(value: str) -> int:
@@ -1384,7 +1384,7 @@ def day18_part2(s):
     program_id: int
     pc: int = 0
     registers: collections.defaultdict[str, int] = dataclasses.field(
-        default_factory=lambda: collections.defaultdict(int)
+        default_factory=lambda: collections.defaultdict[str, int](int)
     )
     queue: collections.deque[int] = dataclasses.field(default_factory=collections.deque)
     total_sends: int = 0
@@ -1555,7 +1555,7 @@ def day20(s, *, part2=False):
   lines = s.splitlines()
 
   def parse(ch: str) -> np.ndarray:
-    pattern = ch + r'=<([0-9 -]+),([0-9 -]+),([0-9 -]+)>'
+    pattern = ch + r'=<([\d -]+),([\d -]+),([\d -]+)>'
     return np.array([hh.re_groups(pattern, line) for line in lines], int)
 
   position, velocity, acceleration = (parse(ch) for ch in 'pva')
@@ -2155,7 +2155,7 @@ def day25a(s):  # Slow version using dicts and Python.
       t = int(s_write_value), {'left': -1, 'right': +1}[s_move], next_state
       logic[current, int(condition_state)] = t
 
-  tape: collections.defaultdict[int, int] = collections.defaultdict(int)
+  tape = collections.defaultdict[int, int](int)
   pos = 0
   for _ in range(num_steps):
     write_value, move, state = logic[state, tape[pos]]

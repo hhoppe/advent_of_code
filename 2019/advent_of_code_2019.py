@@ -2114,7 +2114,7 @@ def day17_part2(s, *, visualize=False):
       skip = len(hh.re_groups(r'^(([ABC],)*)', s_routine)[0])
       best = 10**8, '', ''
       for num_matches in range(2, 10):
-        pattern = r'([LR0-9][LR,0-9]+[LR0-9],)' + r'.*\1' * num_matches
+        pattern = r'([LR\d][LR,\d]+[LR\d],)' + r'.*\1' * num_matches
         if match := re.search(pattern, s_routine[skip:]):
           group1 = match.group(1)[:-1]
           candidate = s_routine.replace(group1, chr(ord('A') + i))

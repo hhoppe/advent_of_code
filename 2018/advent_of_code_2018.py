@@ -290,7 +290,7 @@ puzzle = advent.puzzle(day=3)
 def day3a(s, *, part2=False, check_single_solution=False):
   lines = s.splitlines()
   pattern = r'^#(\d+) @ (\d+),(\d+): (\d+)x(\d+)$'
-  grid: collections.defaultdict[tuple[int, int], int] = collections.defaultdict(int)
+  grid = collections.defaultdict[tuple[int, int], int](int)
   for line in lines:
     claim, l, t, w, h = map(int, hh.re_groups(pattern, line))
     for y in range(t, t + h):
@@ -3042,7 +3042,6 @@ def day22_dijkstra(grid, target_yx, visualize):
   TORCH = 1
   distances = {}
   # pylint: disable-next=consider-using-set-comprehension
-  visited = set([(0, 0, 0) for _ in range(0)])  # Typed empty set.
   parents = {(0, 0, 0): (0, 0, 0)}  # Dummy entry for numba typing.
   source_tyx = TORCH, 0, 0
   target_tyx = TORCH, *target_yx
@@ -3052,20 +3051,16 @@ def day22_dijkstra(grid, target_yx, visualize):
 
   while pq:
     distance, node = heapq.heappop(pq)
-    if node in visited:
-      continue
-    visited.add(node)
     if node == target_tyx:
       break
 
     def consider(node2, edge_cost):
-      if ~(node2 in visited):  # (Workaround for numba bug "not in".)
-        distance2 = distance + edge_cost
-        if distance2 < distances.get(node2, 10**8):
-          distances[node2] = distance2
-          heapq.heappush(pq, (distance2, node2))
-          if visualize:
-            parents[node2] = node
+      distance2 = distance + edge_cost
+      if distance2 < distances.get(node2, 10**8):
+        distances[node2] = distance2
+        heapq.heappush(pq, (distance2, node2))
+        if visualize:
+          parents[node2] = node
 
     tool, y, x = node
     if y > 0 and grid[y - 1, x] != tool:
@@ -3176,7 +3171,7 @@ pos=<10,10,10>, r=5
 def day23a(s, *, part2=False):
   positions0, radii0 = [], []
   for line in s.splitlines():
-    pattern = r'^pos=<([0-9-]+),([0-9-]+),([0-9-]+)>, r=(\d+)$'
+    pattern = r'^pos=<([\d-]+),([\d-]+),([\d-]+)>, r=(\d+)$'
     x, y, z, r = map(int, hh.re_groups(pattern, line))
     positions0.append((x, y, z))
     radii0.append(r)
@@ -3310,7 +3305,7 @@ check_eq(day23a_part2(s2), 36)
 def day23b(s, *, part2=False):
   # Divide-and-conquer using octree decomposition, inspired by
   # https://github.com/wimglenn/advent-of-code-wim/blob/master/aoc_wim/aoc2018/q23.py.
-  pattern = r'^pos=<([0-9-]+),([0-9-]+),([0-9-]+)>, r=(\d+)$'
+  pattern = r'^pos=<([\d-]+),([\d-]+),([\d-]+)>, r=(\d+)$'
   data: Any = np.array([list(map(int, hh.re_groups(pattern, line))) for line in s.splitlines()])
   xs, rs = data[:, :3], data[:, 3]
   i = rs.argmax()
@@ -3361,7 +3356,7 @@ def day23(s, *, part2=False):
   # Divide-and-conquer using octree decomposition, adapted from
   # https://github.com/wimglenn/advent-of-code-wim/blob/master/aoc_wim/aoc2018/q23.py.
   # Improved to be robust (not assuming cubes with power-of-two dimensions).
-  pattern = r'^pos=<([0-9-]+),([0-9-]+),([0-9-]+)>, r=(\d+)$'
+  pattern = r'^pos=<([\d-]+),([\d-]+),([\d-]+)>, r=(\d+)$'
   data: Any = np.array([list(map(int, hh.re_groups(pattern, line))) for line in s.splitlines()])
   xs, rs = data[:, :-1], data[:, -1]
   if not part2:

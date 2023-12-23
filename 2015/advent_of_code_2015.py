@@ -772,7 +772,7 @@ def _permutations_ignoring_reflections(iterable: Iterable[_T]) -> Iterator[tuple
 # %%
 # Hamiltonian path problem; NP-complete.
 def day9(s, *, part2=False):
-  graph: dict[str, dict[str, int]] = collections.defaultdict(dict)
+  graph = collections.defaultdict[str, dict[str, int]](dict)
   for line in s.splitlines():
     node1, node2, s_distance = hh.re_groups(r'(\w+) to (\w+) = (\d+)', line)
     graph[node1][node2] = int(s_distance)
@@ -1605,7 +1605,7 @@ def day19_get_input(
   s1, s2 = s.split('\n\n')
   replacements = [(l, r) for line in s1.splitlines() for l, r in [line.split(' => ')]]
   string = s2.strip()
-  nodes = sorted(set(re.findall(r'[A-Ze][a-z]*', s1)))
+  nodes = sorted(set(re.findall(r'[A-Z][a-z]*|e', s1)))
   relabel = dict(zip(nodes, (chr(ord('A') + i) for i in itertools.count())))
 
   def translate(s: str) -> str:

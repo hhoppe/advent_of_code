@@ -451,7 +451,7 @@ s1 = """\
 
 # %%
 def day5a(s, *, part2=False):  # Compact but slow; supports any dimension.
-  count: collections.Counter[tuple[int, int]] = collections.Counter()
+  count = collections.Counter[tuple[int, int]]()
   for line in s.splitlines():
     p, q = (np.array(list(map(int, t.split(',')))) for t in line.split(' -> '))
     if part2 or any(p == q):
@@ -472,7 +472,7 @@ puzzle.verify(2, day5a_part2)
 
 # %%
 def day5b(s, *, part2=False):  # Faster, still with dict.
-  count: collections.defaultdict[tuple[int, int], int] = collections.defaultdict(int)
+  count = collections.defaultdict[tuple[int, int], int](int)
   for line in s.splitlines():
     pattern = r'^(\d+),(\d+) -> (\d+),(\d+)$'
     x1, y1, x2, y2 = map(int, hh.re_groups(pattern, line))
@@ -595,7 +595,7 @@ s1 = '3,4,3,1,2'
 def day6a(s, *, part2=False):  # Initial solution, using Counter.
   counter = collections.Counter(map(int, s.strip().split(',')))
   for _ in range(256 if part2 else 80):
-    counter2: collections.Counter[int] = collections.Counter()
+    counter2 = collections.Counter[int]()
     for e, count in counter.items():
       if e == 0:
         counter2[8] += count
@@ -635,7 +635,7 @@ puzzle.verify(2, day6_part2)
 def day6_test(s):
   counter = collections.Counter(map(int, s.strip().split(',')))
   for i in range(80):
-    counter2: collections.Counter[int] = collections.Counter()
+    counter2 = collections.Counter[int]()
     for e, count in counter.items():
       if e == 0:
         counter2[8] += count
@@ -1748,13 +1748,13 @@ def day14(s, *, part2=False):  # Faster (avoiding inefficient sum()).
   rules = dict(line.split(' -> ') for line in lines[2:])
 
   for _ in range(40 if part2 else 10):
-    new_pairs: collections.Counter[str] = collections.Counter()
+    new_pairs = collections.Counter[str]()
     for pair, count in pairs.items():
       new_pairs[pair[0] + rules[pair]] += count
       new_pairs[rules[pair] + pair[1]] += count
     pairs = new_pairs
 
-  letters_in_pairs: collections.Counter[str] = collections.Counter()
+  letters_in_pairs = collections.Counter[str]()
   for pair, count in pairs.items():
     for letter in pair:
       letters_in_pairs[letter] += count
@@ -3769,7 +3769,7 @@ def day22c(s, *, part2=False):  # Using CSG of boxes.
       if inside(subcell, a) and not inside(subcell, b):
         yield subcell
 
-  cells: set[tuple[int, ...]] = set()  # Disjoint union of "on" cubes.
+  cells = set[tuple[int, ...]]()  # Disjoint union of "on" cubes.
 
   # Subtract each cuboid from existing cells (potentially subdividing them).
   for state, cuboid in state_cuboids:
@@ -3856,7 +3856,7 @@ def day22d(s, *, part2=False):  # Faster by reducing CSG fragment count.
     return finalized
 
   # Disjoint union of "on" cubes.
-  cells: set[tuple[tuple[int, int, int], tuple[int, int, int]]] = set()
+  cells = set[tuple[tuple[int, int, int], tuple[int, int, int]]]()
 
   # Subtract each cuboid from existing cells (potentially subdividing them).
   for state, cuboid in state_cuboids:
@@ -4608,7 +4608,7 @@ def day23c(s, *, part2=False):  # Dijkstra or A* search.
   pq = [(0, start_state)]
   while pq:
     _, state = heapq.heappop(pq)
-    distance = distances[state]
+    distance = distances[state]  # For A*.
     if state == end_state:
       return distance
     for i0, i1, move_cost in eligible_moves(state):
@@ -4681,7 +4681,7 @@ def day23_func(nrows, start_state, end_state, state_size):
   pq = [(0, start_state)]
   while pq:
     _, state = heapq.heappop(pq)
-    distance = distances[state]
+    distance = distances[state]  # For A*.
     if state == end_state:
       return distance
 
