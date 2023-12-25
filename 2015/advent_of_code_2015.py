@@ -22,10 +22,12 @@
 # <a href="#day6">day6</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day6a.gif" width="220"> &nbsp;
 #   <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day6b.gif" width="220">
 # </p>
+#
 # <p>
 # <a href="#day7">day7</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day7.png" width="200"> &emsp;
 # <a href="#day14">day14</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day14.gif" width="500">
 # </p>
+#
 # <p>
 # <a href="#day18">day18</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day18a.gif" width="180"> &nbsp;
 #   <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day18b.gif" width="180"> &emsp;

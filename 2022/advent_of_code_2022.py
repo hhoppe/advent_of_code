@@ -24,17 +24,20 @@
 # <a href="#day9">day9</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day09b.gif" width="160">&emsp;
 # <a href="#day12">day12</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day12c.gif" width="300">
 # </p>
+#
 # <p>
 # <a href="#day14">day14</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day14.gif" width="130">&emsp;
 # <a href="#day15">day15</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day15b.gif" width="180">&emsp;
 # <a href="#day16">day16</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day16b.gif" width="320">
 # </p>
+#
 # <p>
 # <a href="#day17">day17</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day17.gif" width="200">&emsp;
 # <a href="#day18">day18</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day18a.gif" width="80">
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day18c.gif" width="100">&emsp;
 # <a href="#day21">day21</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day21b.png" width="300">
 # </p>
+#
 # <p>
 # <a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day22.gif" width="160">&emsp;
 # <a href="#day23">day23</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day23.gif" width="156">&emsp;

@@ -16,24 +16,34 @@ For the fast solutions, the cumulative time across all 25 puzzles is about 6 s o
 Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`):
 
 <p>
-<a href="#day8">day8</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day08e.gif" width="240">&emsp;
-<a href="#day9">day9</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day09b.gif" width="160">&emsp;
-<a href="#day12">day12</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day12c.gif" width="300">
+<a href="#day3">day3</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day03a.png" width="120">&nbsp;
+<img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day03b.png" width="120">&emsp;
+<a href="#day6">day6</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day06.gif" width="220">&emsp;
+<a href="#day7">day7</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day07.png" width="200">
 </p>
+
 <p>
-<a href="#day14">day14</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day14.gif" width="130">&emsp;
-<a href="#day15">day15</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day15b.gif" width="180">&emsp;
-<a href="#day16">day16</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day16b.gif" width="320">
+<a href="#day10">day10</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day10a.png" width="100">&nbsp;
+<img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day10b.png" width="100">&emsp;
+<a href="#day13">day13</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day13.png" width="280">&emsp;
+<a href="#day14">day14</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day14.gif" width="140">
 </p>
+
 <p>
-<a href="#day17">day17</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day17.gif" width="200">&emsp;
-<a href="#day18">day18</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day18a.gif" width="80">
-<img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day18c.gif" width="100">&emsp;
-<a href="#day21">day21</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day21b.png" width="300">
+<a href="#day16">day16</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day16a.gif" width="200">&emsp;
+<a href="#day17">day17</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day17a.gif" width="110">&nbsp;
+<img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day17b.gif" width="110">&emsp;
+<a href="#day18">day18</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day18b.png" width="220">
 </p>
+
 <p>
-<a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day22.gif" width="160">&emsp;
-<a href="#day23">day23</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day23.gif" width="156">&emsp;
-<a href="#day24">day24</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day24a.gif" width="30">&nbsp;
-<img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day24c.gif" width="306">
+<a href="#day20">day20</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day20.png" width="240">&emsp;
+<a href="#day21">day21</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day21a.gif" width="240">&emsp;
+<a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day22b.gif" width="72">
+</p>
+
+<p>
+<a href="#day23">day23</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day23d.png" width="180">&nbsp;
+<img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day23b.png" width="180">&emsp;
+<a href="#day25">day25</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day25.png" width="320">
 </p>

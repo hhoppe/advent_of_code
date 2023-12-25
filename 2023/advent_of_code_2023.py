@@ -1,8 +1,9 @@
 # %% [markdown]
+# <a name="top"></a>
 # # Advent of code 2023
 
 # %% [markdown]
-# [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2023.ipynb)
+# [[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2023/advent_of_code_2023.ipynb)
 #
 # Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2023/advent_of_code_2023.ipynb)
 # with Python solutions to the
@@ -16,8 +17,42 @@
 # (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)
 #
 # Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`):
+#
+# <p>
+# <a href="#day3">day3</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day03a.png" width="120">&nbsp;
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day03b.png" width="120">&emsp;
+# <a href="#day6">day6</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day06.gif" width="220">&emsp;
+# <a href="#day7">day7</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day07.png" width="200">
+# </p>
+#
+# <p>
+# <a href="#day10">day10</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day10a.png" width="100">&nbsp;
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day10b.png" width="100">&emsp;
+# <a href="#day13">day13</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day13.png" width="280">&emsp;
+# <a href="#day14">day14</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day14.gif" width="140">
+# </p>
+#
+# <p>
+# <a href="#day16">day16</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day16a.gif" width="200">&emsp;
+# <a href="#day17">day17</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day17a.gif" width="110">&nbsp;
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day17b.gif" width="110">&emsp;
+# <a href="#day18">day18</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day18b.png" width="220">
+# </p>
+#
+# <p>
+# <a href="#day20">day20</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day20.png" width="240">&emsp;
+# <a href="#day21">day21</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day21a.gif" width="240">&emsp;
+# <a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day22b.gif" width="72">
+# </p>
+#
+# <p>
+# <a href="#day23">day23</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day23d.png" width="180">&nbsp;
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day23b.png" width="180">&emsp;
+# <a href="#day25">day25</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day25.png" width="320">
+# </p>
 
 # %% [markdown]
+# <a name="preamble"></a>
 # ## Preamble
 
 # %%
@@ -102,6 +137,7 @@ def as_latex(array: Any, sym: Literal['pmatrix', 'bmatrix', 'vmatrix'] = 'bmatri
 _ORIGINAL_GLOBALS = list(globals())
 
 # %% [markdown]
+# <a name="day1"></a>
 # ## Day 1: Digit names in strings
 
 # %% [markdown]
@@ -189,6 +225,7 @@ check_eq(day1_part2(s2), 281)
 puzzle.verify(2, day1_part2)
 
 # %% [markdown]
+# <a name="day2"></a>
 # ## Day 2: Bags of colored cubes
 
 # %% [markdown]
@@ -248,6 +285,7 @@ check_eq(day2_part2(s1), 2286)
 puzzle.verify(2, day2_part2)
 
 # %% [markdown]
+# <a name="day3"></a>
 # ## Day 3: Digit components in a grid
 
 # %% [markdown]
@@ -426,6 +464,7 @@ check_eq(day3_part2(s1), 467835)
 puzzle.verify(2, day3_part2)
 
 # %% [markdown]
+# <a name="day4"></a>
 # ## Day 4: Matching numbers on cards
 #
 # - Part 1: The first match makes the card worth one point and each match after the first doubles the point value of that card.  How many points are they worth in total?
@@ -477,6 +516,7 @@ check_eq(day4_part2(s1), 30)
 puzzle.verify(2, day4_part2)
 
 # %% [markdown]
+# <a name="day5"></a>
 # ## Day 5: Successive range remaps
 
 # %% [markdown]
@@ -672,6 +712,7 @@ check_eq(day5_part2(s1), 46)
 puzzle.verify(2, day5_part2)
 
 # %% [markdown]
+# <a name="day6"></a>
 # ## Day 6: Charge-up before race
 
 # %% [markdown]
@@ -744,11 +785,12 @@ def day6_part1_visualize(s, fps=20, delay_start=20, delay_end=40):
   ts, ds = (list(map(int, line.split(':')[1].split())) for line in s.splitlines())
   t1, d1 = ts[0], ds[0]
 
-  fig, ax = plt.subplots(figsize=(8, 4))
+  fig, ax = plt.subplots(figsize=(6, 4), dpi=80)
   ax.set(title=f'Successful start times for Time={t1} Distance={d1}')
   ax.set(xlim=(0, t1 + 1), ylim=(-20, 800), xlabel='Start time', ylabel='Distance traveled')
   ax.plot([0, t1 + 1], [d1, d1], '-', color='green', linewidth=0.8)
   ax.grid(True, lw=0.3)
+  fig.tight_layout()
   artists = {}
   for start in range(t1 + 1):
     artists[start] = (
@@ -814,6 +856,7 @@ check_eq(day6_part2(s1), 71503)
 puzzle.verify(2, day6_part2)
 
 # %% [markdown]
+# <a name="day7"></a>
 # ## Day 7: Poker-variant hand ranking
 
 # %% [markdown]
@@ -888,6 +931,7 @@ check_eq(day7_part2(s1), 5905)
 puzzle.verify(2, day7_part2)
 
 # %% [markdown]
+# <a name="day8"></a>
 # ## Day 8: Parallel walks over graph
 
 # %% [markdown]
@@ -1108,6 +1152,7 @@ check_eq(day8_part2(s3), 6)
 puzzle.verify(2, day8_part2)
 
 # %% [markdown]
+# <a name="day9"></a>
 # ## Day 9: Nth difference extrapolation
 
 # %% [markdown]
@@ -1190,6 +1235,7 @@ check_eq(day9_part2(s1), 2)
 puzzle.verify(2, day9_part2)
 
 # %% [markdown]
+# <a name="day10"></a>
 # ## Day 10: Interior area of pipe loop
 
 # %% [markdown]
@@ -1441,6 +1487,7 @@ check_eq(day10_part2(s6), 10)
 puzzle.verify(2, day10_part2)
 
 # %% [markdown]
+# <a name="day11"></a>
 # ## Day 11: Expanding galaxy distances
 
 # %% [markdown]
@@ -1648,6 +1695,7 @@ day11_part2 = functools.partial(day11, part2=True)
 puzzle.verify(2, day11_part2)
 
 # %% [markdown]
+# <a name="day12"></a>
 # ## Day 12: Count of wildcard matches
 
 # %% [markdown]
@@ -1959,6 +2007,7 @@ puzzle.verify(2, day12_part2)
 # s = re.sub(r'\.\.*', '.', s)  # No improvement.
 
 # %% [markdown]
+# <a name="day13"></a>
 # ## Day 13: Reflection axes in matrices
 
 # %% [markdown]
@@ -2050,6 +2099,7 @@ def day13_visualize(s, rep=5):
 day13_visualize(puzzle.input)
 
 # %% [markdown]
+# <a name="day14"></a>
 # ## Day 14: Tilting platform
 
 # %% [markdown]
@@ -2347,6 +2397,7 @@ puzzle.verify(2, day14_part2)
 # config = tuple(sorted([(y, x) for y, x in rolls]))
 
 # %% [markdown]
+# <a name="day15"></a>
 # ## Day 15: Edits to hashed boxes
 
 # %% [markdown]
@@ -2403,6 +2454,7 @@ check_eq(day15_part2(s1), 145)
 puzzle.verify(2, day15_part2)
 
 # %% [markdown]
+# <a name="day16"></a>
 # ## Day 16: Mirrors and splitters
 
 # %% [markdown]
@@ -2654,6 +2706,7 @@ puzzle.verify(2, day16_part2)
 # With numba, switching the grid from dtype 'U1' to np.uint8 reduced the time from 215 ms to 15 ms!
 
 # %% [markdown]
+# <a name="day17"></a>
 # ## Day 17: Turn-constrained path
 
 # %% [markdown]
@@ -2914,6 +2967,7 @@ check_eq(day17_part2(s2), 71)
 puzzle.verify(2, day17_part2)
 
 # %% [markdown]
+# <a name="day18"></a>
 # ## Day 18: Area inside long loop
 
 # %% [markdown]
@@ -3045,6 +3099,7 @@ def day18_part2_visualize(s):
 day18_part2_visualize(puzzle.input)
 
 # %% [markdown]
+# <a name="day19"></a>
 # ## Day 19: Graph of inequality rules
 
 # %% [markdown]
@@ -3200,6 +3255,7 @@ check_eq(day19_part2(s1), 167409079868000)
 puzzle.verify(2, day19_part2)
 
 # %% [markdown]
+# <a name="day20"></a>
 # ## Day 20: Pulses through graph
 
 # %% [markdown]
@@ -3392,6 +3448,7 @@ day20_part2 = functools.partial(day20, part2=True)
 puzzle.verify(2, day20_part2)
 
 # %% [markdown]
+# <a name="day21"></a>
 # ## Day 21: Steps through grid lattice
 
 # %% [markdown]
@@ -3556,6 +3613,7 @@ def day21_part2(s):  # Most concise but obscure.
 puzzle.verify(2, day21_part2)
 
 # %% [markdown]
+# <a name="day22"></a>
 # ## Day 22: Bricks falling in 3D
 
 # %% [markdown]
@@ -3732,6 +3790,7 @@ def day22_visualize(s):
 day22_visualize(puzzle.input)
 
 # %% [markdown]
+# <a name="day23"></a>
 # ## Day 23: Longest path in maze
 
 # %% [markdown]
@@ -4011,6 +4070,7 @@ check_eq(day23_part2(s1), 154)
 puzzle.verify(2, day23_part2)  # ~5 s (~90 s without numba).
 
 # %% [markdown]
+# <a name="day24"></a>
 # ## Day 24: Intersecting 3D trajectories
 
 # %% [markdown]
@@ -4272,6 +4332,7 @@ check_eq(day24_part2(s1), 47)
 puzzle.verify(2, day24_part2)
 
 # %% [markdown]
+# <a name="day25"></a>
 # ## Day 25: Graph cut
 
 # %% [markdown]
@@ -4338,7 +4399,7 @@ if SHOW_BIG_MEDIA:
 
 # %% [markdown]
 # Cached result:<br/>
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2022/results/day25.png"/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day25.png"/>
 
 
 # %%
@@ -4426,6 +4487,7 @@ puzzle.verify(1, day25)
 # puzzle.verify(2, lambda s: '')  # (No "Part 2" on last day.)
 
 # %% [markdown]
+# <a name="timings"></a>
 # ## Timings
 
 # %%

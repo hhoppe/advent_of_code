@@ -39,11 +39,13 @@
 # <a href="#day11">day11</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day11a.gif" width="200">&emsp;
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day11b.gif" width="200">
 # </p>
+#
 # <p>
 # <a href="#day17">day17</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day17a.gif" width="40">&emsp;
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day17b.gif" width="340">&emsp;
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day17c.gif" width="340">
 # </p>
+#
 # <p>
 # <a href="#day20">day20</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day20a.png" width="250">&emsp;
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2020/results/day20b.png" width="200">&emsp;
