@@ -53,7 +53,10 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools kaleido matplotlib mediapy more-itertools numba numpy plotly resampler scipy
+# !dpkg -l | grep -q libgraphviz-dev || (apt-get -qq update && apt-get -qq -y install libgraphviz-dev) >/dev/null  # https://stackoverflow.com/a/66380001
+
+# %%
+# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools kaleido matplotlib mediapy more-itertools numba numpy plotly pygraphviz resampler scipy
 
 # %%
 import ast
@@ -3960,7 +3963,7 @@ puzzle.verify(2, day20_part2)
 #
 # With `matplotlib` we can visualize the original and simplified graphs.
 # For the large (unsimplified) graph of the puzzle input, the visualization greatly benefits from the improved graph layout
-# algorithms in the `apt` package `graphviz`, which is accessed from `networkx` via either `pydot` or `pygraphviz`.
+# algorithms in the `apt` package `graphviz`, which is accessed from `networkx` via `pygraphviz`.
 
 # %%
 puzzle = advent.puzzle(day=21)

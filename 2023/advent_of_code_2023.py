@@ -56,10 +56,13 @@
 # ## Preamble
 
 # %%
-# !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
+# !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null  # For mediapy.
 
 # %%
-# !pip install -q advent-of-code-hhoppe hhoppe-tools kaleido matplotlib mediapy more-itertools numba numpy plotly scipy scikit-image sympy
+# !dpkg -l | grep -q libgraphviz-dev || (apt-get -qq update && apt-get -qq -y install libgraphviz-dev) >/dev/null  # https://stackoverflow.com/a/66380001
+
+# %%
+# !pip install -q advent-of-code-hhoppe hhoppe-tools kaleido matplotlib mediapy more-itertools numba numpy plotly pygraphviz scipy scikit-image sympy
 
 # %%
 import ast
@@ -1124,6 +1127,7 @@ def day8_visualize(s):
 
 
 if 'networkx' in globals():
+  media.set_max_output_height(3000)
   day8_visualize(puzzle.input)
 
 
@@ -3765,8 +3769,8 @@ def day22_visualize(s):
   def set_fig_layout(a=0.1):  # Downscale dimensions to avoid clipping eye coordinates to max ~100.
     maxs = [max(cube[3 + c] for cube in cubes) for c in range(3)]
     aspectratio = dict(x=maxs[0] * a, y=maxs[1] * a, z=maxs[2] * a)
-    eye = dict(x=105 * a, y=105 * a, z=80 * a)
-    center = dict(x=0, y=0, z=10 * a)
+    eye = dict(x=140 * a, y=0 * a, z=80 * a)
+    center = dict(x=0, y=0, z=12 * a)
     camera = dict(center=center, eye=eye)
     no_axes = {axis: dict(visible=False) for axis in ['xaxis', 'yaxis', 'zaxis']}
     scene = dict(aspectratio=aspectratio, camera=camera, **no_axes)
@@ -3775,11 +3779,12 @@ def day22_visualize(s):
   set_fig_layout()
 
   if SHOW_BIG_MEDIA:
+    media.set_max_output_height(3000)
     hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
     fig.show()
 
   if 1:
-    video = np.array(hh.wobble_video(fig, amplitude=20.0))  # [:, :, 140:-140]
+    video = np.array(hh.wobble_video(fig, amplitude=20.0))
     media.show_video(video, codec='gif', fps=3, border=True, title='day22b')
 
   if 0:
@@ -3957,6 +3962,7 @@ def day23_visualize_graph(s, *, part2=False, node_size=1000):
 
   fig, ax = plt.subplots(figsize=(7, 7), dpi=90)
   ax.axes.set_aspect('equal')
+  ax.set_axis_off()
 
   node_color = [attr for _, attr in graph.nodes(data='node_color')]
   networkx.draw_networkx_nodes(graph, pos, node_size=node_size, node_color=node_color)
@@ -3980,6 +3986,7 @@ def day23_visualize_graph(s, *, part2=False, node_size=1000):
 
 
 if 'networkx' in globals():
+  media.set_max_output_height(3000)
   day23_visualize_graph(puzzle.input)
   day23_visualize_graph(puzzle.input, part2=True)
 
