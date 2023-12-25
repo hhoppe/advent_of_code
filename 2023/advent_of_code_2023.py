@@ -3934,7 +3934,7 @@ if SHOW_BIG_MEDIA:
 
 # %% [markdown]
 # Cached result:<br/>
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day23b.gif"/><br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day23b.png"/><br/>
 
 
 # %%
@@ -4484,7 +4484,7 @@ def day25(s, num_random_edges=100):
 puzzle.verify(1, day25)
 
 # %%
-# puzzle.verify(2, lambda s: '')  # (No "Part 2" on last day.)
+puzzle.verify(2, lambda s: '')  # (No "Part 2" on last day.)
 
 # %% [markdown]
 # <a name="timings"></a>
