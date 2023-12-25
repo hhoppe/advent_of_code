@@ -84,6 +84,11 @@ import resampler  # https://github.com/hhoppe/resampler/
 import scipy.ndimage
 import scipy.signal
 
+try:
+  import networkx
+except ModuleNotFoundError:
+  print('Module networkx is unavailable.')
+
 # %%
 if not media.video_is_available():
   media.show_videos = lambda *a, **kw: print('Creating video is unavailable.')
@@ -115,27 +120,6 @@ hh.adjust_jupyterlab_markdown_width()
 # %%
 check_eq = hh.check_eq
 
-# %%
-try:
-  import networkx
-except ModuleNotFoundError:
-  print('Module networkx is unavailable.')
-
-
-# %%
-def from_xyz(d: dict[str, float], /) -> np.ndarray:
-  """Return an [x, y, z] array from a dict(x=x, y=y, z=z)."""
-  return np.array([d['x'], d['y'], d['z']], float)
-
-
-def to_xyz(a: Any) -> dict[str, float]:
-  """Return a dict(x=x, y=y, z=z) from an [x, y, z] array."""
-  x, y, z = np.asarray(a)
-  return dict(x=x, y=y, z=z)
-
-
-assert np.all(from_xyz(to_xyz([0.5, 1, 2])) == [0.5, 1, 2])
-
 
 # %%
 def hex_color(r: float, g: float, b: float) -> str:
@@ -150,137 +134,8 @@ def color_from_hex(s: str) -> tuple[float, float, float]:
   return tuple(int(s2, 16) / 255 for s2 in more_itertools.sliced(s[1:], 2))  # type: ignore
 
 
-check_eq(hex_color(0.0, 0.5, 1.0), '#0080ff')
-check_eq(color_from_hex('#0000ff'), (0.0, 0.0, 1.0))
-
-
-# %%
-def image_from_plotly(fig: Any, **kwargs: Any) -> np.ndarray:
-  """Return an image obtained by rasterizing a plotly figure."""
-  return media.decompress_image(fig.to_image(format='png', **kwargs))[..., :3]
-
-
-# %%
-def mesh3d_from_height(grid, /, *, facecolor=None, color=None, **kwargs):
-  """Returns a plotly surface formed by extruding square columns from the `grid` height field.
-
-  It is crucial to set lighting=dict(facenormalsepsilon=1e-15) to handle degenerate triangles.
-  """
-  assert not (color is not None and facecolor is None)
-  yy, xx = np.arange(grid.shape[0] + 1).repeat(2), np.arange(grid.shape[1] + 1).repeat(2)
-  y, x = yy.repeat(len(xx)), np.tile(xx, len(yy))
-  z = np.pad(grid.repeat(2, axis=0).repeat(2, axis=1), 1, constant_values=0.0).ravel()
-  i, j, k = (
-      [
-          y2 * len(xx) + x2
-          for y1, x1 in np.ndindex((len(yy) - 1, len(xx) - 1))
-          for y2, x2 in ((y1 + c0, x1 + c1), (y1 + c2, x1 + c3))
-      ]
-      for c0, c1, c2, c3 in [(0, 0, 1, 1), (0, 1, 1, 0), (1, 1, 0, 0)]
-  )
-
-  if facecolor is not None:
-    facecolor2 = np.full(((grid.shape[0] * 2 + 1) * (grid.shape[1] * 2 + 1) * 2, 3), color)
-    for y0, x0 in np.ndindex(facecolor.shape[:2]):
-      index = ((y0 * 2 + 1) * (grid.shape[1] * 2 + 1) + x0 * 2 + 1) * 2
-      facecolor2[index : index + 2] = facecolor[y0, x0]
-    facecolor = facecolor2
-
-  intensity = z if facecolor is None else None
-  return go.Mesh3d(x=x, y=y, z=z, i=i, j=j, k=k, intensity=intensity, facecolor=facecolor, **kwargs)
-
-
-# %%
-def vector_slerp(a, b, t):
-  """Spherically interpolate two unit vectors, as in https://en.wikipedia.org/wiki/Slerp ."""
-  a, b = np.asarray(a), np.asarray(b)
-  angle = max(math.acos(np.dot(a, b)), 1e-10)
-  return (math.sin((1.0 - t) * angle) * a + math.sin(t * angle) * b) / math.sin(angle)
-
-
-assert np.allclose(vector_slerp([0, 1], [1, 0], 1 / 3), [0.5, math.cos(math.radians(30))])
-
-
-# %%
-def wobble_video(fig: Any, /, *, amplitude: float = 1.0) -> list[np.ndarray]:
-  """Return a looping video from a 3D plotly figure by orbiting the eye position left/right.
-
-  Args:
-    fig: A `plotly` figure containing a 3D scene.
-    amplitude: Magnitude of the angle displacement, in degrees, by which the eye is rotated.
-  """
-  rotation_fractions = [0, 2 / 3, 1, 1, 1, 2 / 3, 0, -2 / 3, -1, -1, -1, -2 / 3]
-  camera = fig['layout']['scene']['camera']
-  if isinstance(camera, plotly.graph_objs.layout.scene.Camera):
-    camera = camera.to_plotly_json()
-
-  eye = from_xyz(camera['eye'])
-  up = hh.normalize(from_xyz(camera.get('up', dict(x=0, y=0, z=1))))
-  center = from_xyz(camera.get('center', dict(x=0, y=0, z=0)))
-  from_center = eye - center
-  planar_from_center = from_center - up * np.dot(up, from_center)
-  unit_planar_from_center = hh.normalize(planar_from_center)
-  orthogonal: Any = np.cross(up, unit_planar_from_center)
-
-  image_for_rotation = {}
-  for rotation_fraction in set(rotation_fractions):
-    angle = rotation_fraction * (amplitude / 360 * math.tau)
-    rotation = np.array([math.cos(angle), math.sin(angle)])
-    new_unit_planar_from_center = rotation @ [unit_planar_from_center, orthogonal]
-    new_planar_from_center = new_unit_planar_from_center * np.linalg.norm(planar_from_center)
-    new_eye = eye + (new_planar_from_center - planar_from_center)
-    camera2 = camera.copy()
-    camera2['eye'] = to_xyz(new_eye)
-    fig.layout.update(scene_camera=camera2)
-    image_for_rotation[rotation_fraction] = image_from_plotly(fig)
-
-  fig.layout.update(scene_camera=camera)
-  return [image_for_rotation[rotation_fraction] for rotation_fraction in rotation_fractions]
-
-
-# %%
-def tilt_video(fig: Any) -> list[np.ndarray]:
-  """Return a looping video from a 3D plotly figure by displacing the eye towards `camera.up`."""
-  rotation_fractions = [0, 0, 0, 1 / 6, 1 / 2, 5 / 6, 0.999, 0.999, 0.999, 5 / 6, 1 / 2, 1 / 6]
-  camera = fig['layout']['scene']['camera']
-  if isinstance(camera, plotly.graph_objs.layout.scene.Camera):
-    camera = camera.to_plotly_json()
-
-  eye = from_xyz(camera['eye'])
-  up = hh.normalize(from_xyz(camera.get('up', dict(x=0, y=0, z=1))))
-  center = from_xyz(camera.get('center', dict(x=0, y=0, z=0)))
-  from_center = eye - center
-  unit_from_center = hh.normalize(from_center)
-
-  image_for_rotation = {}
-  for rotation_fraction in set(rotation_fractions):
-    new_unit_from_center = vector_slerp(unit_from_center, up, rotation_fraction)
-    new_eye = center + np.linalg.norm(from_center) * new_unit_from_center
-    camera2 = camera.copy()
-    camera2['eye'] = to_xyz(new_eye)
-    fig.layout.update(scene_camera=camera2)
-    image_for_rotation[rotation_fraction] = image_from_plotly(fig)
-
-  fig.layout.update(scene_camera=camera)
-  return [image_for_rotation[rotation_fraction] for rotation_fraction in rotation_fractions]
-
-
-# %%
-def graph_layout(graph: Any, *, prog: str) -> dict[Any, tuple[float, float]]:
-  """Return dictionary of 2D coordinates for layout of graph nodes."""
-  nx = networkx
-  try:
-    args = '-Gstart=1'  # Deterministically seed the graphviz random number generator.
-    return nx.nx_agraph.graphviz_layout(graph, prog=prog, args=args)  # Requires package pygraphviz.
-  except ImportError:
-    pass
-  try:
-    return nx.nx_pydot.pydot_layout(graph, prog=prog)  # Requires package pydot.
-  except ImportError:
-    pass
-  print('Cannot reach graphviz; resorting to simpler layout.')
-  return nx.kamada_kawai_layout(graph)
-
+assert hex_color(0.0, 0.5, 1.0) == '#0080ff'
+assert color_from_hex('#0000ff') == (0.0, 0.0, 1.0)
 
 # %%
 _ORIGINAL_GLOBALS = list(globals())
@@ -974,8 +829,7 @@ puzzle.verify(2, day7b_part2)
 
 # %%
 def day7v(s):  # Visualization
-  nx = networkx
-  graph = nx.DiGraph()
+  graph = networkx.DiGraph()
   graph.add_node('/', label='/', node_color='red', size=0)
   dirs = collections.defaultdict[str, int](int)
   for line in s.splitlines():
@@ -1001,12 +855,12 @@ def day7v(s):  # Visualization
       for p in itertools.accumulate(curr):
         dirs[p] += int(fields[0])
 
-  pos = graph_layout(graph, prog='neato')
+  pos = hh.graph_layout(graph, prog='neato')
   fig, ax = plt.subplots(figsize=(12, 12), dpi=60)
   ax.axes.set_aspect('equal')
-  # labels = nx.get_node_attributes(graph, 'label')
+  # labels = networkx.get_node_attributes(graph, 'label')
   node_color = [attr for _, attr in graph.nodes(data='node_color')]
-  nx.draw(graph, pos, node_size=150, node_color=node_color, width=0.7)
+  networkx.draw(graph, pos, node_size=150, node_color=node_color, width=0.7)
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
   media.show_image(image, border=True, title='day07')
@@ -1192,7 +1046,7 @@ def day8w(s):  # Use plotly to create 3D visualization.
       facecolor[y, x2] = 1.0, 0.5, 0.0
     grid, facecolor, matrix2 = map(np.rot90, [grid, facecolor, matrix2])
 
-  surface = mesh3d_from_height(
+  surface = hh.mesh3d_from_height(
       grid,
       facecolor=facecolor,
       color=(0.94,) * 3,
@@ -1216,14 +1070,14 @@ def day8w(s):  # Use plotly to create 3D visualization.
     hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
     fig.show()
 
-  image = image_from_plotly(fig, width=350, height=175)
+  image = hh.image_from_plotly(fig, width=350, height=175)
   media.show_image(image, border=True, title='day08c')
 
   if SHOW_BIG_MEDIA:
-    video: Any = wobble_video(fig, amplitude=2.0)
+    video: Any = hh.wobble_video(fig, amplitude=2.0)
     media.show_video(video, codec='gif', fps=10, border=True, title='day08d')
     set_fig_layout(for_tilt=True)
-    video = np.array(tilt_video(fig))[:, :, 140:-140]
+    video = np.array(hh.tilt_video(fig))[:, :, 140:-140]
     media.show_video(video, codec='gif', fps=3, border=True, title='day08e')
 
   media.set_max_output_height(5000)
@@ -1944,7 +1798,7 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
 
   lighting = dict(ambient=0.5, diffuse=0.5, fresnel=0.1, specular=0.1, roughness=0.05)
   lighting.update(facenormalsepsilon=1e-15)  # Crucial given the degenerate triangles.
-  surface = mesh3d_from_height(
+  surface = hh.mesh3d_from_height(
       grid,
       colorscale=[(0.0, 'rgb(90, 90, 90)'), (1.0, 'rgb(220, 220, 220)')],
       cmin=-10,
@@ -1990,17 +1844,17 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
     fig.show()
 
   image = (
-      image_from_plotly(fig)[110:-70, 20:-20]
+      hh.image_from_plotly(fig)[110:-70, 20:-20]
       if use_tilt
-      else image_from_plotly(fig)[110:-25, 0:-20]
+      else hh.image_from_plotly(fig)[110:-25, 0:-20]
   )
   media.show_image(image, border=True, title='day12b')
 
   if SHOW_BIG_MEDIA:
     video = (
-        np.asarray(tilt_video(fig))[:, 95:-80, 20:-20]
+        np.asarray(hh.tilt_video(fig))[:, 95:-80, 20:-20]
         if use_tilt
-        else np.asarray(wobble_video(fig, amplitude=2.0))[:, 110:-25, 0:-20]
+        else np.asarray(hh.wobble_video(fig, amplitude=2.0))[:, 110:-25, 0:-20]
     )
     fps = 3 if use_tilt else 10
     media.show_video(video, codec='gif', fps=fps, border=True, title='day12c')
@@ -2538,7 +2392,7 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
     fig.show(config=config)
 
   if 1:
-    image = image_from_plotly(fig)[40:-40, 40:-40]
+    image = hh.image_from_plotly(fig)[40:-40, 40:-40]
     media.show_image(image, border=True, title='day15a')
 
   if SHOW_BIG_MEDIA:
@@ -2546,7 +2400,7 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
     while (diam := (vmax - vmin).astype(float)).min() > 6:
       fig.layout.xaxis.range = [vmin[0], vmax[0]]
       fig.layout.yaxis.range = [vmin[1], vmax[1]]
-      images.append(image_from_plotly(fig)[40:-40, 40:-40])
+      images.append(hh.image_from_plotly(fig)[40:-40, 40:-40])
       scale = 0.97 if len(images) < 16 else 0.92 if min(vmax - vmin) > 110_000 else 0.70
       pp_norm = (pp - vmin) / (vmax - vmin)
       assert 0 <= pp_norm[0] <= 1 and 0 <= pp_norm[1] <= 1, pp_norm
@@ -2793,15 +2647,14 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
     v = search(t, u, vs=vs, e=e)[1]
     return get_path(path + [v], t - valve_distance(u)[v], v, vs - {v}, e) if v else (path, vs)
 
-  nx = networkx
-  graph = nx.Graph()
+  graph = networkx.Graph()
   for node, dsts1 in dsts.items():
     rate1 = rate[node]
     graph.add_node(node, label=f'{node}\n{rate1}')
     for dst in dsts1:
       graph.add_edge(node, dst)
 
-  pos = graph_layout(graph, prog='dot')
+  pos = hh.graph_layout(graph, prog='dot')
 
   if visualize:
     fig, ax = plt.subplots(figsize=(16, 12), dpi=66)
@@ -2835,7 +2688,7 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
   for time_index in range(time):
     if visualize and (not only_last_frame or time_index == time - 1):
       ax.clear()
-      labels = nx.get_node_attributes(graph, 'label')
+      labels = networkx.get_node_attributes(graph, 'label')
       node_size = [2400 if rate[node] else 1500 for node in graph]
       node_color = [get_color(node) for node in graph]
       linewidths = [6 if node in valves else 1 for node in graph]
@@ -2843,20 +2696,11 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
           'tomato' if node in enabled_valves else 'gray' if node in valves else 'black'
           for node in graph
       ]
-      nx.draw(
-          graph,
-          pos,
-          node_size=node_size,
-          node_color=node_color,
-          linewidths=linewidths,
-          edgecolors=edgecolors,
-          margins=0.07,
-          labels=labels,
-          font_family='sans-serif',
-          font_size=14,
-          width=0.8,
-          ax=ax,
-      )
+      params: Any = dict(node_size=node_size, node_color=node_color, width=0.8)
+      params |= dict(labels=labels, font_family='sans-serif', font_size=14)
+      params |= dict(linewidths=linewidths, edgecolors=edgecolors)
+      params |= dict(ax=ax, margins=0.07)
+      networkx.draw(graph, pos, **params)
       fig.tight_layout(pad=0)
       image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
       text = f'Time {time_index + 1:2}'
@@ -3536,11 +3380,11 @@ def day18v(s):  # Visualize Part 1 using plotly 3D rendering.
     hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
     fig.show()
 
-  image = image_from_plotly(fig)
+  image = hh.image_from_plotly(fig)
   media.show_image(image, border=True, title='day18b')
 
   if SHOW_BIG_MEDIA:
-    video = wobble_video(fig)
+    video = hh.wobble_video(fig)
     media.show_video(video, codec='gif', fps=10, title='day18c')
 
   media.set_max_output_height(5000)
@@ -4373,7 +4217,9 @@ else:
 
 # %%
 # Visualize graphs.
-def day21v(s, *, simplify=False, directed=True, prog='dot', figsize=(3, 3)) -> np.ndarray:
+def day21v(
+    s, *, simplify=False, directed=True, prog='dot', figsize=(3, 3), rot=math.tau / 2
+) -> np.ndarray:
   assert prog in 'dot neato'.split()  # Possibly also 'sfdp'.
   monkeys = dict(line.split(': ') for line in s.splitlines())
   operators = {'+': operator.add, '-': operator.sub, '*': operator.mul, '/': operator.truediv}
@@ -4397,8 +4243,7 @@ def day21v(s, *, simplify=False, directed=True, prog='dot', figsize=(3, 3)) -> n
   if simplify:
     recursively_simplify('root')
 
-  nx = networkx
-  graph = nx.DiGraph() if directed else nx.Graph()
+  graph = networkx.DiGraph() if directed else networkx.Graph()
 
   def create_node(monkey: str) -> int:
     expression = monkeys[monkey]
@@ -4418,19 +4263,17 @@ def day21v(s, *, simplify=False, directed=True, prog='dot', figsize=(3, 3)) -> n
     graph.add_edge(node2, node)
     return node
 
-  _ = create_node('root')
-  pos = graph_layout(graph, prog=prog)
-  long_axis_is_vertical = np.ptp(list(pos.values()), axis=0).argmax() == 1
-  if long_axis_is_vertical:
-    ccw = len(graph) < 20 or simplify
-    pos = {node: ((-y, x) if ccw else (y, -x)) for node, (x, y) in pos.items()}
+  root_node = create_node('root')
+  pos = hh.graph_layout(graph, prog=prog)
+  if rot is not None:
+    pos = hh.rotate_layout_so_node_is_on_left(pos, root_node, rot)
 
   dpi = 50  # Graph node labels are small yet readable at this resolution.
   fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
   ax.axes.set_aspect('equal')  # Preserve aspect ratio.
-  labels = nx.get_node_attributes(graph, 'label')
+  labels = networkx.get_node_attributes(graph, 'label')
   node_color = [attr for _, attr in graph.nodes(data='color')]
-  nx.draw(graph, with_labels=True, labels=labels, node_color=node_color, pos=pos, ax=ax)
+  networkx.draw(graph, with_labels=True, labels=labels, node_color=node_color, pos=pos, ax=ax)
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
   plt.close(fig)
@@ -4445,15 +4288,10 @@ if 'networkx' in globals():
   )
   if SHOW_BIG_MEDIA:
     media.show_image(
-        day21v(puzzle.input, prog='neato', figsize=(40, 20)), border=True, title='day21b'
+        day21v(puzzle.input, prog='neato', figsize=(40, 20), rot=0), border=True, title='day21b'
     )
-    media.show_image(
-        day21v(puzzle.input, figsize=(60, 30)),
-        title='day21c',
-        border=True,
-        height=800,
-        downsample=False,
-    )
+    _image = day21v(puzzle.input, figsize=(60, 30), rot=None)
+    media.show_image(_image, title='day21c', border=True, height=800, downsample=False)
   media.set_max_output_height(5000)
 
 

@@ -70,6 +70,11 @@ import numba
 import numpy as np
 import pyparsing
 
+try:
+  import networkx
+except ModuleNotFoundError:
+  print('Module networkx is unavailable.')
+
 # %%
 if not media.video_is_available():
   media.show_videos = lambda *a, **kw: print('Creating video is unavailable.')
@@ -100,29 +105,6 @@ hh.adjust_jupyterlab_markdown_width()
 
 # %%
 check_eq = hh.check_eq
-
-# %%
-try:
-  import networkx
-except ModuleNotFoundError:
-  print('Module networkx is unavailable.')
-
-
-# %%
-def graph_layout(graph: Any, *, prog: str) -> dict[Any, tuple[float, float]]:
-  """Return dictionary of 2D coordinates for layout of graph nodes."""
-  nx = networkx
-  try:
-    args = '-Gstart=1'  # Deterministically seed the graphviz random number generator.
-    return nx.nx_agraph.graphviz_layout(graph, prog=prog, args=args)  # Requires package pygraphviz.
-  except ImportError:
-    pass
-  try:
-    return nx.nx_pydot.pydot_layout(graph, prog=prog)  # Requires package pydot.
-  except ImportError:
-    pass
-  print('Cannot reach graphviz; resorting to simpler layout.')
-  return nx.kamada_kawai_layout(graph)
 
 
 # %%
@@ -670,8 +652,7 @@ puzzle.verify(2, day7_part2)
 
 # %%
 def day7_visualize(s):
-  nx = networkx
-  graph = nx.DiGraph()
+  graph = networkx.DiGraph()
   graph.add_node('a', node_color='red')
   for line in s.splitlines():
     match line.split():
@@ -684,11 +665,12 @@ def day7_visualize(s):
       case 'NOT', src, '->', dst:
         graph.add_edge(src, dst)
 
-  pos = graph_layout(graph, prog='neato')
+  pos = hh.graph_layout(graph, prog='neato')
+  pos = hh.rotate_layout_so_node_is_on_left(pos, 'a', math.tau / 8)
   fig, ax = plt.subplots(figsize=(12, 12), dpi=60)
   ax.axes.set_aspect('equal')
   node_color = [(attr or 'green') for _, attr in graph.nodes(data='node_color')]
-  nx.draw(graph, pos, node_size=150, node_color=node_color, width=0.7)
+  networkx.draw(graph, pos, node_size=150, node_color=node_color, width=0.7)
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
   media.show_image(image, border=True, title='day7')

@@ -62,7 +62,6 @@ import dataclasses
 import functools
 import hashlib
 import heapq
-import importlib
 import itertools
 import math
 import pathlib
@@ -78,6 +77,11 @@ import numba
 import numpy as np
 import scipy.optimize
 import scipy.signal
+
+try:
+  import networkx
+except ModuleNotFoundError:
+  print('Module networkx is unavailable.')
 
 # %%
 if not media.video_is_available():
@@ -108,7 +112,6 @@ hh.adjust_jupyterlab_markdown_width()
 
 # %%
 check_eq = hh.check_eq
-
 
 # %%
 _ORIGINAL_GLOBALS = list(globals())
@@ -2989,7 +2992,7 @@ def day22a(s, *, part2=False, pad=60):  # Using networkx; slower.
   def generate_graph(grid, shape):
     # Note: Using add_weighted_edges_from() just ends up calling add_edge().
     # Note: Using np.array for grid is actually slower.
-    graph = nx.Graph()
+    graph = networkx.Graph()
     for y, x in np.ndindex((shape[1], shape[0])):
       item0, item1 = valid_items[grid[x, y]]
       graph.add_edge((x, y, item0), (x, y, item1), weight=7)
@@ -3012,23 +3015,20 @@ def day22a(s, *, part2=False, pad=60):  # Using networkx; slower.
     grid = generate_grid(depth, shape)
     return sum(v[2] for v in grid.values())
 
-  import networkx as nx
-
   shape = target[0] + pad, target[1] + pad
   grid = {c: v[2] for c, v in (generate_grid(depth, shape)).items()}
   graph = generate_graph(grid, shape)
   use_astar = True
+  args = graph, (0, 0, torch), (*target, torch)
   if use_astar:
-    return nx.astar_path_length(graph, (0, 0, torch), (*target, torch), heuristic=cost_lower_bound)
-  return nx.dijkstra_path_length(graph, (0, 0, torch), (*target, torch))
+    return networkx.astar_path_length(*args, heuristic=cost_lower_bound)
+  return networkx.dijkstra_path_length(*args)
 
 
 check_eq(day22a(s1), 114)
 puzzle.verify(1, day22a)
 
-if not importlib.util.find_spec('networkx'):
-  print('Module networkx is unavailable.')
-else:
+if 'networkx' in globals():
   day22a_part2 = functools.partial(day22a, part2=True)
   check_eq(day22a_part2(s1), 45)
   # puzzle.verify(2, day22a_part2)  # Slow using Dijkstra; even slower (~1.5 x) using A*.
