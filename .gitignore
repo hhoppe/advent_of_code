@@ -2,5 +2,6 @@
 __pycache__/
 .mypy_cache/
 /*/data/*/
-/2023/
 /Notes.txt
+# /2023/
+/2024/
