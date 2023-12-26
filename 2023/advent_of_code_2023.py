@@ -1383,7 +1383,7 @@ def day10a(s, *, part2=False, visualize=False):  # Initial implementation, and v
   # elif 0:
   #   import PIL.Image
   #   import PIL.ImageDraw
-  #   if 0:  # floodfill requires RGB image?
+  #   if 0:  # floodfill seems to require an RGB image.
   #     pil_image = PIL.Image.fromarray(grid2)
   #     PIL.ImageDraw.floodfill(pil_image, (0, 0), 2)  # Buggy; it fails to fill.
   #     hh.show(pil_image.getpixel((0, 0)))
@@ -1425,8 +1425,9 @@ _ = day10a(puzzle.input, part2=True, visualize=True)
 def day10b(s, *, part2=False):  # Concise implementation.
   grid = np.array([list(line) for line in s.splitlines()])
   ((y, x),) = np.argwhere(grid == 'S')
+  assert grid[y + 1, x] in 'JL|'  # The start has a downward loop arm in all the examples I see.
+  dy, dx = 1, 0
   loop: list[tuple[int, int]] = []
-  dy, dx = 1, 0  # The start has a downward loop arm in all the examples I see.
   while (ch := grid[y, x]) != 'S' or not loop:
     loop.append((y, x))
     dy, dx = (dx, dy) if ch in 'L7' else (-dx, -dy) if ch in 'JF' else (dy, dx)
@@ -1457,22 +1458,25 @@ puzzle.verify(2, day10b_part2)
 
 # %%
 def day10(s, *, part2=False):  # Interior test using row intersection counting.
-  grid = np.array([list(line) for line in s.splitlines()])
+  grid = np.pad([list(line) for line in s.splitlines()], 1, constant_values='.')
   ((y, x),) = np.argwhere(grid == 'S')
+  assert grid[y + 1, x] in 'JL|'  # The start has a downward loop arm in all the examples I see.
+  dy, dx = 1, 0
   loop: list[tuple[int, int]] = []
-  dy, dx = 1, 0  # The start has a downward loop arm in all the examples I see.
   while (ch := grid[y, x]) != 'S' or not loop:
     loop.append((y, x))
     dy, dx = (dx, dy) if ch in 'L7' else (-dx, -dy) if ch in 'JF' else (dy, dx)
     y, x = y + dy, x + dx
+  grid[y, x] = ('|F', '7')[grid[y, x - 1] in 'LF-'][grid[y, x + 1] in 'J7-']  # Replace 'S'.
 
   if not part2:
     return len(loop) // 2
 
   loop_mask = np.full(grid.shape, False)
   loop_mask[tuple(np.array(loop).T)] = True
-  lookup = np.array([chr(i) in '|LJ' for i in range(256)])
-  is_wall = lookup[grid.view(np.uint32)]  # ('U1' and uint32 have the same bitwidth.)
+  lookup = np.array([chr(i) in '|LJ' for i in range(256)])  # (Or "in '|F7'".)
+  assert grid.dtype == 'U1' and grid.dtype.itemsize == np.dtype(np.uint32).itemsize
+  is_wall = lookup[grid.view(np.uint32)]
   is_wall[~loop_mask] = 0
   count = is_wall.cumsum(1) % 2
   count[loop_mask] = 0
@@ -2858,10 +2862,12 @@ def day17c_compute(grid, part2, pad):
   dir2s = (1, 3), (2, 0), (3, 1), (0, 2)
   dn2 = 4 if part2 else 1
   offsets = nx, 1, -nx, -1
-  distances = {  # state -> distance with state == (i, dir, dn) with dir 0,1,2,3 == S,E,N,W.
-      (start_i + offsets[dir], dir, 1): np.int64(grid_flat[start_i + offsets[dir]])
-      for dir in range(2)
-  }
+  distances = {}  # state -> distance with state == (i, dir, dn) with dir 0,1,2,3 == S,E,N,W.
+  for dir in range(2):
+    distance = 0
+    for i in range(1, dn2 + 1):
+      distance += grid_flat[start_i + offsets[dir] * i]
+    distances[start_i + offsets[dir] * dn2, dir, dn2] = distance
   priority_queue = [(distance, state) for state, distance in distances.items()]
 
   while priority_queue:
@@ -2921,10 +2927,12 @@ def day17_get_jitted(part2):
     dir2s = (1, 3), (2, 0), (3, 1), (0, 2)
     dn2 = 4 if part2 else 1
     offsets = nx, 1, -nx, -1
-    distances = {  # state -> distance with state == (i, dir, dn) with dir 0,1,2,3 == S,E,N,W.
-        (start_i + offsets[dir], dir, 1): np.int64(grid_flat[start_i + offsets[dir]])
-        for dir in range(2)
-    }
+    distances = {}  # state -> distance with state == (i, dir, dn) with dir 0,1,2,3 == S,E,N,W.
+    for dir in range(2):
+      distance = 0
+      for i in range(1, dn2 + 1):
+        distance += grid_flat[start_i + offsets[dir] * i]
+      distances[start_i + offsets[dir] * dn2, dir, dn2] = distance
     priority_queue = [(distance, state) for state, distance in distances.items()]
 
     while priority_queue:
@@ -3524,9 +3532,8 @@ puzzle.verify(1, day21_part1)
 
 
 # %%
-def day21_visualize(s):
+def day21_visualize(s, num_rings=2, no_flicker=True):
   grid = np.array([list(line) for line in s.splitlines()])
-  num_rings = 2
   num_tiles = 1 + 2 * num_rings
   grid = np.tile(grid, (num_tiles, num_tiles))
   is_empty = grid != '#'
@@ -3534,34 +3541,36 @@ def day21_visualize(s):
   active[(1 + 65 + num_rings * 131,) * 2] = True
   counts = np.full((num_tiles, num_tiles), 0)
   images = []
+  new_counts = False
+  num_indices = 65 + num_rings * 131
 
-  for index in range(65 + num_rings * 131):
+  for index in range(num_indices):
     active[1:-1, 1:-1] = is_empty & (
         active[:-2, 1:-1] | active[2:, 1:-1] | active[1:-1, :-2] | active[1:-1, 2:]
     )
-    if measure_counts := (index + 1) % 131 == 65:
+    if (index + 1) % 131 == 65 and index > 65:
       counts = active[1:-1, 1:-1].reshape(num_tiles, 131, num_tiles, 131).sum(axis=(1, 3))
+      new_counts = True
+    if no_flicker and index % 2 == 1 and index != num_indices - 1:
+      continue
     image = hh.to_image(is_empty, 10, 245)
-    image[active[1:-1, 1:-1]] = 60, 60, 255
+    image[active[1:-1, 1:-1]] = 80, 110, 255
     for i in [0, 130]:
       image[i::131, :, 1] = image[:, i::131, 1] = 120
     for yx, count in np.ndenumerate(counts):
       if count:
         hh.overlay_text(image, np.array(yx) * 131 + 65, f'{count:4}', align='mc', fontsize=20)
-    for _ in range(40 if measure_counts else 1):
+    for _ in range(60 if new_counts else 1):
       images.append(image)
+    new_counts = False
 
-  images = [images[0]] * 20 + images + [images[-1]] * 150
+  if no_flicker:
+    hh.display_html('Note: to avoid flickering, we only show every other step.')
+  images = [images[0]] * 20 + images + [images[-1]] * 180
   media.show_video(images, codec='gif', fps=30, title='day21a')
 
 
-if SHOW_BIG_MEDIA:
-  day21_visualize(puzzle.input)
-
-
-# %% [markdown]
-# Cached result:<br/>
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day21a.gif"/><br/>
+day21_visualize(puzzle.input)
 
 
 # %%
@@ -3627,7 +3636,13 @@ puzzle.verify(2, day21_part2)
 #
 # ---
 #
+# - The approach **day22a** by `@lkesteloot` cleverly reuses a brick dropping routine
+#   to realize both Part 1 and Part 2.  It only maintains a 2D height map.
+#   However, the routine must be called many times so the algorithm is computationally expensive.
 #
+# - My first approach **day22b** introduces many data structures including a 3D occupancy volume.
+#
+# - The simpler scheme **day22** constructs only a `rests_on` graph structure.
 
 # %%
 puzzle = advent.puzzle(day=22)
@@ -3701,7 +3716,7 @@ check_eq(day22a_part2(s1), 7)
 
 
 # %%
-def day22(s, *, part2=False):
+def day22b(s, *, part2=False):  # First scheme with unnecessary data structures including 3D grid.
   bricks = [tuple(map(int, re.findall(r'\d+', line))) for line in s.splitlines()]
   bricks = [(*b[:3], b[3] + 1, b[4] + 1, b[5] + 1) for b in bricks]
   bricks.sort(key=lambda brick: brick[2])  # In ascending minimum height.
@@ -3709,7 +3724,7 @@ def day22(s, *, part2=False):
   heights = np.full((10, 10), 0)
   occupancy = np.full((10, 10, max(brick[5] for brick in bricks)), -1)  # Empty.
   occupancy[..., 0] = -2  # Fake extra base brick spanning height=0.
-  placement, belows = {}, {}
+  placement, rests_on = {}, {}
   total = 0
 
   for index, brick in enumerate(bricks):
@@ -3717,7 +3732,7 @@ def day22(s, *, part2=False):
     height = heights[footprint].max() + 1
     placement[index] = height
     occupancy[(*footprint, slice(height, height + brick[5] - brick[2]))] = index
-    belows[index] = set(occupancy[(*footprint, height - 1)].flat) - {-1}
+    rests_on[index] = set(occupancy[(*footprint, height - 1)].flat) - {-1}
     heights[footprint] = height + brick[5] - brick[2] - 1
 
   if not part2:
@@ -3725,18 +3740,67 @@ def day22(s, *, part2=False):
       footprint = slice(*brick[0::3]), slice(*brick[1::3])
       height = placement[index]
       height2 = height + brick[5] - brick[2]
-      # Check if for each brick above this one, there is at least one other brick below it.
-      above = set(occupancy[(*footprint, height2)].flat) - {-1}
-      total += all(len(belows[index2]) > 1 for index2 in above)
+      # Check if for each brick above this one, there is at least one other brick it rests on.
+      supported = set(occupancy[(*footprint, height2)].flat) - {-1}
+      total += all(len(rests_on[index2]) > 1 for index2 in supported)
     return total
 
-  # Is there a faster-than-quadratic graph solution for Part 2?
+  # TODO: Is there any graph algorithm to enable a faster-than-quadratic solution here?
   for index in range(len(bricks)):
     falling = {index}
     for index2 in range(index + 1, len(bricks)):
-      if belows[index2] <= falling:
+      if rests_on[index2] <= falling:
         falling.add(index2)
     total += len(falling) - 1
+  return total
+
+
+check_eq(day22b(s1), 5)
+puzzle.verify(1, day22b)
+
+day22b_part2 = functools.partial(day22b, part2=True)
+check_eq(day22b_part2(s1), 7)
+puzzle.verify(2, day22b_part2)
+
+
+# %%
+def day22(s, *, part2=False):  # Both Part 1 and Part 2 access only a `rests_on` graph.
+  def drop_bricks():
+    bricks = [tuple(map(int, re.findall(r'\d+', line))) for line in s.splitlines()]
+    bricks = [(*b[:3], b[3] + 1, b[4] + 1, b[5] + 1) for b in bricks]
+    bricks.sort(key=lambda brick: brick[2])  # In ascending minimum height.
+    rests_on: dict[int, set[int]] = {}
+    heights = np.full((10, 10), 1)
+    highest_brick = np.full((10, 10), -1)  # Fake extra base-spanning brick.
+    for index, brick in enumerate(bricks):
+      footprint = slice(*brick[0::3]), slice(*brick[1::3])
+      height = heights[footprint].max()
+      is_touching = heights[footprint] == height
+      rests_on[index] = set(highest_brick[footprint][is_touching].flat)
+      heights[footprint] = height + brick[5] - brick[2]
+      highest_brick[footprint] = index
+    return rests_on
+
+  rests_on = drop_bricks()
+  total = 0
+
+  if part2:
+    for index in range(len(rests_on)):
+      falling = {index}
+      for index2 in range(index + 1, len(rests_on)):
+        if rests_on[index2] <= falling:
+          falling.add(index2)
+      total += len(falling) - 1
+
+  else:
+    # Create the directed graph that is reverse of rests_on.
+    supports = {-1: set()} | {index: set() for index in rests_on}
+    for index, indices in rests_on.items():
+      for index2 in indices:
+        supports[index2] |= {index}
+    for index, indices in supports.items():
+      total += index >= 0 and all(len(rests_on[index2]) > 1 for index2 in indices)
+
   return total
 
 
@@ -3784,15 +3848,16 @@ def day22_visualize(s):
     fig.show()
 
   if 1:
-    video = np.array(hh.wobble_video(fig, amplitude=20.0))
-    media.show_video(video, codec='gif', fps=3, border=True, title='day22b')
-
-  if 0:
-    image = hh.image_from_plotly(fig, width=200, height=700)
-    media.show_image(image, border=True, title='day22a')
+    video = np.array(hh.wobble_video(fig, amplitude=20.0, num_frames=24, quantization=1 / 6))
+    media.show_video(video, codec='gif', fps=6, border=True, title='day22b')
 
 
-day22_visualize(puzzle.input)
+if SHOW_BIG_MEDIA:
+  day22_visualize(puzzle.input)
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day22b.gif"/>
 
 # %% [markdown]
 # <a name="day23"></a>
@@ -3805,7 +3870,23 @@ day22_visualize(puzzle.input)
 #
 # ---
 #
+# - Approach **day23a** uses a stack-based breadth-first search (BFS) where the state includes the set of visited nodes
+#   and the length of the path so far.  Here the state identifies nodes by their `y, x` grid locations, to allow visualization.
 #
+# - Approach **day23b** uses a recursive function for a depth-first search with the same state as before.
+#   Here the state identifies nodes by integer indices.
+#
+# - Approach **day23c** is back to the stack-based BFS approach, but using integer node indices.
+#
+# - Approach **day23** is a numba implementation.  One complication is that the graph structure (`dict[int, list[int]]`) must
+#   be stored as an `np.ndarray`.
+#
+# Visualizations reveal that the graph structure induced by the maze is not at all random!
+# In fact, it corresponds to a regular grid structure.
+# This is entirely unexpected given the apparent jumble of paths in the text grid.
+# For this special graph structure, maybe there are more efficient solvers.
+# For Part 1 (a purely directed graph), it seems that it's an instance of dynamic programming.
+# TODO: For Part 2, are there any tricks?
 
 # %%
 puzzle = advent.puzzle(day=23)
@@ -3989,6 +4070,8 @@ if 'networkx' in globals():
   media.set_max_output_height(3000)
   day23_visualize_graph(puzzle.input)
   day23_visualize_graph(puzzle.input, part2=True)
+
+# TODO: Show the solution paths on these graphs.
 
 
 # %%
@@ -4253,11 +4336,12 @@ check_eq(day24c_part2(s1), 47)
 
 
 # %%
-# Try defining the gradient??
+# TODO: Try defining the gradient to see if this robustifies or accelerates the search.
 
 
 # %%
-def day24d_part2(s, debug=False, use=10):  # scipy.optimize.least_squares() succeeds.
+def day24d_part2(s, debug=False, use=20):  # scipy.optimize.least_squares() succeeds.
+  # use=10 was OK for one puzzle.input, but use=20 was required for another one.
   array = np.array([line.replace(' @', ',').split(',') for line in s.splitlines()], float)[:use]
 
   def fun(vars):
@@ -4309,6 +4393,7 @@ check_eq(day24e_part2(s1), 47)
 
 puzzle.verify(2, day24e_part2)
 # (159153037374407, 228139153674672, 170451316297300, 245, 75, 221, 734248440071, 854610412103, 300825392054)
+# (363206674204110, 368909610239045, 156592420220258, -164, -127, 223, 807026090068, 665395648062, 117549288974)
 
 
 # %%
