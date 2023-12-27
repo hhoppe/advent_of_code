@@ -39,7 +39,8 @@ Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`
 <p>
 <a href="#day20">day20</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day20.png" width="240">&emsp;
 <a href="#day21">day21</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day21a.gif" width="240">&emsp;
-<a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day22b.gif" width="72">
+<a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day22a.png" width="60">&nbsp;
+<img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day22b.gif" width="72">
 </p>
 
 <p>

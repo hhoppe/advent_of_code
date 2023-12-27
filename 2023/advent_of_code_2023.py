@@ -42,7 +42,8 @@
 # <p>
 # <a href="#day20">day20</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day20.png" width="240">&emsp;
 # <a href="#day21">day21</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day21a.gif" width="240">&emsp;
-# <a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day22b.gif" width="72">
+# <a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day22a.png" width="60">&nbsp;
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day22b.gif" width="72">
 # </p>
 #
 # <p>
@@ -873,7 +874,8 @@ puzzle.verify(2, day6_part2)
 #
 # ---
 #
-#
+# The `collections.Counter` class is handy for this problem.
+# Also, it is useful that Python automatically sorts tuples (including nested ones) in lexicographic order.
 
 # %%
 puzzle = advent.puzzle(day=7)
@@ -953,8 +955,9 @@ puzzle.verify(2, day7_part2)
 # We implement a generalized version that supports non-co-prime moduli.
 #
 # We further observe that the phase equals zero for all cycles.
-# (A visualization of the graph structure encoded in the puzzle input explains this special phase property.)
 # Because all phases are zero, a simpler solution is to simply compute the least common multiple (lcm) of the cycle periods.
+#
+# A visualization of the graph structure encoded in the puzzle input explains all the properties above..
 
 # %%
 puzzle = advent.puzzle(day=8)
@@ -1131,6 +1134,12 @@ if 'networkx' in globals():
   day8_visualize(puzzle.input)
 
 
+# %% [markdown]
+# In the visualization above, there are 6 "doubly-stranded" cycles, with different cycle periods.
+# For each cycle, there is a start node (in green) just outside which jumps to a node right after the end node (in red).
+# That is why the phase of the solution is zero in each of the cycles.
+
+
 # %%
 def day8(s, *, part2=False):  # Special-case algorithm that assumes that all phases are zero.
   lines = s.splitlines()
@@ -1254,9 +1263,12 @@ puzzle.verify(2, day9_part2)
 # - **day10a**, **day10b**: We upsample the loop onto a grid with twice the resolution of the original grid and then compute
 #   a flood-fill starting from an exterior point.
 #   The remaining (non-filled) grid nodes are the interior; these are counted on the subsampled grid at the original resolution.
+#   This approach is really useful for visualizing the problem.
 #
 # - **day10**: For each grid row, we accumulate the number of intersections with vertical pipes (modulo 2).
 #   The interior region consists of grid points with value 1, except for the grid nodes on the loop itself.
+#   A difficult aspect here is that the start symbol `S` must be replaced by the correct pipe symbol to
+#   yield the correct intersection counts.
 
 # %%
 puzzle = advent.puzzle(day=10)
@@ -2107,6 +2119,9 @@ def day13_visualize(s, rep=5):
 day13_visualize(puzzle.input)
 
 # %% [markdown]
+#  In the visualization above, the Part 1 reflections lines are green, and the Part 2 lines are red.
+
+# %% [markdown]
 # <a name="day14"></a>
 # ## Day 14: Tilting platform
 
@@ -2117,7 +2132,15 @@ day13_visualize(puzzle.input)
 #
 # ---
 #
+# - The first approach **day14a** uses an `np.ndarray` to store the grid, applies `np.rot90` to rotate it,
+#   and within each rotation, walks over each row to move the rocks to the first open spaces.
 #
+# - The second approach **day14b** is entirely different.
+#   Based on an algorithm by @lkesteloot, it represents the rocks as a list of `(y, x)` coordinates and
+#   it precomputes for each grid rotation a set of jump points onto which the rocks will accumulate.
+#   This is all represented using several arrays to allow `numba` acceleration and it runs fast.
+#
+# - However, **day14** is the fastest implementation; it is simply a `numba`-accelerated version of the first approach.
 
 # %%
 puzzle = advent.puzzle(day=14)
@@ -2400,10 +2423,6 @@ puzzle.verify(2, day14_part2)
 # day14_slide_left(np.rot90(np.full((10, 10), ord('.'), np.uint8), 2))
 # print(day14_slide_left.signatures)
 
-# config = tuple(sorted(map(tuple, rolls)))
-# config = frozenset(tuple(yx) for yx in rolls)
-# config = tuple(sorted([(y, x) for y, x in rolls]))
-
 # %% [markdown]
 # <a name="day15"></a>
 # ## Day 15: Edits to hashed boxes
@@ -2415,7 +2434,7 @@ puzzle.verify(2, day14_part2)
 #
 # ---
 #
-#
+# This was a tedious puzzle to read, and the implementation just involves a list of lists of string tuples.
 
 # %%
 puzzle = advent.puzzle(day=15)
@@ -2472,7 +2491,22 @@ puzzle.verify(2, day15_part2)
 #
 # ---
 #
+# All my approaches store the `visited` state as a grid (y, x, direction) and maintain a stack
+# of new states to explore when reaching a splitter node.
 #
+# - Approach **day16a** represents direction as `dy, dx`.
+#
+# - Approach **day16** represents direction as `dir in [0, 1, 2, 3]`, converts the input grid to `np.uint8`,
+#   and uses `numba` for acceleration.
+#
+# The fun visualization here is a bit misleading in that it involves a breadth-first traversal,
+# which is not what most algorithms implement, but it looks cooler.
+#
+# The visualizer uses a generator `traced_rays = create_traced_rays(best_start)` to advance the rays.
+# The algorithm advances a float-valued `time_current` while outputting frames.
+# It invokes `next(traced_rays)` whenever the time value advances pass integer time unit(s).
+# This allows the animation to be both slow (repeating frames) initially and fast (skipping ray states) at the end,
+# all with simple logic.
 
 # %%
 puzzle = advent.puzzle(day=16)
@@ -2662,6 +2696,11 @@ if SHOW_BIG_MEDIA:
 # <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day16a.gif"/><br/>
 
 
+# %% [markdown]
+# (This visualization is a bit misleading in that it involves a breadth-first traversal,
+# which is not what most algorithms implement, but it looks cool.)
+
+
 # %%
 @numba.njit
 def day16_num_visited(grid, start):  # start == (y, x, dir); dir 0,1,2,3 == S,E,N,W.
@@ -2724,7 +2763,25 @@ puzzle.verify(2, day16_part2)
 #
 # ---
 #
+# The key trick is to use the standard Dijkstra shortest-path algorithm but incorporating the path direction and current length into the state of each graph node.
 #
+# - Approach **day17a** implements the node state as `(y, x, dy, dx, dn)` where `dy, dx` encode direction and
+#   `dn` is the number of steps already walked in that direction.
+#
+# - **day17b** is a straightforward `numba` acceleration of the first approach.
+#
+# - **day17c** applies several optimizations for a further 2x speedup:
+#   padding all boundaries of the 2D array to avoid bounds checking,
+#   flattening the 2D array into 1D, representing all four directions as 1D offsets in this flat array,
+#   immediately advancing the 1 (Part 1) or 4 (Part 2) minimum straight steps after performing a turn,
+#   and treating the (straight, left, right) cases explicitly rather than exploring all four directions.
+#
+# - **day17** is a further optimization in which the numba-jitted code is specialized to the setting of the `part2` parameter.
+#   For this particular puzzle, the code is not all that different, so there is no speedup.
+#   However, I feel like archiving this technique because it could be useful in other scenarios.
+#
+# As the visualization shows, a clever design aspect of the puzzle input is that the shortest path in Part 1 is nowhere close
+# to the Part 2 solution, so one could not perform a local "relaxation" to try to satisfy the path straightness constraints.
 
 # %%
 puzzle = advent.puzzle(day=17)
@@ -2990,12 +3047,15 @@ puzzle.verify(2, day17_part2)
 # ---
 #
 # - The first approach **day18a_part1** discretizes the loop path into a 2D grid and applies a flood-fill algorithm.
-#   This approach is only practical for Part 1.
+#   This approach is only practical for the small problem size of Part 1.
 #
 # - The efficient approach **day18** computes the area inside the path by summing signed areas corresponding to the
-#   Up segments and Down segments.
+#   "up" segments and "down" segments.
 #   However, this basic scheme only accounts for half of the perimeter, whereas we need to include the full perimeter.
-#   We add extra single-wide path areas on the Down and Right segments to complete the full perimeter.
+#   We add therefore extra single-wide path areas on the "down" and "right" segments to complete the full perimeter.
+#
+# It looks like the more general approach (for a polygon with non-axis-aligned edges) is called the
+# [shoelace formula](https://en.wikipedia.org/wiki/Shoelace_formula).
 
 # %%
 puzzle = advent.puzzle(day=18)
@@ -3122,6 +3182,16 @@ day18_part2_visualize(puzzle.input)
 # ---
 #
 # The approach in Part 2 is to compute using intervals, subdividing them as appropriate based on the inequality conditions.
+#
+# - Approach **day19a_part2** uses a stack to store new intervals after subdivision.
+#   It includes the fun code snippet `for category in 'xmas'` :-).
+#
+# - In contrast, **day19_part2** uses recursion.
+#
+# Both approaches are fast.  The recursion-based algorithm is slightly more compact.
+#
+# The graph structure turns out to be a tree (i.e., it is not only acyclic but all nodes have a single parent).
+# The current algorithms do not rely on this property.
 
 # %%
 puzzle = advent.puzzle(day=19)
@@ -3266,6 +3336,45 @@ def day19_part2(s):  # Implementation using a recursive function.
 check_eq(day19_part2(s1), 167409079868000)
 puzzle.verify(2, day19_part2)
 
+
+# %%
+def day19_visualize(s):
+  graph = networkx.DiGraph()
+  for line in s.split('\n\n')[0].splitlines():
+    name, s_rules = line[:-1].split('{')
+    for rule in s_rules.split(','):
+      if rule.isalpha():
+        graph.add_edge(name, rule)
+      else:
+        _, name2 = rule.split(':')
+        graph.add_edge(name, name2)
+
+  for node in ['A', 'R']:  # Remove the accept and reject nodes for a clean visualization.
+    graph.remove_node(node)
+
+  # A graph is a tree if (1) it is a DAG; (2) it has one root; (3) all nodes have single parent.
+  assert networkx.is_directed_acyclic_graph(graph)
+  roots = [node for node, in_degree in graph.in_degree() if in_degree == 0]
+  assert roots == ['in']
+  assert all(in_degree == 1 for node, in_degree in graph.in_degree() if node != roots[0])
+  assert networkx.is_tree(graph)
+
+  pos = hh.graph_layout(graph, prog='neato')
+  fig, ax = plt.subplots(figsize=(7, 7), dpi=80)
+  ax.axes.set_aspect('equal')
+  # 'C0' is the first color in the color cycle of the current matplotlib style.
+  node_color = ['red' if node == 'in' else 'C0' for node in graph]
+  networkx.draw(graph, pos, node_size=15, node_color=node_color, width=0.5, arrowsize=8)
+
+  hh.display_html("In the following visualization, the (root) 'in' node is shown in red.")
+  fig.tight_layout(pad=0)
+  image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
+  media.show_image(image, border=True, title='day19')
+  plt.close(fig)
+
+
+day19_visualize(puzzle.input)
+
 # %% [markdown]
 # <a name="day20"></a>
 # ## Day 20: Pulses through graph
@@ -3277,7 +3386,16 @@ puzzle.verify(2, day19_part2)
 #
 # ---
 #
+# I first tried in vain to find an efficient solution to the general problem (for arbitrary puzzle inputs).
 #
+# The key to tractibility is to recognize that the puzzle has a very specific graph structure, as seen in the visualization.
+# There are four subgraphs that each contribute a single high pulse at a specific period.
+# These four subgraphs feed into a single "conjunction" (i.e., a NAND gate).
+# Therefore, the output has only a single low pulse at a period that is the lcm of the four subgraphs.
+#
+# If the pulses had nonzero phases, it would be necessary to then solve a general `_solve_modulo_congruences` problem.
+# However, all phases are zero, so one can simply return the lcm of the four periods.
+# (In fact, the periods are coprime, so the product of the periods suffices.)
 
 # %%
 puzzle = advent.puzzle(day=20)
@@ -3470,7 +3588,24 @@ puzzle.verify(2, day20_part2)
 #
 # ---
 #
+# Several properties of the puzzle input make this problem tractable:
 #
+# - The start node is located at location $(65, 65)$, which is precisely in the center of the $131\times131$ tile.
+#
+# - The advancing front of "farthest nodes" reached after 65 steps forms a "diamond-shaped" band within the tile,
+#   and in the puzzle input this band is empty, so the progress of "distances" is highly regular there.
+#
+# - The requested number 26501365 of steps is of the form $65 + k\cdot 131$, i.e. with $k=202300$.
+#
+# The solution approach is to compute the simulation over a fixed numbers of steps, $65 + k\cdot 131$,
+# which represent the solution reached after advancing through $k$ "outer tiles" (e.g., for a small number such as $k=2$),
+# and count the number of active/reachable nodes within each of the $131\times131$ tiles.
+# Due to the special properties of the puzzle input, these counts have regularities both spatially and with increasing $k$
+# (although the counts are different in each of the four diagonal and four axial directions).
+# Thus one can determine analytically how many of each type of tile are present
+# after expansion over $k=202300$ tiles.
+#
+# A visualization demonstrates the basic approach using $k=2$.
 
 # %%
 puzzle = advent.puzzle(day=21)
@@ -3492,7 +3627,7 @@ s1 = """\
 
 
 # %%
-def day21a_part1(s, *, nsteps=64):
+def day21a_part1(s, *, nsteps=64):  # Breadth-first search using an active set and next set.
   grid = np.array([list(line) for line in s.splitlines()])
   grid = np.pad(grid, 1, constant_values='#')
   (start_yx,) = np.argwhere(grid == 'S')
@@ -3515,7 +3650,7 @@ puzzle.verify(1, day21a_part1)
 
 
 # %%
-def day21_part1(s, *, nsteps=64):
+def day21_part1(s, *, nsteps=64):  # Breadth-first search as a numpy logical operation.
   grid = np.array([list(line) for line in s.splitlines()])
   is_empty = grid != '#'
   grid = np.pad(grid, 1, constant_values='#')
@@ -3606,7 +3741,7 @@ puzzle.verify(2, day21a_part2)
 
 
 # %%
-def day21_part2(s):  # Most concise but obscure.
+def day21_part2(s):  # Most concise but highly specialized and obscure.
   empty = np.tile(np.array([list(line) for line in s.splitlines()]) != '#', (5, 5))
   a = np.zeros((657, 657), bool)
   a[328, 328] = 1
@@ -3638,11 +3773,14 @@ puzzle.verify(2, day21_part2)
 #
 # - The approach **day22a** by `@lkesteloot` cleverly reuses a brick dropping routine
 #   to realize both Part 1 and Part 2.  It only maintains a 2D height map.
-#   However, the routine must be called many times so the algorithm is computationally expensive.
+#   However, both the Part 1 and Part 2 algorithms are computationally expensive
+#   because they involve many calls to the drop routine.
 #
-# - My first approach **day22b** introduces many data structures including a 3D occupancy volume.
+# - My first approach **day22b** introduces many data structures (including a 3D occupancy volume) to speed up the algorithms.
 #
 # - The simpler scheme **day22** constructs only a `rests_on` graph structure.
+#
+# A visualization of the `rests_on` graph structure reveals a directed acyclic graph (DAG), as expected.
 
 # %%
 puzzle = advent.puzzle(day=22)
@@ -3716,14 +3854,14 @@ check_eq(day22a_part2(s1), 7)
 
 
 # %%
-def day22b(s, *, part2=False):  # First scheme with unnecessary data structures including 3D grid.
+def day22b(s, *, part2=False, visualize=False):  # First scheme, with unnecessary data structures.
   bricks = [tuple(map(int, re.findall(r'\d+', line))) for line in s.splitlines()]
   bricks = [(*b[:3], b[3] + 1, b[4] + 1, b[5] + 1) for b in bricks]
   bricks.sort(key=lambda brick: brick[2])  # In ascending minimum height.
 
   heights = np.full((10, 10), 0)
   occupancy = np.full((10, 10, max(brick[5] for brick in bricks)), -1)  # Empty.
-  occupancy[..., 0] = -2  # Fake extra base brick spanning height=0.
+  occupancy[..., 0] = base_brick = -2  # Fake extra base brick spanning height=0.
   placement, rests_on = {}, {}
   total = 0
 
@@ -3734,6 +3872,25 @@ def day22b(s, *, part2=False):  # First scheme with unnecessary data structures 
     occupancy[(*footprint, slice(height, height + brick[5] - brick[2]))] = index
     rests_on[index] = set(occupancy[(*footprint, height - 1)].flat) - {-1}
     heights[footprint] = height + brick[5] - brick[2] - 1
+
+  if visualize:
+    graph = networkx.DiGraph()
+    for index, brick in enumerate(bricks):
+      graph.add_node(index, node_color='#40A0E0')
+      for index2 in rests_on[index]:
+        graph.add_edge(index, index2)
+    graph.add_node(base_brick, node_color='red')
+    assert networkx.is_directed_acyclic_graph(graph)  # As expected.
+    pos = hh.graph_layout(graph, prog='dot')
+    fig, ax = plt.subplots(figsize=(5, 20), dpi=80)
+    ax.axes.set_aspect('equal')
+    node_color = [attr for _, attr in graph.nodes(data='node_color')]
+    networkx.draw(graph, pos, node_color=node_color, node_size=15, width=0.5, arrowsize=4)
+    fig.tight_layout(pad=0)
+    image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
+    media.show_image(image, border=True, title='day22a')
+    plt.close(fig)
+    return
 
   if not part2:
     for index, brick in enumerate(bricks):
@@ -3761,6 +3918,10 @@ puzzle.verify(1, day22b)
 day22b_part2 = functools.partial(day22b, part2=True)
 check_eq(day22b_part2(s1), 7)
 puzzle.verify(2, day22b_part2)
+
+# %%
+media.set_max_output_height(3000)
+day22b(puzzle.input, visualize=True)
 
 
 # %%
@@ -3813,7 +3974,7 @@ puzzle.verify(2, day22_part2)
 
 
 # %%
-def day22_visualize(s):
+def day22_visualize_3d(s):
   bricks = [tuple(map(int, re.findall(r'\d+', line))) for line in s.splitlines()]
   bricks = [(*b[:3], b[3] + 1, b[4] + 1, b[5] + 1) for b in bricks]
   bricks.sort(key=lambda brick: brick[2])  # In ascending minimum height.
@@ -3828,9 +3989,8 @@ def day22_visualize(s):
 
   facecolors = np.random.default_rng(0).random((len(cubes), 3)) * 0.7 + 0.2
   surface = hh.mesh3d_from_cubes(cubes, facecolors)
-  fig = go.Figure(data=surface)
 
-  def set_fig_layout(a=0.1):  # Downscale dimensions to avoid clipping eye coordinates to max ~100.
+  def fig_layout(a=0.1):  # Downscale dimensions to avoid clipping eye coordinates to max ~100.
     maxs = [max(cube[3 + c] for cube in cubes) for c in range(3)]
     aspectratio = dict(x=maxs[0] * a, y=maxs[1] * a, z=maxs[2] * a)
     eye = dict(x=140 * a, y=0 * a, z=80 * a)
@@ -3838,9 +3998,9 @@ def day22_visualize(s):
     camera = dict(center=center, eye=eye)
     no_axes = {axis: dict(visible=False) for axis in ['xaxis', 'yaxis', 'zaxis']}
     scene = dict(aspectratio=aspectratio, camera=camera, **no_axes)
-    fig.layout.update(width=200, height=700, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
+    return go.Layout(width=200, height=700, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
 
-  set_fig_layout()
+  fig = go.Figure(data=surface, layout=fig_layout())
 
   if SHOW_BIG_MEDIA:
     media.set_max_output_height(3000)
@@ -3853,7 +4013,7 @@ def day22_visualize(s):
 
 
 if SHOW_BIG_MEDIA:
-  day22_visualize(puzzle.input)
+  day22_visualize_3d(puzzle.input)
 
 # %% [markdown]
 # Cached result:<br/>
@@ -3879,13 +4039,14 @@ if SHOW_BIG_MEDIA:
 # - Approach **day23c** is back to the stack-based BFS approach, but using integer node indices.
 #
 # - Approach **day23** is a numba implementation.  One complication is that the graph structure (`dict[int, list[int]]`) must
-#   be stored as an `np.ndarray`.
+#   be passed to the numba function as an `np.ndarray`.
 #
-# Visualizations reveal that the graph structure induced by the maze is not at all random!
+# A visualizations reveals that the graph structure induced by the maze is not at all random!
 # In fact, it corresponds to a regular grid structure.
 # This is entirely unexpected given the apparent jumble of paths in the text grid.
 # For this special graph structure, maybe there are more efficient solvers.
 # For Part 1 (a purely directed graph), it seems that it's an instance of dynamic programming.
+#
 # TODO: For Part 2, are there any tricks?
 
 # %%
@@ -4166,11 +4327,57 @@ puzzle.verify(2, day23_part2)  # ~5 s (~90 s without numba).
 # %% [markdown]
 # - Part 1: Considering only the X and Y axes, check all pairs of hailstones' future paths for intersections.  How many of these intersections occur within the test area $\left[2\cdot 10^{14}, 4\cdot 10^{14}\right]^2$ ?
 #
-# - Part 2: Determine the exact position and velocity the rock needs to have at time 0 so that it perfectly collides with every hailstone. What do you get if you add up the X, Y, and Z coordinates of that initial position?
+# - Part 2: Determine the exact position and velocity the (thrown) rock needs to have at time 0 so that it perfectly collides with every hailstone. What do you get if you add up the X, Y, and Z coordinates of that initial position?
 #
 # ---
 #
+# **Part 1** involves solving many small linear systems.
+# For each pair of input 2D hailstones,
+# with given positions $p_1, p_2$ and velocities $v_1, v_2$,
+# we obtain their paths' intersection by solving for the time parameters $t_1, t_2$ in:
+# $$
+# \begin{align}
+# p_{1,x} + v_{1,x}\,t_1 = p_{2,x} + v_{2,x}\,t_2 \\
+# p_{1,y} + v_{1,y}\,t_1 = p_{2,y} + v_{2,y}\,t_2
+# \end{align},
+# $$
+# or equivalently,
+# $$
+# \pmatrix{v_{1,x} & -v_{2,x} \\ v_{1,y} & -v_{2,y}} \pmatrix{t_1 \\ t_2} = \pmatrix{p_{2,x} - p_{1,x} \\ p_{2,y} - p_{1,y}}.
+# $$
 #
+# We explore
+# (1) using either the library function `np.linalg.solve`
+# or a manual implementation of the $2\times2$ linear system solution, and
+# (2) using either `numpy` or `numba`.  (See **day24a_part1**, **day24b_part1**, **day24c_part1**, **day24_part1**.)
+#
+# The conclusions are that
+# (1) the manual implementation of the linear solver is much faster, and
+# (2) using `numba` is much faster.
+
+# %% [markdown]
+# **Part 2** involves solving a system of quadratic equations:
+# $$p_c + v_c\,t_i = p_{i, c} + v_{i, c}\,t_i,$$
+# where the subscript $c\in\{x,y,z\}$ denotes each of the three coordinates,
+# $\{p_i\}$ and $\{v_i\}$ are the known positions and velocities of the hailstones,
+# and the unknowns are
+# the position $p$ and velocity $v$ of the thrown rock and
+# the times $\{t_i\}$ at which the rock intersects the hailstones.
+#
+# These equations are quadratic because they involve the product of two unknowns: $v_c$ and $t_i$,
+# the velocity of the thrown rock and the time at which each intersection occurs.
+#
+# If we consider just $k$ input hailstones $p_1,\ldots,p_k$,
+# the resulting system has $3k$ constraints and $k+6$ unknowns.
+# Thus, in general, considering only the first $k=3$ hailstones already provides a sufficiently constrained system.
+#
+# Several approaches are considered:
+#
+# - `scipy.optimize.fsolve()` and `scipy.optimize.minimize` fail to converge to the solution.
+#
+# - **day24d_part2** finds the correct solution using `scipy.optimize.least_squares()` by considering $k=20$ hailstones.
+#
+# - The simplest approach **day24_part2** is to use the symbolic solver in `sympy.solve`.
 
 # %%
 puzzle = advent.puzzle(day=24)
@@ -4186,16 +4393,16 @@ s1 = """\
 
 
 # %%
-def day24a_part1(s, low=200_000_000_000_000, high=400_000_000_000_000):
-  array = np.array([line.replace(' @', ',').split(',') for line in s.splitlines()], int)
+def day24a_part1(s, low=200_000_000_000_000, high=400_000_000_000_000):  # np.linalg.solve().
+  array = np.array([line.replace(' @', ',').split(',') for line in s.splitlines()], float)
   total = 0
-  for row0, row1 in itertools.combinations(array, 2):
-    pos0, vel0, pos1, vel1 = row0[:2], row0[3:5], row1[:2], row1[3:5]
+  for row1, row2 in itertools.combinations(array, 2):
+    pos1, vel1, pos2, vel2 = row1[:2], row1[3:5], row2[:2], row2[3:5]
     try:
-      t = np.linalg.solve(np.array([vel0, -vel1]).T, pos1 - pos0)
+      t = np.linalg.solve(np.array([vel1, -vel2]).T, pos2 - pos1)
     except np.linalg.LinAlgError:
       continue
-    total += all(t > 0) and all(low <= c <= high for c in pos0 + t[0] * vel0)
+    total += all(t > 0) and all(low <= c <= high for c in pos1 + t[0] * vel1)
   return total
 
 
@@ -4204,21 +4411,72 @@ puzzle.verify(1, day24a_part1)
 
 
 # %%
-# The Python exception overhead is greatly reduced when using numba.
-@numba.njit
-def day24_compute(array, low, high):
+def day24b_part1(s, low=200_000_000_000_000, high=400_000_000_000_000):  # Manual solution.
+  array = np.array([line.replace(' @', ',').split(',') for line in s.splitlines()], float)
   total = 0
-  for i0, row0 in enumerate(array):
-    for row1 in array[i0 + 1 :]:
-      pos0, vel0, pos1, vel1 = row0[:2], row0[3:5], row1[:2], row1[3:5]
+  for row1, row2 in itertools.combinations(array, 2):
+    pos1, vel1, pos2, vel2 = row1[:2], row1[3:5], row2[:2], row2[3:5]
+    # [[a, b], [c, d]] @ [t1, t2] == [e, f]
+    a, b = vel1[0], -vel2[0]
+    c, d = vel1[1], -vel2[1]
+    e, f = pos2[0] - pos1[0], pos2[1] - pos1[1]
+    det = a * d - b * c
+    if det != 0:
+      inv_a11, inv_a12, inv_a21, inv_a22 = d / det, -b / det, -c / det, a / det
+      t1 = inv_a11 * e + inv_a12 * f
+      t2 = inv_a21 * e + inv_a22 * f
+      total += t1 > 0 and t2 > 0 and all(low <= c <= high for c in pos1 + t1 * vel1)
+  return total
+
+
+check_eq(day24b_part1(s1, low=7, high=27), 2)
+puzzle.verify(1, day24b_part1)
+
+
+# %%
+@numba.njit  # np.linalg.solve() in numba.
+def day24c_compute(array, low, high):
+  total = 0
+  for i1, row1 in enumerate(array):
+    for row2 in array[i1 + 1 :]:
+      pos1, vel1, pos2, vel2 = row1[:2], row1[3:5], row2[:2], row2[3:5]
       try:
-        matrix = np.column_stack((vel0, -vel1))
-        t = np.linalg.solve(matrix, pos1 - pos0)
+        matrix = np.column_stack((vel1, -vel2))
+        t = np.linalg.solve(matrix, pos2 - pos1)
       except Exception:  # For numba. # pylint: disable=broad-exception-caught
         continue
       if np.all(t > 0):
-        intersection = pos0 + t[0] * vel0
+        intersection = pos1 + t[0] * vel1
         total += int(np.all(low <= intersection) and np.all(intersection <= high))
+  return total
+
+
+def day24c_part1(s, low=200_000_000_000_000, high=400_000_000_000_000):
+  array = np.array([line.replace(' @', ',').split(',') for line in s.splitlines()], float)
+  return day24c_compute(array, low, high)
+
+
+check_eq(day24c_part1(s1, low=7, high=27), 2)
+puzzle.verify(1, day24c_part1)
+
+
+# %%
+@numba.njit  # Manual solution in numba.
+def day24_compute(array, low, high):
+  total = 0
+  for i1, row1 in enumerate(array):
+    for row2 in array[i1 + 1 :]:
+      pos1, vel1, pos2, vel2 = row1[:2], row1[3:5], row2[:2], row2[3:5]
+      a, b = vel1[0], -vel2[0]
+      c, d = vel1[1], -vel2[1]
+      e, f = pos2[0] - pos1[0], pos2[1] - pos1[1]
+      det = a * d - b * c
+      if det != 0:
+        inv_a11, inv_a12, inv_a21, inv_a22 = d / det, -b / det, -c / det, a / det
+        t1 = inv_a11 * e + inv_a12 * f
+        t2 = inv_a21 * e + inv_a22 * f
+        inter = pos1 + t1 * vel1
+        total += t1 > 0 and t2 > 0 and low <= inter[0] <= high and low <= inter[1] <= high
   return total
 
 
@@ -4423,6 +4681,9 @@ def day24_part2(s):  # Most concise.
 check_eq(day24_part2(s1), 47)
 puzzle.verify(2, day24_part2)
 
+# %%
+# TODO: The constraint that the coordinates of p and v must be integer might lead to a combinatorial search approach?
+
 # %% [markdown]
 # <a name="day25"></a>
 # ## Day 25: Graph cut
@@ -4434,7 +4695,18 @@ puzzle.verify(2, day24_part2)
 #
 # ---
 #
+# We seek to cut an unweighted, undirected graph into two connected components by removing just three edges.
+# There are routines in `networkx` to do precisely this.
 #
+# - **day25a** uses `networkx.stoer_wagner`.
+#
+# - **day25b** uses `networkx.minimum_edge_cut` and is slightly faster.
+#
+# - Visualizing the graph reveals that it has a dumbbell shape,
+#   i.e., it consists of two large clusters of nodes separated by a narrow bridge of just three edges.
+#   This particular structure allows a **faster, heuristic** solution.
+#   **day25** examines the shortest paths between many random pairs of nodes and
+#   simply determines the three most common path edges.
 
 # %%
 puzzle = advent.puzzle(day=25)
@@ -4558,7 +4830,7 @@ def day25(s, num_random_edges=100):
   # many random pairs of nodes and determine the most common path edges.
   rng = np.random.default_rng(0)
   edge_counts = collections.Counter[tuple[str, str]]()
-  nodes = np.array(list(graph.nodes()))
+  nodes = np.array(list(graph))
 
   for _ in range(num_random_edges):
     node_pair = rng.choice(nodes, size=2, replace=False)
