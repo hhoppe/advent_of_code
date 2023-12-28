@@ -13,7 +13,7 @@
 #
 # The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 #
-# For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is about 6 s on my PC.<br/>
+# For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is less than 1 s on my PC.<br/>
 # (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)
 #
 # Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`):
@@ -76,6 +76,7 @@ import math
 import pathlib
 import re
 from typing import Any, Literal
+import warnings
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
@@ -477,7 +478,8 @@ puzzle.verify(2, day3_part2)
 #
 # ---
 #
-# The approach is to use `set` intersection to count matches, and to maintain the number of copies of scratchcards as a `dict` dictionary.
+# The approach is to use `set` intersection to count matches,
+# and to maintain the number of copies of scratchcards as a `dict` dictionary.
 
 # %%
 puzzle = advent.puzzle(day=4)
@@ -530,8 +532,13 @@ puzzle.verify(2, day4_part2)
 #
 # ---
 #
-# For the challenging Part 2, my first approach is to use a recursive generator, which uses both `yield` and `yield from`.
-# My second (and faster) approach is non-recursive, with two loops and and two update lists.
+# For the challenging Part 2:
+#
+# - The first approach (**day5b** and **day5c**) involves a recursive generator,
+#   which uses both `yield` and `yield from`.
+#
+# - The second (and faster) approach **day5** is non-recursive,
+#   with two loops and and two update lists.
 
 # %%
 puzzle = advent.puzzle(day=5)
@@ -727,7 +734,8 @@ puzzle.verify(2, day5_part2)
 # ---
 #
 # The distance traveled is a quadratic function of the start time.
-# The fastest approach is to determine the interval of successful start times by solving for the roots of a quadratic equation.
+# The fastest approach is to determine the interval of successful start times
+# by solving for the roots of a quadratic equation.
 
 # %%
 puzzle = advent.puzzle(day=6)
@@ -875,7 +883,8 @@ puzzle.verify(2, day6_part2)
 # ---
 #
 # The `collections.Counter` class is handy for this problem.
-# Also, it is useful that Python automatically sorts tuples (including nested ones) in lexicographic order.
+# Also, it is useful that Python automatically sorts tuples (including nested ones)
+# in lexicographic order.
 
 # %%
 puzzle = advent.puzzle(day=7)
@@ -946,8 +955,11 @@ puzzle.verify(2, day7_part2)
 #
 # ---
 #
-# For Part 2, the approach is to run the simulation for some time and detect state cycles for each of the advancing "ghosts".  In general, each cycle has a different period, and within that period, there can be multiple phases at which a solution is possible.
-# The general implementation below determines these periods and phases.
+# For Part 2, the approach is to run the simulation for some time and detect state cycles
+# for each of the advancing "ghosts".
+# In general, each cycle has a different period, and within that period,
+# there can be multiple phases at which a solution is possible.
+# The general implementation **day8a** below determines these periods and phases.
 #
 # We observe that there is only one phase for each cycle.
 # Thus, we obtain the solution by applying the Chinese remainder theorem.
@@ -955,9 +967,11 @@ puzzle.verify(2, day7_part2)
 # We implement a generalized version that supports non-co-prime moduli.
 #
 # We further observe that the phase equals zero for all cycles.
-# Because all phases are zero, a simpler solution is to simply compute the least common multiple (lcm) of the cycle periods.
+# Because all phases are zero, a simpler solution **day8** simply computes the
+# least common multiple (lcm) of the cycle periods.
 #
-# A visualization of the graph structure encoded in the puzzle input explains all the properties above..
+# A visualization of the particular graph structure encoded in the puzzle input
+# helps explains all the properties above.
 
 # %%
 puzzle = advent.puzzle(day=8)
@@ -1175,10 +1189,11 @@ puzzle.verify(2, day8_part2)
 #
 # ---
 #
-# The first approach builds a list of successive difference arrays (obtained using `np.diff`)
-# and then computes some expression of the heads (Part 2) or tails (Part 1) of the arrays.
+# - The first approach **day9a** builds a list of successive difference arrays
+#   (obtained using `np.diff`)
+#   and then computes some expression of the heads (Part 2) or tails (Part 1) of the arrays.
 #
-# The second approach implements the same computation as a recursive function.
+# - The second approach **day9** implements the same computation as a recursive function.
 
 # %%
 puzzle = advent.puzzle(day=9)
@@ -1260,15 +1275,16 @@ puzzle.verify(2, day9_part2)
 #
 # Part 2 is explored using two approaches:
 #
-# - **day10a**, **day10b**: We upsample the loop onto a grid with twice the resolution of the original grid and then compute
-#   a flood-fill starting from an exterior point.
-#   The remaining (non-filled) grid nodes are the interior; these are counted on the subsampled grid at the original resolution.
-#   This approach is really useful for visualizing the problem.
+# - **day10a**, **day10b**: We upsample the loop onto a grid with twice the resolution of the
+#   original grid and then compute a flood-fill starting from an exterior point.
+#   The remaining (non-filled) grid nodes are the interior;
+#   these are counted on the subsampled grid at the original resolution.
+#   This approach is also useful for visualizing the problem.
 #
 # - **day10**: For each grid row, we accumulate the number of intersections with vertical pipes (modulo 2).
 #   The interior region consists of grid points with value 1, except for the grid nodes on the loop itself.
-#   A difficult aspect here is that the start symbol `S` must be replaced by the correct pipe symbol to
-#   yield the correct intersection counts.
+#   A difficult aspect here is that the start symbol `S` must be replaced by the correct
+#   pipe symbol to yield the correct intersection counts.
 
 # %%
 puzzle = advent.puzzle(day=10)
@@ -1725,20 +1741,24 @@ puzzle.verify(2, day11_part2)
 #
 # ---
 #
-# - My initial approach **day12a** is to recursively explore all possible parsings of the string from left to right.
-#   Each invocation of the recursive function consumes either a space character `'.'` or a whole word, e.g. `'###'`.
+# - The initial approach **day12a** recursively explores all possible parsings
+#   of the string from left to right.
+#   Each invocation of the recursive function consumes either a space character `'.'`
+#   or a whole word, e.g. `'###'`.
 #   A key to efficiency is to introduce `functools.cache` to reuse any intermediate results;
 #   this effectively provides dynamic programming with little effort.
 #
 # - **day12b** also uses a recursive function but parses one character at a time.
 #
-# - The approach in **day12c** by @lkesteloot simulates a parallel state machine as each character is parsed one at a time.
+# - The approach in **day12c** by @lkesteloot simulates a parallel state machine as each
+#   character is parsed one at a time.
 #
 # - The approach **day12d** recognizes that the state can be captured as just two integers:
 #   the numbers of characters processed and the *number* of counts processed.
 #   This leads to a *dynamic programming* algorithm over a 2D integer matrix.
 #
-# - The fastest implementation **day12** is a numba-accelerated version of that dynamic programming algorithm.
+# - The fastest implementation **day12** is a numba-accelerated version of that
+#   dynamic programming algorithm.
 #
 # - The implementation **day12e** precomputes the possible locations of words, but it is no faster.
 
@@ -2132,15 +2152,18 @@ day13_visualize(puzzle.input)
 #
 # ---
 #
-# - The first approach **day14a** uses an `np.ndarray` to store the grid, applies `np.rot90` to rotate it,
+# - The first approach **day14a** uses an `np.ndarray` to store the grid,
+#   applies `np.rot90` to rotate it,
 #   and within each rotation, walks over each row to move the rocks to the first open spaces.
 #
 # - The second approach **day14b** is entirely different.
-#   Based on an algorithm by @lkesteloot, it represents the rocks as a list of `(y, x)` coordinates and
+#   Based on an algorithm by @lkesteloot, it represents the rocks as a list
+#   of `(y, x)` coordinates and
 #   it precomputes for each grid rotation a set of jump points onto which the rocks will accumulate.
 #   This is all represented using several arrays to allow `numba` acceleration and it runs fast.
 #
-# - However, **day14** is the fastest implementation; it is simply a `numba`-accelerated version of the first approach.
+# - However, **day14** is the fastest implementation;
+#   it is simply a `numba`-accelerated version of the first approach.
 
 # %%
 puzzle = advent.puzzle(day=14)
@@ -2434,7 +2457,8 @@ puzzle.verify(2, day14_part2)
 #
 # ---
 #
-# This was a tedious puzzle to read, and the implementation just involves a list of lists of string tuples.
+# This was a tedious puzzle to read,
+# and the implementation just involves a list of lists of string tuples.
 
 # %%
 puzzle = advent.puzzle(day=15)
@@ -2496,17 +2520,19 @@ puzzle.verify(2, day15_part2)
 #
 # - Approach **day16a** represents direction as `dy, dx`.
 #
-# - Approach **day16** represents direction as `dir in [0, 1, 2, 3]`, converts the input grid to `np.uint8`,
+# - Approach **day16** represents direction as `dir in [0, 1, 2, 3]`,
+#   converts the input grid to `np.uint8`,
 #   and uses `numba` for acceleration.
 #
-# The fun visualization here is a bit misleading in that it involves a breadth-first traversal,
+# The visualization included here is a bit misleading in that it involves a breadth-first traversal,
 # which is not what most algorithms implement, but it looks cooler.
 #
-# The visualizer uses a generator `traced_rays = create_traced_rays(best_start)` to advance the rays.
+# The visualizer uses a generator `traced_rays = create_traced_rays(best_start)`
+# to advance the rays.
 # The algorithm advances a float-valued `time_current` while outputting frames.
 # It invokes `next(traced_rays)` whenever the time value advances pass integer time unit(s).
-# This allows the animation to be both slow (repeating frames) initially and fast (skipping ray states) at the end,
-# all with simple logic.
+# This allows the animation to be both slow (repeating frames) initially and
+# fast (skipping ray states) at the end, all with simple logic.
 
 # %%
 puzzle = advent.puzzle(day=16)
@@ -2763,25 +2789,32 @@ puzzle.verify(2, day16_part2)
 #
 # ---
 #
-# The key trick is to use the standard Dijkstra shortest-path algorithm but incorporating the path direction and current length into the state of each graph node.
+# The key trick is to use the standard Dijkstra shortest-path algorithm
+# but incorporating the path direction and current length into the state of each graph node.
 #
-# - Approach **day17a** implements the node state as `(y, x, dy, dx, dn)` where `dy, dx` encode direction and
+# - Approach **day17a** implements the node state as `(y, x, dy, dx, dn)`
+#   where `dy, dx` encode direction and
 #   `dn` is the number of steps already walked in that direction.
 #
 # - **day17b** is a straightforward `numba` acceleration of the first approach.
 #
 # - **day17c** applies several optimizations for a further 2x speedup:
 #   padding all boundaries of the 2D array to avoid bounds checking,
-#   flattening the 2D array into 1D, representing all four directions as 1D offsets in this flat array,
-#   immediately advancing the 1 (Part 1) or 4 (Part 2) minimum straight steps after performing a turn,
-#   and treating the (straight, left, right) cases explicitly rather than exploring all four directions.
+#   flattening the 2D array into 1D,
+#   representing all four directions as 1D offsets in this flat array,
+#   immediately advancing the 1 (Part 1) or 4 (Part 2) minimum
+#   straight steps after performing a turn,
+#   and treating the (straight, left, right) cases explicitly
+#   rather than exploring all four directions.
 #
-# - **day17** is a further optimization in which the numba-jitted code is specialized to the setting of the `part2` parameter.
+# - **day17** is a further optimization in which the numba-jitted code is specialized
+#   to the setting of the `part2` parameter.
 #   For this particular puzzle, the code is not all that different, so there is no speedup.
 #   However, I feel like archiving this technique because it could be useful in other scenarios.
 #
-# As the visualization shows, a clever design aspect of the puzzle input is that the shortest path in Part 1 is nowhere close
-# to the Part 2 solution, so one could not perform a local "relaxation" to try to satisfy the path straightness constraints.
+# As the visualization shows, a clever design aspect of the puzzle input is that
+# the shortest path in Part 1 is nowhere close to the Part 2 solution,
+# so one could not perform a local "relaxation" to try to satisfy the path straightness constraints.
 
 # %%
 puzzle = advent.puzzle(day=17)
@@ -2921,10 +2954,11 @@ def day17c_compute(grid, part2, pad):
   offsets = nx, 1, -nx, -1
   distances = {}  # state -> distance with state == (i, dir, dn) with dir 0,1,2,3 == S,E,N,W.
   for dir in range(2):
-    distance = 0
-    for i in range(1, dn2 + 1):
-      distance += grid_flat[start_i + offsets[dir] * i]
-    distances[start_i + offsets[dir] * dn2, dir, dn2] = distance
+    i2, distance = start_i, 0
+    for _ in range(dn2):
+      i2 += offsets[dir]
+      distance += grid_flat[i2]
+    distances[i2, dir, dn2] = distance
   priority_queue = [(distance, state) for state, distance in distances.items()]
 
   while priority_queue:
@@ -2986,10 +3020,11 @@ def day17_get_jitted(part2):
     offsets = nx, 1, -nx, -1
     distances = {}  # state -> distance with state == (i, dir, dn) with dir 0,1,2,3 == S,E,N,W.
     for dir in range(2):
-      distance = 0
-      for i in range(1, dn2 + 1):
-        distance += grid_flat[start_i + offsets[dir] * i]
-      distances[start_i + offsets[dir] * dn2, dir, dn2] = distance
+      i2, distance = start_i, 0
+      for _ in range(dn2):
+        i2 += offsets[dir]
+        distance += grid_flat[i2]
+      distances[i2, dir, dn2] = distance
     priority_queue = [(distance, state) for state, distance in distances.items()]
 
     while priority_queue:
@@ -3046,13 +3081,16 @@ puzzle.verify(2, day17_part2)
 #
 # ---
 #
-# - The first approach **day18a_part1** discretizes the loop path into a 2D grid and applies a flood-fill algorithm.
+# - The first approach **day18a_part1** discretizes the loop path into a 2D grid and
+#   applies a flood-fill algorithm.
 #   This approach is only practical for the small problem size of Part 1.
 #
-# - The efficient approach **day18** computes the area inside the path by summing signed areas corresponding to the
-#   "up" segments and "down" segments.
-#   However, this basic scheme only accounts for half of the perimeter, whereas we need to include the full perimeter.
-#   We add therefore extra single-wide path areas on the "down" and "right" segments to complete the full perimeter.
+# - The efficient approach **day18** computes the area inside the path by summing
+#   signed areas corresponding to the "up" segments and "down" segments.
+#   However, this basic scheme only accounts for half of the perimeter,
+#   whereas we need to include the full perimeter.
+#   We add therefore extra single-wide path areas on the "down" and "right" segments
+#   to complete the full perimeter.
 #
 # It looks like the more general approach (for a polygon with non-axis-aligned edges) is called the
 # [shoelace formula](https://en.wikipedia.org/wiki/Shoelace_formula).
@@ -3181,7 +3219,8 @@ day18_part2_visualize(puzzle.input)
 #
 # ---
 #
-# The approach in Part 2 is to compute using intervals, subdividing them as appropriate based on the inequality conditions.
+# The approach in Part 2 is to compute using intervals, subdividing them as appropriate
+# based on the inequality conditions.
 #
 # - Approach **day19a_part2** uses a stack to store new intervals after subdivision.
 #   It includes the fun code snippet `for category in 'xmas'` :-).
@@ -3190,7 +3229,8 @@ day18_part2_visualize(puzzle.input)
 #
 # Both approaches are fast.  The recursion-based algorithm is slightly more compact.
 #
-# The graph structure turns out to be a tree (i.e., it is not only acyclic but all nodes have a single parent).
+# The graph structure turns out to be a tree, i.e.,
+# it is not only acyclic but all nodes have a single parent.
 # The current algorithms do not rely on this property.
 
 # %%
@@ -3386,14 +3426,18 @@ day19_visualize(puzzle.input)
 #
 # ---
 #
-# I first tried in vain to find an efficient solution to the general problem (for arbitrary puzzle inputs).
+# Initially, I tried in vain to find an efficient solution to the general problem
+# for arbitrary puzzle inputs.
 #
-# The key to tractibility is to recognize that the puzzle has a very specific graph structure, as seen in the visualization.
+# The key to tractibility is to recognize that the puzzle input has a very specific
+# graph structure, as revealed in the visualization.
 # There are four subgraphs that each contribute a single high pulse at a specific period.
 # These four subgraphs feed into a single "conjunction" (i.e., a NAND gate).
-# Therefore, the output has only a single low pulse at a period that is the lcm of the four subgraphs.
+# Therefore, the output has only a single low pulse at a period
+# that is the lcm of the four subgraphs.
 #
-# If the pulses had nonzero phases, it would be necessary to then solve a general `_solve_modulo_congruences` problem.
+# If the pulses had nonzero phases, it would be necessary to then solve
+# a general `_solve_modulo_congruences` problem.
 # However, all phases are zero, so one can simply return the lcm of the four periods.
 # (In fact, the periods are coprime, so the product of the periods suffices.)
 
@@ -3590,17 +3634,24 @@ puzzle.verify(2, day20_part2)
 #
 # Several properties of the puzzle input make this problem tractable:
 #
-# - The start node is located at location $(65, 65)$, which is precisely in the center of the $131\times131$ tile.
+# - The start node is located at location $(65, 65)$,
+#   which is precisely in the center of the $131\times131$ tile.
 #
-# - The advancing front of "farthest nodes" reached after 65 steps forms a "diamond-shaped" band within the tile,
-#   and in the puzzle input this band is empty, so the progress of "distances" is highly regular there.
+# - The advancing front of "farthest nodes" reached after 65 steps forms
+#   a "diamond-shaped" band within the tile,
+#   and in the puzzle input this band is empty,
+#   so the progress of "distances" is highly regular there.
 #
-# - The requested number 26501365 of steps is of the form $65 + k\cdot 131$, i.e. with $k=202300$.
+# - The requested number 26501365 of steps is of the form
+#   $65 + k\cdot 131$, i.e. with $k=202300$.
 #
-# The solution approach is to compute the simulation over a fixed numbers of steps, $65 + k\cdot 131$,
-# which represent the solution reached after advancing through $k$ "outer tiles" (e.g., for a small number such as $k=2$),
+# The solution approach is to compute the simulation
+# over a fixed numbers of steps, $65 + k\cdot 131$,
+# which represent the solution reached after advancing through $k$ "outer tiles"
+# (e.g., for a small number such as $k=2$),
 # and count the number of active/reachable nodes within each of the $131\times131$ tiles.
-# Due to the special properties of the puzzle input, these counts have regularities both spatially and with increasing $k$
+# Due to the special properties of the puzzle input,
+# these counts have regularities both spatially and with increasing $k$
 # (although the counts are different in each of the four diagonal and four axial directions).
 # Thus one can determine analytically how many of each type of tile are present
 # after expansion over $k=202300$ tiles.
@@ -3705,7 +3756,13 @@ def day21_visualize(s, num_rings=2, no_flicker=True):
   media.show_video(images, codec='gif', fps=30, title='day21a')
 
 
-day21_visualize(puzzle.input)
+if SHOW_BIG_MEDIA:
+  day21_visualize(puzzle.input)
+
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day21a.gif"/>
 
 
 # %%
@@ -3776,11 +3833,19 @@ puzzle.verify(2, day21_part2)
 #   However, both the Part 1 and Part 2 algorithms are computationally expensive
 #   because they involve many calls to the drop routine.
 #
-# - My first approach **day22b** introduces many data structures (including a 3D occupancy volume) to speed up the algorithms.
+# - The first approach **day22b** introduces many data structures (including a 3D occupancy volume)
+#   to speed up the algorithms.
 #
-# - The simpler scheme **day22** constructs only a `rests_on` graph structure.
+# - The simpler scheme **day22c** constructs a `rests_on` graph structure.
 #
-# A visualization of the `rests_on` graph structure reveals a directed acyclic graph (DAG), as expected.
+# - **day22d** is an implementation of **day22** using `networkx`;
+#   it benefits from the `graph.reverse()` function but has a higher computational overhead.
+#
+# - The scheme **day22** constructs both `rests_on` and `supports` graph structures
+#   for both Part 1 and Part 2.
+#
+# A visualization of the `rests_on` graph structure reveals a directed acyclic graph (DAG),
+# as expected.
 
 # %%
 puzzle = advent.puzzle(day=22)
@@ -3799,10 +3864,9 @@ s1 = """\
 
 # %%
 def day22a(s, *, part2=False):  # Compact but slow.
-  # From https://github.com/lkesteloot/advent-of-code/blob/master/2023/22.py
-  lines = s.splitlines()
+  # Adapted from https://github.com/lkesteloot/advent-of-code/blob/master/2023/22.py
   bricks = []
-  for line in lines:
+  for line in s.splitlines():
     begin, end = line.split('~')
     begin = tuple(map(int, begin.split(',')))
     end = tuple(map(int, end.split(',')))
@@ -3815,7 +3879,6 @@ def day22a(s, *, part2=False):  # Compact but slow.
       for y in range(begin[1], end[1] + 1):
         yield x, y
 
-  # Returns dropped bricks and the number of bricks whose positions changed.
   def drop(bricks):
     height = collections.defaultdict[tuple[int, int], int](int)
     dropped_bricks = []
@@ -3826,9 +3889,7 @@ def day22a(s, *, part2=False):  # Compact but slow.
       for x, y in coords(begin, end):
         height[x, y] = end[2] - drop
       if drop > 0:
-        dropped_bricks.append(
-            ((begin[0], begin[1], begin[2] - drop), (end[0], end[1], end[2] - drop))
-        )
+        dropped_bricks.append(((*begin[:2], begin[2] - drop), (*end[:2], end[2] - drop)))
         num_moved_bricks += 1
       else:
         dropped_bricks.append((begin, end))
@@ -3836,12 +3897,11 @@ def day22a(s, *, part2=False):  # Compact but slow.
 
   bricks, _ = drop(bricks)
 
-  # Number of bricks that would be destroyed if "i" were destroyed (not including "i").
-  def would_be_destroyed(i):
+  def num_others_would_be_destroyed(i):
     _, num_moved_bricks = drop(bricks[:i] + bricks[i + 1 :])
     return num_moved_bricks
 
-  destroyed = [would_be_destroyed(i) for i in range(len(bricks))]
+  destroyed = [num_others_would_be_destroyed(i) for i in range(len(bricks))]
   return sum(destroyed) if part2 else sum(d == 0 for d in destroyed)
 
 
@@ -3902,7 +3962,6 @@ def day22b(s, *, part2=False, visualize=False):  # First scheme, with unnecessar
       total += all(len(rests_on[index2]) > 1 for index2 in supported)
     return total
 
-  # TODO: Is there any graph algorithm to enable a faster-than-quadratic solution here?
   for index in range(len(bricks)):
     falling = {index}
     for index2 in range(index + 1, len(bricks)):
@@ -3925,7 +3984,7 @@ day22b(puzzle.input, visualize=True)
 
 
 # %%
-def day22(s, *, part2=False):  # Both Part 1 and Part 2 access only a `rests_on` graph.
+def day22c(s, *, part2=False):  # Parts 1 and 2 access a `rests_on` graph.
   def drop_bricks():
     bricks = [tuple(map(int, re.findall(r'\d+', line))) for line in s.splitlines()]
     bricks = [(*b[:3], b[3] + 1, b[4] + 1, b[5] + 1) for b in bricks]
@@ -3959,6 +4018,106 @@ def day22(s, *, part2=False):  # Both Part 1 and Part 2 access only a `rests_on`
     for index, indices in rests_on.items():
       for index2 in indices:
         supports[index2] |= {index}
+    for index, indices in supports.items():
+      total += index >= 0 and all(len(rests_on[index2]) > 1 for index2 in indices)
+
+  return total
+
+
+check_eq(day22c(s1), 5)
+puzzle.verify(1, day22c)
+
+day22c_part2 = functools.partial(day22c, part2=True)
+check_eq(day22c_part2(s1), 7)
+puzzle.verify(2, day22c_part2)
+
+
+# %%
+# Both parts use `rests_on` and `supports` graphs.  networkx has .reverse() but introduces overhead.
+def day22d(s, *, part2=False):
+  def drop_bricks():
+    bricks = [tuple(map(int, re.findall(r'\d+', line))) for line in s.splitlines()]
+    bricks = [(*b[:3], b[3] + 1, b[4] + 1, b[5] + 1) for b in bricks]
+    bricks.sort(key=lambda brick: brick[2])  # In ascending minimum height.
+    rests_on = networkx.DiGraph()
+    heights = np.full((10, 10), 1)
+    highest_brick = np.full((10, 10), -1)  # Fake extra base-spanning brick.
+    for index, brick in enumerate(bricks):
+      footprint = slice(*brick[0::3]), slice(*brick[1::3])
+      height = heights[footprint].max()
+      is_touching = heights[footprint] == height
+      rests_on.add_edges_from((index, j) for j in set(highest_brick[footprint][is_touching].flat))
+      heights[footprint] = height + brick[5] - brick[2]
+      highest_brick[footprint] = index
+    return rests_on, rests_on.reverse()
+
+  rests_on, supports = drop_bricks()
+  total = 0
+
+  if part2:
+    for index in range(len(rests_on) - 1):
+      falling = {index}
+      queue = collections.deque(supports[index])
+      while queue:
+        index2 = queue.popleft()
+        if index2 not in falling and all(i in falling for i in rests_on[index2]):
+          falling.add(index2)
+          queue.extend(supports[index2])
+      total += len(falling) - 1
+
+  else:
+    for index, nbrs in supports.adjacency():
+      total += index >= 0 and all(len(rests_on[index2]) > 1 for index2 in nbrs)
+
+  return total
+
+
+check_eq(day22d(s1), 5)
+puzzle.verify(1, day22d)
+
+day22d_part2 = functools.partial(day22d, part2=True)
+check_eq(day22d_part2(s1), 7)
+puzzle.verify(2, day22d_part2)
+
+
+# %%
+def day22(s, *, part2=False):  # Parts 1 and 2 use both `rests_on` and `supports` graphs.
+  def drop_bricks():
+    bricks = [tuple(map(int, re.findall(r'\d+', line))) for line in s.splitlines()]
+    bricks = [(*b[:3], b[3] + 1, b[4] + 1, b[5] + 1) for b in bricks]
+    bricks.sort(key=lambda brick: brick[2])  # In ascending minimum height.
+    rests_on: dict[int, set[int]] = {}
+    heights = np.full((10, 10), 1)
+    highest_brick = np.full((10, 10), -1)  # Fake extra base-spanning brick.
+    for index, brick in enumerate(bricks):
+      footprint = slice(*brick[0::3]), slice(*brick[1::3])
+      height = heights[footprint].max()
+      is_touching = heights[footprint] == height
+      rests_on[index] = set(highest_brick[footprint][is_touching].flat)
+      heights[footprint] = height + brick[5] - brick[2]
+      highest_brick[footprint] = index
+    # Create the directed graph that is reverse of rests_on.
+    supports = {-1: set[int]()} | {index: set[int]() for index in rests_on}
+    for index, indices in rests_on.items():
+      for index2 in indices:
+        supports[index2].add(index)
+    return rests_on, supports
+
+  rests_on, supports = drop_bricks()
+  total = 0
+
+  if part2:
+    for index in range(len(rests_on)):
+      falling = {index}
+      queue = collections.deque(supports[index])
+      while queue:
+        index2 = queue.popleft()
+        if index2 not in falling and rests_on[index2] <= falling:
+          falling.add(index2)
+          queue.extend(supports[index2])
+      total += len(falling) - 1
+
+  else:
     for index, indices in supports.items():
       total += index >= 0 and all(len(rests_on[index2]) > 1 for index2 in indices)
 
@@ -4030,15 +4189,20 @@ if SHOW_BIG_MEDIA:
 #
 # ---
 #
-# - Approach **day23a** uses a stack-based breadth-first search (BFS) where the state includes the set of visited nodes
-#   and the length of the path so far.  Here the state identifies nodes by their `y, x` grid locations, to allow visualization.
+# - Approach **day23a** uses a stack-based breadth-first search (BFS)
+#   where the state includes the set of visited nodes and the length of the path so far.
+#   Here the state identifies nodes by their `y, x` grid locations, to allow visualization.
 #
-# - Approach **day23b** uses a recursive function for a depth-first search with the same state as before.
+# - Approach **day23b** uses a recursive function for a depth-first search
+#   with the same state as before.
 #   Here the state identifies nodes by integer indices.
 #
 # - Approach **day23c** is back to the stack-based BFS approach, but using integer node indices.
 #
-# - Approach **day23** is a numba implementation.  One complication is that the graph structure (`dict[int, list[int]]`) must
+# - Approach **day23d** is the same but representing `visited` as a bitmask.
+#
+# - Approach **day23** is a numba implementation, which proves to be highly efficient.
+#   One difficulty is that the graph structure (`dict[int, list[int]]`) must
 #   be passed to the numba function as an `np.ndarray`.
 #
 # A visualizations reveals that the graph structure induced by the maze is not at all random!
@@ -4047,7 +4211,12 @@ if SHOW_BIG_MEDIA:
 # For this special graph structure, maybe there are more efficient solvers.
 # For Part 1 (a purely directed graph), it seems that it's an instance of dynamic programming.
 #
-# TODO: For Part 2, are there any tricks?
+# For Part 2, a key observation is that for the edges along the perimeter of the graph, i.e.,
+# connecting two degree-3 nodes,
+# we can constrain the graph to only include directed edges towards the target.
+# The reason is that the graph is planar and if the path were to go in the opposite direction,
+# could not reach the targer without passing through some already visited nodes.
+# The figure created in **day23_visualize_graph** shows the resulting modified graph connectivity.
 
 # %%
 puzzle = advent.puzzle(day=23)
@@ -4081,8 +4250,8 @@ s1 = """\
 
 
 # %%
-def day23_graph_yx(s, part2):
-  grid = np.array([list(line) for line in s.splitlines()])
+@numba.njit
+def day23_graph_yx_numpy(grid, part2):
   start_yx, target_yx = (0, 1), (grid.shape[0] - 1, grid.shape[1] - 2)
 
   def neighbors(yx):
@@ -4095,8 +4264,10 @@ def day23_graph_yx(s, part2):
           results.append((y2, x2))
     return results
 
-  nodes = {yx for yx, ch in np.ndenumerate(grid) if ch != '#' and len(neighbors(yx)) > 2}
-  nodes |= {start_yx, target_yx}
+  nodes = {start_yx, target_yx}
+  for yx, ch in np.ndenumerate(grid):
+    if ch != '#' and len(neighbors(yx)) > 2:
+      nodes.add(yx)  # type:ignore[arg-type]
 
   def get_paths(yx):
     paths = {}
@@ -4105,9 +4276,9 @@ def day23_graph_yx(s, part2):
       while yx2 not in nodes:
         path.append(yx2)
         candidates = [yx3 for yx3 in neighbors(yx2) if yx3 != path[-2]]
-        (yx2,) = candidates if candidates else (yx,)  # We use yx to signal no legal path.
+        (yx2,) = candidates or [yx]  # We use yx to indicate no legal path.
       if yx2 != yx:
-        paths[yx2] = path[1:] + [yx2]
+        paths[yx2] = np.array(path[1:] + [yx2])
     return paths
 
   graph_yx = {yx: get_paths(yx) for yx in nodes}
@@ -4115,8 +4286,32 @@ def day23_graph_yx(s, part2):
 
 
 # %%
-def day23_graph(s, part2):
-  graph_yx, start_yx, target_yx = day23_graph_yx(s, part2)
+def day23_graph_yx(s, part2, optimize=True):  # Create graph with yx nodes and array paths as edges.
+  grid = np.array([list(line) for line in s.splitlines()])
+  graph_yx, start_yx, target_yx = day23_graph_yx_numpy(grid, part2)
+
+  if part2 and optimize:
+    # For all edges on the perimeter of the graph, i.e., connecting two degree-3 nodes,
+    # we can constrain the graph to only include directed edges towards the target.
+    # The reason is that the graph is planar and if the path were to go in the opposite direction,
+    # it could not reach the targer without passing through some already visited nodes.
+    queue = collections.deque([target_yx])
+    while queue:
+      yx = queue.popleft()
+      for yx2 in list(graph_yx[yx]):
+        if len(graph_yx[yx2]) == 3:
+          del graph_yx[yx][yx2]  # Remove the backward directed edge.
+          if yx2 != start_yx:
+            queue.append(yx2)
+    (first_yx,) = graph_yx[start_yx]  # Upper-left node in the central graph grid.
+    del graph_yx[first_yx][start_yx]
+
+  return graph_yx, start_yx, target_yx
+
+
+# %%
+def day23_graph(s, part2, optimize=True):  # Create graph with integer nodes and distances as edges.
+  graph_yx, start_yx, target_yx = day23_graph_yx(s, part2, optimize)
   ordered = sorted(graph_yx)
   graph = [
       [(ordered.index(yx2), len(path)) for yx2, path in graph_yx[yx].items()]
@@ -4127,8 +4322,10 @@ def day23_graph(s, part2):
 
 
 # %%
-def day23a(s, *, part2=False, visualize=False, rep=3):  # Stack-based over yx, for visualization.
-  graph, start_yx, target_yx = day23_graph_yx(s, part2)
+def day23a_longest_path(graph_yx, start_yx, target_yx):
+  graph_yx_len = {
+      yx: {yx2: len(array) for yx2, array in dsts.items()} for yx, dsts in graph_yx.items()
+  }
   max_length = 0
   max_visited = {start_yx: 0}  # It is a dict only to ensure that the element order is preserved.
   stack = [(start_yx, 0, max_visited)]
@@ -4139,22 +4336,33 @@ def day23a(s, *, part2=False, visualize=False, rep=3):  # Stack-based over yx, f
       max_length = length
       max_visited = visited
       continue
-    for yx2, path in graph[yx].items():
+    for yx2, dist in graph_yx_len[yx].items():
       if yx2 not in visited:
-        stack.append((yx2, length + len(path), visited | {yx2: 0}))
+        stack.append((yx2, length + dist, visited | {yx2: 0}))
+
+  return max_length, list(max_visited)
+
+
+# %%
+def day23a(s, *, part2=False, visualize=False, rep=3):  # Stack-based over yx, for visualization.
+  graph_yx, start_yx, target_yx = day23_graph_yx(s, part2)
+  max_length, yx_sequence = day23a_longest_path(graph_yx, start_yx, target_yx)
 
   if visualize:
     grid = np.array([list(line) for line in s.splitlines()])
     image = hh.to_image(grid == '#', 245, 40)
     rgb_from_scalar = matplotlib.colormaps['cool']  # Or 'jet', 'brg'.
     chain = itertools.chain.from_iterable
-    path = [start_yx] + list(chain(graph[yx][yx2] for yx, yx2 in itertools.pairwise(max_visited)))
+    pairs_yx = itertools.pairwise(yx_sequence)
+    path = [start_yx] + list(chain(map(tuple, graph_yx[yx][yx2]) for yx, yx2 in pairs_yx))
     for i, yx in enumerate(path):
       frac = i / max_length
       # image[yx] = int(frac * 255 + 0.5), int((1 - frac) * 255 + 0.5), 0
       image[yx] = (np.array(rgb_from_scalar(frac)[:3]) * 255 + 0.5).astype(np.uint8)
     if 0:  # Optionally highlight the junctions along the path.
-      image[tuple(np.array(list(max_visited))[1:-1].T)] = 255, 150, 50
+      image[tuple(np.array(yx_sequence)[1:-1].T)] = 255, 150, 50
+    if 0:  # Optionally highlight all junctions.
+      image[tuple(np.array(list(graph_yx)).T)] = 255, 0, 0
     image = image.repeat(rep, 0).repeat(rep, 1)
     title = None if len(grid) < 30 else 'day23b' if part2 else 'day23a'
     media.show_image(image, title=title)
@@ -4167,16 +4375,15 @@ puzzle.verify(1, day23a)
 
 day23a_part2 = functools.partial(day23a, part2=True)
 check_eq(day23a_part2(s1), 154)
+# puzzle.verify(2, day23a_part2)  # ~3.1 s.
 
+# The large cell computation time reflects numba-jitting of day23_graph_yx_numpy().
 
 # %%
-# _ = day23a(s1, visualize=True)
-# _ = day23a_part2(s1, visualize=True)
-
 _ = day23a(puzzle.input, visualize=True)
 
 if SHOW_BIG_MEDIA:
-  _ = day23a_part2(puzzle.input, visualize=True)  # ~15 s.
+  _ = day23a_part2(puzzle.input, visualize=True)  # ~3.2 s.
 
 
 # %% [markdown]
@@ -4185,22 +4392,28 @@ if SHOW_BIG_MEDIA:
 
 
 # %%
-def day23_visualize_graph(s, *, part2=False, node_size=1000):
+def day23_visualize_graph(s, *, part2=False, optimize=True, node_size=700):
   grid = np.array([list(line) for line in s.splitlines()])
+  graph_yx, start_yx, target_yx = day23_graph_yx(s, part2, optimize)
 
-  graph_yx, start_yx, unused_target_yx = day23_graph_yx(s, part2)
   graph = networkx.DiGraph()
   for yx, paths in graph_yx.items():
     color = 'lightgreen' if yx[0] == 0 or yx[0] == grid.shape[0] - 1 else 'lightblue'
     graph.add_node(yx, node_color=color, label=f'{yx[0]},{yx[1]}')
     for yx2, path in paths.items():
-      graph.add_edge(yx, yx2, weight=len(path))
+      graph.add_edge(yx, yx2, weight=len(path), color='#8F8F8F')
+
+  unused_max_length, yx_sequence = day23a_longest_path(graph_yx, start_yx, target_yx)
+  for yx1, yx2 in itertools.pairwise(yx_sequence):
+    graph[yx1][yx2]['color'] = 'black'
+    if yx1 in graph[yx2]:
+      graph[yx2][yx1]['color'] = 'black'
 
   pos = hh.graph_layout(graph, prog='neato')
   pos = hh.rotate_layout_so_node_is_on_left(pos, start_yx, math.tau / 8)
   most_upper_right_yx = max(graph_yx, key=lambda yx: yx[1] - yx[0])
   if pos[most_upper_right_yx][0] < np.mean(list(pos.values()), 0)[0]:
-    pos = {node: (-y, -x) for node, (x, y) in pos.items()}  # Reflect about NW-SE.
+    pos = {node: (-y, -x) for node, (x, y) in pos.items()}  # Reflect about NW-SE line.
 
   fig, ax = plt.subplots(figsize=(7, 7), dpi=90)
   ax.axes.set_aspect('equal')
@@ -4212,13 +4425,17 @@ def day23_visualize_graph(s, *, part2=False, node_size=1000):
   labels = networkx.get_node_attributes(graph, 'label')
   networkx.draw_networkx_labels(graph, pos, labels=labels, font_size=7)
 
-  width = [graph[u][v]['weight'] * 0.025 for u, v in graph.edges()]
-  arrow_style = '-' if part2 else None
-  networkx.draw_networkx_edges(graph, pos, node_size=node_size, width=width, arrowstyle=arrow_style)
+  width = [graph[u][v]['weight'] * 0.015 for u, v in graph.edges()]
+  edge_color = [graph[u][v]['color'] for u, v in graph.edges()]
+  with warnings.catch_warnings():  # Use of edge_color results in warning.
+    warnings.filterwarnings('ignore', category=DeprecationWarning, message='.*alltrue.*NumPy.*')
+    networkx.draw_networkx_edges(
+        graph, pos, node_size=node_size, width=width, edge_color=edge_color
+    )
 
+  params = dict(font_size=7, bbox=dict(facecolor='white', edgecolor='none', pad=1))
   edge_labels = networkx.get_edge_attributes(graph, 'weight')
-  bbox = dict(facecolor='white', edgecolor='none', pad=1)
-  networkx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, font_size=7, bbox=bbox)
+  networkx.draw_networkx_edge_labels(graph, pos, edge_labels=edge_labels, **params)
 
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
@@ -4232,7 +4449,11 @@ if 'networkx' in globals():
   day23_visualize_graph(puzzle.input)
   day23_visualize_graph(puzzle.input, part2=True)
 
-# TODO: Show the solution paths on these graphs.
+
+# %% [markdown]
+# In the above graph (corresponding to Part 2), the edges along the grid perimeter
+# are made *directional*, pointing towards the target node.
+# This optimization speeds up the search process.
 
 
 # %%
@@ -4257,11 +4478,11 @@ puzzle.verify(1, day23b)
 
 day23b_part2 = functools.partial(day23b, part2=True)
 check_eq(day23b_part2(s1), 154)
-# puzzle.verify(2, day23b_part2)  # ~12.5 s.
+# puzzle.verify(2, day23b_part2)  # ~2.5 s.
 
 
 # %%
-def day23c(s, *, part2=False):  # Stack-based; fastest non-numba version.
+def day23c(s, *, part2=False):  # Stack-based.
   graph, start, target = day23_graph(s, part2)
   stack = [(start, 0, {start})]
   max_length = 0
@@ -4283,13 +4504,41 @@ puzzle.verify(1, day23c)
 
 day23c_part2 = functools.partial(day23c, part2=True)
 check_eq(day23c_part2(s1), 154)
-# puzzle.verify(2, day23c_part2)  # ~11 s.
+# puzzle.verify(2, day23c_part2)  # ~2.5 s.
 
 
 # %%
-@numba.njit
+def day23d(s, *, part2=False):  # Stack-based with `visited` as bitmask; fastest non-numba version.
+  graph, start, target = day23_graph(s, part2)
+  assert len(graph) <= 64  # Number of bits in bitmask.
+  stack = [(start, 0, 1 << start)]
+  max_length = 0
+
+  while stack:
+    node, length, visited = stack.pop()
+    if node == target:
+      max_length = max(max_length, length)
+      continue
+    for node2, dist in graph[node]:
+      if visited & (1 << node2) == 0:
+        stack.append((node2, length + dist, visited | (1 << node2)))
+
+  return max_length
+
+
+check_eq(day23d(s1), 94)
+puzzle.verify(1, day23d)
+
+day23d_part2 = functools.partial(day23d, part2=True)
+check_eq(day23d_part2(s1), 154)
+puzzle.verify(2, day23d_part2)  # ~1.7 s.
+
+
+# %%
+@numba.njit  # Numba version of stack-based with `visited` as a bitmask.
 def day23_length_of_longest_path(graph_array, start, target):
-  stack = [(start, 0, {start})]
+  assert len(graph_array) <= 64  # Number of bits in bitmask.
+  stack = [(start, 0, 1 << start)]
   max_length = 0
 
   while stack:
@@ -4298,8 +4547,8 @@ def day23_length_of_longest_path(graph_array, start, target):
       max_length = max(max_length, length)
       continue
     for node2, dist in graph_array[node]:
-      if node2 >= 0 and node2 not in visited:
-        stack.append((node2, length + dist, visited | {node2}))
+      if node2 >= 0 and visited & (1 << node2) == 0:
+        stack.append((node2, length + dist, visited | (1 << node2)))
 
   return max_length
 
@@ -4318,7 +4567,7 @@ puzzle.verify(1, day23)
 
 day23_part2 = functools.partial(day23, part2=True)
 check_eq(day23_part2(s1), 154)
-puzzle.verify(2, day23_part2)  # ~5 s (~90 s without numba).
+puzzle.verify(2, day23_part2)  # ~60 ms (~18 s without numba).
 
 # %% [markdown]
 # <a name="day24"></a>
@@ -4343,13 +4592,15 @@ puzzle.verify(2, day23_part2)  # ~5 s (~90 s without numba).
 # $$
 # or equivalently,
 # $$
-# \pmatrix{v_{1,x} & -v_{2,x} \\ v_{1,y} & -v_{2,y}} \pmatrix{t_1 \\ t_2} = \pmatrix{p_{2,x} - p_{1,x} \\ p_{2,y} - p_{1,y}}.
+# \pmatrix{v_{1,x} & -v_{2,x} \\ v_{1,y} & -v_{2,y}} \pmatrix{t_1 \\ t_2} =
+#   \pmatrix{p_{2,x} - p_{1,x} \\ p_{2,y} - p_{1,y}}.
 # $$
 #
 # We explore
 # (1) using either the library function `np.linalg.solve`
 # or a manual implementation of the $2\times2$ linear system solution, and
-# (2) using either `numpy` or `numba`.  (See **day24a_part1**, **day24b_part1**, **day24c_part1**, **day24_part1**.)
+# (2) using either `numpy` or `numba`.
+# (See **day24a_part1**, **day24b_part1**, **day24c_part1**, **day24_part1**.)
 #
 # The conclusions are that
 # (1) the manual implementation of the linear solver is much faster, and
@@ -4369,13 +4620,15 @@ puzzle.verify(2, day23_part2)  # ~5 s (~90 s without numba).
 #
 # If we consider just $k$ input hailstones $p_1,\ldots,p_k$,
 # the resulting system has $3k$ constraints and $k+6$ unknowns.
-# Thus, in general, considering only the first $k=3$ hailstones already provides a sufficiently constrained system.
+# Thus, in general, considering only the first $k=3$ hailstones already provides
+# a sufficiently constrained system.
 #
 # Several approaches are considered:
 #
 # - `scipy.optimize.fsolve()` and `scipy.optimize.minimize` fail to converge to the solution.
 #
-# - **day24d_part2** finds the correct solution using `scipy.optimize.least_squares()` by considering $k=20$ hailstones.
+# - **day24d_part2** finds the correct solution using `scipy.optimize.least_squares()`
+#   by considering $k=20$ hailstones.
 #
 # - The simplest approach **day24_part2** is to use the symbolic solver in `sympy.solve`.
 
@@ -4695,7 +4948,8 @@ puzzle.verify(2, day24_part2)
 #
 # ---
 #
-# We seek to cut an unweighted, undirected graph into two connected components by removing just three edges.
+# We seek to cut an unweighted, undirected graph into two connected components
+# by removing just three edges.
 # There are routines in `networkx` to do precisely this.
 #
 # - **day25a** uses `networkx.stoer_wagner`.
@@ -4703,7 +4957,8 @@ puzzle.verify(2, day24_part2)
 # - **day25b** uses `networkx.minimum_edge_cut` and is slightly faster.
 #
 # - Visualizing the graph reveals that it has a dumbbell shape,
-#   i.e., it consists of two large clusters of nodes separated by a narrow bridge of just three edges.
+#   i.e., it consists of two large clusters of nodes separated
+#   by a narrow bridge of just three edges.
 #   This particular structure allows a **faster, heuristic** solution.
 #   **day25** examines the shortest paths between many random pairs of nodes and
 #   simply determines the three most common path edges.
@@ -4802,7 +5057,7 @@ def day25a(s):  # networkx.stoer_wagner
 
 
 check_eq(day25a(s1), 54)
-# puzzle.verify(1, day25a)  # ~3.6 s.
+# puzzle.verify(1, day25a)  # ~3.7 s.
 
 
 # %%
@@ -4819,7 +5074,7 @@ def day25b(s):  # networkx.minimum_edge_cut
 
 
 check_eq(day25b(s1), 54)
-puzzle.verify(1, day25b)  # ~2.7 s
+puzzle.verify(1, day25b)  # ~3.0 s
 
 
 # %%
