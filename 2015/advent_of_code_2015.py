@@ -18,20 +18,20 @@
 # Here are some visualization results:
 #
 # <p>
-# <a href="#day3">day3</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day3.png" width="220"> &emsp;
-# <a href="#day6">day6</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day6a.gif" width="220"> &nbsp;
-#   <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day6b.gif" width="220">
+# <a href="#day3">day3</a> <img src="results/day3.png" width="220"> &emsp;
+# <a href="#day6">day6</a> <img src="results/day6a.gif" width="220"> &nbsp;
+#   <img src="results/day6b.gif" width="220">
 # </p>
 #
 # <p>
-# <a href="#day7">day7</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day7.png" width="200"> &emsp;
-# <a href="#day14">day14</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day14.gif" width="500">
+# <a href="#day7">day7</a> <img src="results/day7.png" width="200"> &emsp;
+# <a href="#day14">day14</a> <img src="results/day14.gif" width="500">
 # </p>
 #
 # <p>
-# <a href="#day18">day18</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day18a.gif" width="180"> &nbsp;
-#   <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day18b.gif" width="180"> &emsp;
-# <a href="#day19">day19</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day19.png" width="256">
+# <a href="#day18">day18</a> <img src="results/day18a.gif" width="180"> &nbsp;
+#   <img src="results/day18b.gif" width="180"> &emsp;
+# <a href="#day19">day19</a> <img src="results/day19.png" width="256">
 # </p>
 
 # %% [markdown]
@@ -553,7 +553,7 @@ if SHOW_BIG_MEDIA:
 
 # %% [markdown]
 # Cached result:<br/>
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2015/results/day6b.gif">
+# <img src="results/day6b.gif">
 
 # %% [markdown]
 # <a name="day7"></a>
