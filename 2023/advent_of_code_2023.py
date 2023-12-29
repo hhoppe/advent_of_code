@@ -4589,6 +4589,7 @@ puzzle.verify(2, day23_part2)  # ~60 ms (~18 s without numba).
 #   Using the first $k=3$ hailstones and some manipulation,
 #   this results in a *linear* system of 6 equations on the 6 unknowns ($\{p_c\}, \{v_c\}$),
 #   which can be solved for arbitrarily large integers using `sympy.solve_linear_system`.
+#   (See also [this derivation](https://gist.github.com/tom-huntington/00065d3f5c52a900bfa99a6230470956).)
 
 # %%
 puzzle = advent.puzzle(day=24)
