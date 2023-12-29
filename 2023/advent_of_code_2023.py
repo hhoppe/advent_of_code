@@ -19,37 +19,37 @@
 # Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`):
 #
 # <p>
-# <a href="#day3">day3</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day03a.png" width="120">&nbsp;
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day03b.png" width="120">&emsp;
-# <a href="#day6">day6</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day06.gif" width="220">&emsp;
-# <a href="#day7">day7</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day07.png" width="200">
+# <a href="#day3">day3</a> <img src="results/day03a.png" width="120">&nbsp;
+# <img src="results/day03b.png" width="120">&emsp;
+# <a href="#day6">day6</a> <img src="results/day06.gif" width="220">&emsp;
+# <a href="#day7">day7</a> <img src="results/day07.png" width="200">
 # </p>
 #
 # <p>
-# <a href="#day10">day10</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day10a.png" width="100">&nbsp;
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day10b.png" width="100">&emsp;
-# <a href="#day13">day13</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day13.png" width="280">&emsp;
-# <a href="#day14">day14</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day14.gif" width="140">
+# <a href="#day10">day10</a> <img src="results/day10a.png" width="100">&nbsp;
+# <img src="results/day10b.png" width="100">&emsp;
+# <a href="#day13">day13</a> <img src="results/day13.png" width="280">&emsp;
+# <a href="#day14">day14</a> <img src="results/day14.gif" width="140">
 # </p>
 #
 # <p>
-# <a href="#day16">day16</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day16a.gif" width="200">&emsp;
-# <a href="#day17">day17</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day17a.gif" width="110">&nbsp;
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day17b.gif" width="110">&emsp;
-# <a href="#day18">day18</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day18b.png" width="220">
+# <a href="#day16">day16</a> <img src="results/day16a.gif" width="200">&emsp;
+# <a href="#day17">day17</a> <img src="results/day17a.gif" width="110">&nbsp;
+# <img src="results/day17b.gif" width="110">&emsp;
+# <a href="#day18">day18</a> <img src="results/day18b.png" width="220">
 # </p>
 #
 # <p>
-# <a href="#day20">day20</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day20.png" width="240">&emsp;
-# <a href="#day21">day21</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day21a.gif" width="240">&emsp;
-# <a href="#day22">day22</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day22a.png" width="60">&nbsp;
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day22b.gif" width="72">
+# <a href="#day20">day20</a> <img src="results/day20.png" width="240">&emsp;
+# <a href="#day21">day21</a> <img src="results/day21a.gif" width="240">&emsp;
+# <a href="#day22">day22</a> <img src="results/day22a.png" width="60">&nbsp;
+# <img src="results/day22b.gif" width="72">
 # </p>
 #
 # <p>
-# <a href="#day23">day23</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day23d.png" width="180">&nbsp;
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day23b.png" width="180">&emsp;
-# <a href="#day25">day25</a> <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day25.png" width="320">
+# <a href="#day23">day23</a> <img src="results/day23d.png" width="180">&nbsp;
+# <img src="results/day23b.png" width="180">&emsp;
+# <a href="#day25">day25</a> <img src="results/day25.png" width="320">
 # </p>
 
 # %% [markdown]
@@ -842,7 +842,7 @@ if SHOW_BIG_MEDIA:
 
 # %% [markdown]
 # Cached result:<br/>
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day06.gif"/><br/>
+# <img src="results/day06.gif"/><br/>
 
 
 # %%
@@ -2719,7 +2719,7 @@ if SHOW_BIG_MEDIA:
 
 # %% [markdown]
 # Cached result:<br/>
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day16a.gif"/><br/>
+# <img src="results/day16a.gif"/><br/>
 
 
 # %% [markdown]
@@ -2967,8 +2967,9 @@ def day17_compute(grid, part2, pad):
       state2 = i2, dir, dn + 1
       distance2 = distance + grid_flat[i2]
       if distance2 < distances.get(state2, 30_000):
-        distances[state2] = distance2
-        heapq.heappush(priority_queue, (distance2, state2))
+        if distance2 < distances.get((i2, dir, dn2), 30_000):  # Optional, for optimization!
+          distances[state2] = distance2
+          heapq.heappush(priority_queue, (distance2, state2))
     for dir2 in dir2s[dir]:  # Try turning left or right.
       i2, distance2, offset = i, distance, offsets[dir2]
       for _ in range(dn2):
@@ -2997,7 +2998,17 @@ check_eq(day17_part2(s2), 71)
 puzzle.verify(2, day17_part2)
 
 # %% [markdown]
-# I explored further optimizations but these had negligible benefit:
+# Before introducing the optional optimization line
+# ```python
+#   if distance2 < distances.get((i2, dir, dn2), 30_000):  # Optional, for optimization!
+#     ...
+# ```
+# the computational time for Part 2 was ~2.6x longer than Part 1 due to
+# the ~2.3x increase in the number of graph nodes
+# as the `dn` state parameter generalizes from `[1, 2, 3]` to `[4, 5, 6, 7, 8, 9, 10]`.
+# Thanks to the optimization, many of these new states are never considered.
+#
+# I explored other optimizations but these had negligible benefit:
 #
 # - Specializing the jitted function based on the setting of the parameter `part2`.
 #
@@ -3005,11 +3016,6 @@ puzzle.verify(2, day17_part2)
 #
 # - Precomputing `distance_dn = np.empty((4, grid.size), np.int16)` -- the distance summed over
 #   the next `dn2` cells in direction `dir` -- used when starting a new straight path after a turn.
-#
-# The ~2.6x increase in execution time for Part 2 is largely due to the ~2.3x increase
-# in the number of graph nodes,
-# due to the fact that the `dn` parameter of the state generalizes
-# from `[1, 2, 3]` to `[4, 5, 6, 7, 8, 9, 10]`.
 
 # %% [markdown]
 # <a name="day18"></a>
@@ -3703,7 +3709,7 @@ if SHOW_BIG_MEDIA:
 
 # %% [markdown]
 # Cached result:<br/>
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day21a.gif"/>
+# <img src="results/day21a.gif"/>
 
 
 # %%
@@ -4117,7 +4123,7 @@ if SHOW_BIG_MEDIA:
 
 # %% [markdown]
 # Cached result:<br/>
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day22b.gif"/>
+# <img src="results/day22b.gif"/>
 
 # %% [markdown]
 # <a name="day23"></a>
@@ -4329,7 +4335,7 @@ if SHOW_BIG_MEDIA:
 
 # %% [markdown]
 # Cached result:<br/>
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day23b.png"/><br/>
+# <img src="results/day23b.png"/><br/>
 
 
 # %%
@@ -5050,7 +5056,7 @@ if SHOW_BIG_MEDIA:
 
 # %% [markdown]
 # Cached result:<br/>
-# <img src="https://github.com/hhoppe/advent_of_code/raw/main/2023/results/day25.png"/>
+# <img src="results/day25.png"/>
 
 
 # %%
