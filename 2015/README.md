@@ -17,18 +17,18 @@ It seems difficult to further speed up the solutions because a key bottleneck is
 Here are some visualization results:
 
 <p>
-<a href="#day3">day3</a> <img src="results/day3.png" width="220"> &emsp;
-<a href="#day6">day6</a> <img src="results/day6a.gif" width="220"> &nbsp;
+day3 <img src="results/day3.png" width="220"> &emsp;
+day6 <img src="results/day6a.gif" width="220"> &nbsp;
   <img src="results/day6b.gif" width="220">
 </p>
 
 <p>
-<a href="#day7">day7</a> <img src="results/day7.png" width="200"> &emsp;
-<a href="#day14">day14</a> <img src="results/day14.gif" width="500">
+day7 <img src="results/day7.png" width="200"> &emsp;
+day14 <img src="results/day14.gif" width="500">
 </p>
 
 <p>
-<a href="#day18">day18</a> <img src="results/day18a.gif" width="180"> &nbsp;
+day18 <img src="results/day18a.gif" width="180"> &nbsp;
   <img src="results/day18b.gif" width="180"> &emsp;
-<a href="#day19">day19</a> <img src="results/day19.png" width="256">
+day19 <img src="results/day19.png" width="256">
 </p>

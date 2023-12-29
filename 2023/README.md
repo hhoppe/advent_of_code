@@ -16,35 +16,35 @@ For the fast solutions, the cumulative time across all 25 puzzles is less than 1
 Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`):
 
 <p>
-<a href="#day3">day3</a> <img src="results/day03a.png" width="120">&nbsp;
+day3 <img src="results/day03a.png" width="120">&nbsp;
 <img src="results/day03b.png" width="120">&emsp;
-<a href="#day6">day6</a> <img src="results/day06.gif" width="220">&emsp;
-<a href="#day7">day7</a> <img src="results/day07.png" width="200">
+day6 <img src="results/day06.gif" width="220">&emsp;
+day7 <img src="results/day07.png" width="200">
 </p>
 
 <p>
-<a href="#day10">day10</a> <img src="results/day10a.png" width="100">&nbsp;
+day10 <img src="results/day10a.png" width="100">&nbsp;
 <img src="results/day10b.png" width="100">&emsp;
-<a href="#day13">day13</a> <img src="results/day13.png" width="280">&emsp;
-<a href="#day14">day14</a> <img src="results/day14.gif" width="140">
+day13 <img src="results/day13.png" width="280">&emsp;
+day14 <img src="results/day14.gif" width="140">
 </p>
 
 <p>
-<a href="#day16">day16</a> <img src="results/day16a.gif" width="200">&emsp;
-<a href="#day17">day17</a> <img src="results/day17a.gif" width="110">&nbsp;
+day16 <img src="results/day16a.gif" width="200">&emsp;
+day17 <img src="results/day17a.gif" width="110">&nbsp;
 <img src="results/day17b.gif" width="110">&emsp;
-<a href="#day18">day18</a> <img src="results/day18b.png" width="220">
+day18 <img src="results/day18b.png" width="220">
 </p>
 
 <p>
-<a href="#day20">day20</a> <img src="results/day20.png" width="240">&emsp;
-<a href="#day21">day21</a> <img src="results/day21a.gif" width="240">&emsp;
-<a href="#day22">day22</a> <img src="results/day22a.png" width="60">&nbsp;
+day20 <img src="results/day20.png" width="240">&emsp;
+day21 <img src="results/day21a.gif" width="240">&emsp;
+day22 <img src="results/day22a.png" width="60">&nbsp;
 <img src="results/day22b.gif" width="72">
 </p>
 
 <p>
-<a href="#day23">day23</a> <img src="results/day23d.png" width="180">&nbsp;
+day23 <img src="results/day23d.png" width="180">&nbsp;
 <img src="results/day23b.png" width="180">&emsp;
-<a href="#day25">day25</a> <img src="results/day25.png" width="320">
+day25 <img src="results/day25.png" width="320">
 </p>

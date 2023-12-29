@@ -34,19 +34,19 @@ Some **conclusions**:
 Here are some visualization results:
 
 <p>
-<a href="#day5">day5</a> <img src="results/day5.png" width="200">&emsp;
-<a href="#day11">day11</a> <img src="results/day11a.gif" width="200">&emsp;
+day5 <img src="results/day5.png" width="200">&emsp;
+day11 <img src="results/day11a.gif" width="200">&emsp;
 <img src="results/day11b.gif" width="200">
 </p>
 
 <p>
-<a href="#day17">day17</a> <img src="results/day17a.gif" width="40">&emsp;
+day17 <img src="results/day17a.gif" width="40">&emsp;
 <img src="results/day17b.gif" width="340">&emsp;
 <img src="results/day17c.gif" width="340">
 </p>
 
 <p>
-<a href="#day20">day20</a> <img src="results/day20a.png" width="250">&emsp;
+day20 <img src="results/day20a.png" width="250">&emsp;
 <img src="results/day20b.png" width="200">&emsp;
-<a href="#day24">day24</a> <img src="results/day24c.gif" width="250">
+day24 <img src="results/day24c.gif" width="250">
 </p>
