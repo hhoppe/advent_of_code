@@ -1,10 +1,10 @@
-# Advent of code 2016
+# Advent of code 2015
 
-[[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2016/advent_of_code_2016.ipynb)
+[[**Open the notebook in Colab**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2015/advent_of_code_2015.ipynb)
 
-Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2016/advent_of_code_2016.ipynb)
+Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2015/advent_of_code_2015.ipynb)
 with Python solutions to the
-[2016 Advent of Code puzzles](https://adventofcode.com/2016),
+[2015 Advent of Code puzzles](https://adventofcode.com/2015),
 completed in April 2023,
 by [Hugues Hoppe](http://hhoppe.com/).
 
