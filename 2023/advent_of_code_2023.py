@@ -2790,7 +2790,7 @@ puzzle.verify(2, day16_part2)
 # ---
 #
 # The key trick is to use the standard Dijkstra shortest-path algorithm
-# but incorporating the path direction and current length into the state of each graph node.
+# but to incorporate the path direction and current length into the state of each graph node.
 #
 # - Approach **day17a** implements the node state as `(y, x, dy, dx, dn)`
 #   where `dy, dx` encode direction and
@@ -2798,7 +2798,7 @@ puzzle.verify(2, day16_part2)
 #
 # - **day17b** is a straightforward `numba` acceleration of the first approach.
 #
-# - **day17c** applies several optimizations for a further 2x speedup:
+# - **day17** applies several optimizations for a further 2x speedup:
 #   padding all boundaries of the 2D array to avoid bounds checking,
 #   flattening the 2D array into 1D,
 #   representing all four directions as 1D offsets in this flat array,
@@ -2806,11 +2806,6 @@ puzzle.verify(2, day16_part2)
 #   straight steps after performing a turn,
 #   and treating the (straight, left, right) cases explicitly
 #   rather than exploring all four directions.
-#
-# - **day17** is a further optimization in which the numba-jitted code is specialized
-#   to the setting of the `part2` parameter.
-#   For this particular puzzle, the code is not all that different, so there is no speedup.
-#   However, I feel like archiving this technique because it could be useful in other scenarios.
 #
 # As the visualization shows, a clever design aspect of the puzzle input is that
 # the shortest path in Part 1 is nowhere close to the Part 2 solution,
@@ -2944,7 +2939,7 @@ puzzle.verify(2, functools.partial(day17b, part2=True))
 
 # %%
 @numba.njit  # Faster numba, using flat array, padding, advance min dn.
-def day17c_compute(grid, part2, pad):
+def day17_compute(grid, part2, pad):
   ny, nx = grid.shape
   grid_flat = grid.flat
   start_i = pad * nx + pad
@@ -2987,80 +2982,11 @@ def day17c_compute(grid, part2, pad):
   return distance
 
 
-def day17c(s, *, part2=False):
-  grid = np.array([list(line) for line in s.splitlines()], np.uint16)
-  pad = 4 if part2 else 1
-  grid = np.pad(grid, pad, constant_values=30_000)
-  return day17c_compute(grid, part2, pad)
-
-
-check_eq(day17c(s1), 102)
-puzzle.verify(1, day17c)
-day17c_part2 = functools.partial(day17c, part2=True)
-check_eq(day17c_part2(s1), 94)
-check_eq(day17c_part2(s2), 71)
-puzzle.verify(2, day17c_part2)
-
-
-# %%
-# Specializing the numba function based on the parameter part2 has little effect here.
-@functools.cache
-def day17_get_jitted(part2):
-  grid = np.zeros((4, 4), np.uint16)
-  _ = grid
-
-  def compute(grid):
-    pad = 4 if part2 else 1
-    ny, nx = grid.shape
-    grid_flat = grid.flat
-    start_i = pad * nx + pad
-    target_i = (ny - 1 - pad) * nx + (nx - 1 - pad)
-    dir2s = (1, 3), (2, 0), (3, 1), (0, 2)
-    dn2 = 4 if part2 else 1
-    offsets = nx, 1, -nx, -1
-    distances = {}  # state -> distance with state == (i, dir, dn) with dir 0,1,2,3 == S,E,N,W.
-    for dir in range(2):
-      i2, distance = start_i, 0
-      for _ in range(dn2):
-        i2 += offsets[dir]
-        distance += grid_flat[i2]
-      distances[i2, dir, dn2] = distance
-    priority_queue = [(distance, state) for state, distance in distances.items()]
-
-    while priority_queue:
-      distance, state = heapq.heappop(priority_queue)
-      # distance = distances[state]  # Commenting this line improves runtime.
-      i, dir, dn = state
-      if i == target_i:
-        break
-      if dn < (10 if part2 else 3):  # Try going straight.
-        i2 = i + offsets[dir]
-        state2 = i2, dir, dn + 1
-        distance2 = distance + grid_flat[i2]
-        if distance2 < distances.get(state2, 30_000):
-          distances[state2] = distance2
-          heapq.heappush(priority_queue, (distance2, state2))
-      for dir2 in dir2s[dir]:  # Try turning left or right.
-        i2, distance2, offset = i, distance, offsets[dir2]
-        for _ in range(dn2):
-          i2 += offset
-          distance2 += grid_flat[i2]
-        state2 = i2, dir2, dn2
-        if distance2 < distances.get(state2, 30_000):
-          distances[state2] = distance2
-          heapq.heappush(priority_queue, (distance2, state2))
-
-    return distance
-
-  return numba.njit(compute)
-
-
-# %%
 def day17(s, *, part2=False):
   grid = np.array([list(line) for line in s.splitlines()], np.uint16)
   pad = 4 if part2 else 1
   grid = np.pad(grid, pad, constant_values=30_000)
-  return day17_get_jitted(part2)(grid)
+  return day17_compute(grid, part2, pad)
 
 
 check_eq(day17(s1), 102)
@@ -3069,6 +2995,21 @@ day17_part2 = functools.partial(day17, part2=True)
 check_eq(day17_part2(s1), 94)
 check_eq(day17_part2(s2), 71)
 puzzle.verify(2, day17_part2)
+
+# %% [markdown]
+# I explored further optimizations but these had negligible benefit:
+#
+# - Specializing the jitted function based on the setting of the parameter `part2`.
+#
+# - Reducing the `numba` precision of all values using `np.int16(...)`.
+#
+# - Precomputing `distance_dn = np.empty((4, grid.size), np.int16)` -- the distance summed over
+#   the next `dn2` cells in direction `dir` -- used when starting a new straight path after a turn.
+#
+# The ~2.6x increase in execution time for Part 2 is largely due to the ~2.3x increase
+# in the number of graph nodes,
+# due to the fact that the `dn` parameter of the state generalizes
+# from `[1, 2, 3]` to `[4, 5, 6, 7, 8, 9, 10]`.
 
 # %% [markdown]
 # <a name="day18"></a>
@@ -3429,7 +3370,7 @@ day19_visualize(puzzle.input)
 # Initially, I tried in vain to find an efficient solution to the general problem
 # for arbitrary puzzle inputs.
 #
-# The key to tractibility is to recognize that the puzzle input has a very specific
+# The key to tractability is to recognize that the puzzle input has a very specific
 # graph structure, as revealed in the visualization.
 # There are four subgraphs that each contribute a single high pulse at a specific period.
 # These four subgraphs feed into a single "conjunction" (i.e., a NAND gate).
@@ -4215,7 +4156,7 @@ if SHOW_BIG_MEDIA:
 # connecting two degree-3 nodes,
 # we can constrain the graph to only include directed edges towards the target.
 # The reason is that the graph is planar and if the path were to go in the opposite direction,
-# could not reach the targer without passing through some already visited nodes.
+# could not reach the target without passing through some already visited nodes.
 # The figure created in **day23_visualize_graph** shows the resulting modified graph connectivity.
 
 # %%
@@ -4294,7 +4235,7 @@ def day23_graph_yx(s, part2, optimize=True):  # Create graph with yx nodes and a
     # For all edges on the perimeter of the graph, i.e., connecting two degree-3 nodes,
     # we can constrain the graph to only include directed edges towards the target.
     # The reason is that the graph is planar and if the path were to go in the opposite direction,
-    # it could not reach the targer without passing through some already visited nodes.
+    # it could not reach the target without passing through some already visited nodes.
     queue = collections.deque([target_yx])
     while queue:
       yx = queue.popleft()
@@ -4531,7 +4472,7 @@ puzzle.verify(1, day23d)
 
 day23d_part2 = functools.partial(day23d, part2=True)
 check_eq(day23d_part2(s1), 154)
-puzzle.verify(2, day23d_part2)  # ~1.7 s.
+# puzzle.verify(2, day23d_part2)  # ~1.7 s.
 
 
 # %%
@@ -4571,7 +4512,7 @@ puzzle.verify(2, day23_part2)  # ~60 ms (~18 s without numba).
 
 # %% [markdown]
 # <a name="day24"></a>
-# ## Day 24: Intersecting 3D trajectories
+# ## Day 24: Aligned 3D collisions
 
 # %% [markdown]
 # - Part 1: Considering only the X and Y axes, check all pairs of hailstones' future paths for intersections.  How many of these intersections occur within the test area $\left[2\cdot 10^{14}, 4\cdot 10^{14}\right]^2$ ?
@@ -4598,16 +4539,16 @@ puzzle.verify(2, day23_part2)  # ~60 ms (~18 s without numba).
 #
 # We explore
 # (1) using either the library function `np.linalg.solve`
-# or a manual implementation of the $2\times2$ linear system solution, and
+# or a custom implementation of the $2\times2$ linear system solution, and
 # (2) using either `numpy` or `numba`.
 # (See **day24a_part1**, **day24b_part1**, **day24c_part1**, **day24_part1**.)
 #
 # The conclusions are that
-# (1) the manual implementation of the linear solver is much faster, and
+# (1) a custom implementation of the linear solver is much faster, and
 # (2) using `numba` is much faster.
 
 # %% [markdown]
-# **Part 2** involves solving a system of quadratic equations:
+# **Part 2** involves solving a system of *quadratic* equations:
 # $$p_c + v_c\,t_i = p_{i, c} + v_{i, c}\,t_i,$$
 # where the subscript $c\in\{x,y,z\}$ denotes each of the three coordinates,
 # $\{p_i\}$ and $\{v_i\}$ are the known positions and velocities of the hailstones,
@@ -4615,8 +4556,8 @@ puzzle.verify(2, day23_part2)  # ~60 ms (~18 s without numba).
 # the position $p$ and velocity $v$ of the thrown rock and
 # the times $\{t_i\}$ at which the rock intersects the hailstones.
 #
-# These equations are quadratic because they involve the product of two unknowns: $v_c$ and $t_i$,
-# the velocity of the thrown rock and the time at which each intersection occurs.
+# These equations are quadratic because they involve the product of two unknowns:
+# the velocity $v_c$ of the thrown rock and the time $t_i$ at which each intersection occurs.
 #
 # If we consider just $k$ input hailstones $p_1,\ldots,p_k$,
 # the resulting system has $3k$ constraints and $k+6$ unknowns.
@@ -4625,12 +4566,23 @@ puzzle.verify(2, day23_part2)  # ~60 ms (~18 s without numba).
 #
 # Several approaches are considered:
 #
-# - `scipy.optimize.fsolve()` and `scipy.optimize.minimize` fail to converge to the solution.
+# - `scipy.optimize.fsolve()` and `scipy.optimize.minimize` fail to converge to the solution,
+#   even when the gradient is provided.
 #
 # - **day24d_part2** finds the correct solution using `scipy.optimize.least_squares()`
 #   by considering $k=20$ hailstones.
 #
-# - The simplest approach **day24_part2** is to use the symbolic solver in `sympy.solve`.
+# - The simplest approach **day24g_part2** is to invoke the symbolic solver in `sympy.solve`
+#   directly on the system of quadratic equations.
+#
+# - The fastest approach **day24_part2** is based on the
+#   [clever observation](https://github.com/maneatingape/advent-of-code-rust/blob/main/src/year2023/day24.rs)
+#   that the system can also be written as
+#   $$-t_i \,(v_c - v_{i, c}) = p_c - p_{i, c}$$
+#   and this *collinearity condition* can be expressed as zero cross-products.
+#   Using the first $k=3$ hailstones and some manipulation,
+#   this results in a *linear* system of 6 equations on the 6 unknowns ($\{p_c\}, \{v_c\}$),
+#   which can be solved for arbitrarily large integers using `sympy.solve_linear_system`.
 
 # %%
 puzzle = advent.puzzle(day=24)
@@ -4823,8 +4775,18 @@ if 0:
 # method=SLSQP         success=1  correct=0
 
 
+# %% [markdown]
+# The solution can be obtained by minimizing a least-squares objective function $E$:
+# $$
+# \begin{align}
+# E(p, v, t) &= \sum_i \sum_c \left\| p_c + v_c\,t_i - p_{i, c} - v_{i, c}\,t_i \right\|^2 \\
+# &= \sum_i \sum_c \left\| p_c + t_i \left(v_c - v_{i, c}\right) - p_{i, c} \right\|^2.
+# \end{align}
+# $$
+
+
 # %%
-def day24c_part2(s, debug=False, use=10):  # scipy.optimize.minimize fails.
+def day24c1_part2(s, debug=False, use=10):  # scipy.optimize.minimize fails.
   array = np.array([line.replace(' @', ',').split(',') for line in s.splitlines()], float)[:use]
 
   def fun(vars):
@@ -4842,27 +4804,69 @@ def day24c_part2(s, debug=False, use=10):  # scipy.optimize.minimize fails.
   return sum(int(c + 0.5) for c in x[0:3])
 
 
-check_eq(day24c_part2(s1), 47)
-# puzzle.verify(2, day24c_part2)
+check_eq(day24c1_part2(s1), 47)
+# puzzle.verify(2, day24c1_part2)  # Fails.
+
+
+# %% [markdown]
+# Its Jacobian (or gradient) is:
+# $$
+# \begin{align}
+# \frac{\partial E}{\partial p_c} &= \sum_i 2 \left(p_c + t_i \left(v_c - v_{i,c}\right) - p_{i,c}\right) \\
+# \frac{\partial E}{\partial v_c} &= \sum_i 2 t_i \left(p_c + t_i \left(v_c - v_{i,c}\right) - p_{i,c}\right) \\
+# \frac{\partial E}{\partial t_i} &= \sum_c 2 (v_c - v_{i,c}) \left(p_c + t_i \left(v_c - v_{i,c}\right) - p_{i,c}\right) \\
+# \end{align}.
+# $$
+#
+# I verified both the Jacobian formulas and the associated numpy code
+# using [ChatGPT](https://chat.openai.com/share/24cb5168-1540-4dc1-b15a-da0fcfb6e742).
 
 
 # %%
-# TODO: Try defining the gradient to see if this robustifies or accelerates the search.
+def day24c_part2(s, debug=False, use=10):  # scipy.optimize.minimize with Jacobian still fails.
+  array = np.array([line.replace(' @', ',').split(',') for line in s.splitlines()], float)[:use]
+
+  def fun(vars):
+    pos, vel, t = vars[:3], vars[3:6], vars[6:]
+    terms = pos + t[:, None] * (vel - array[:, 3:6]) - array[:, :3]
+    value = (terms**2).sum()
+    jac_p = 2 * terms.sum(0)
+    jac_v = 2 * (t[:, None] * terms).sum(0)
+    jac_t = 2 * ((vel - array[:, 3:6]) * terms).sum(1)
+    jac = np.concatenate((jac_p, jac_v, jac_t))
+    assert len(jac) == len(vars)
+    return value, jac
+
+  if len(array) < 10:
+    initial_guess = [2] * 3 + [1] * 3 + [1.0] * len(array)
+  else:
+    initial_guess = [1e6] * 3 + [1e6] * 3 + [1.0] * len(array)
+
+  method = None  # Or 'BFGS'.
+  x = scipy.optimize.minimize(fun, initial_guess, jac=True, method=method, tol=1e-14).x
+  if debug:
+    print([float(c) for c in x[:6]])
+  return sum(int(c + 0.5) for c in x[0:3])
+
+
+check_eq(day24c_part2(s1), 47)
+# puzzle.verify(2, day24c_part2)  # Fails.
 
 
 # %%
 def day24d_part2(s, debug=False, use=20):  # scipy.optimize.least_squares() succeeds.
   # use=10 was OK for one puzzle.input, but use=20 was required for another one.
   array = np.array([line.replace(' @', ',').split(',') for line in s.splitlines()], float)[:use]
+  n, p_i, v_i = len(array), array[:, :3], array[:, 3:6]
 
   def fun(vars):
-    pos, vel, t = vars[:3], vars[3:6], vars[6:]
-    return (array[:, :3] - pos + t[:, None] * (array[:, 3:6] - vel)).reshape(-1)
+    p, v, t = vars[:3], vars[3:6], vars[6:]
+    return (p_i - p + t[:, None] * (v_i - v)).reshape(-1)
 
-  if len(array) < 10:  # Somehow the choice of initial guess is important.
-    initial_guess = [2] * 3 + [1] * 3 + [1.0] * len(array)
+  if n < 10:  # Somehow the choice of initial guess is important.
+    initial_guess = [2] * 3 + [1] * 3 + [1.0] * n
   else:
-    initial_guess = [1e6] * 3 + [1e6] * 3 + [1.0] * len(array)
+    initial_guess = [1e6] * 3 + [1e6] * 3 + [1.0] * n
 
   # Unlike with scipy.optimize.fsolve, here we can have a non-square system.
   x = scipy.optimize.least_squares(fun, initial_guess, xtol=1e-12).x
@@ -4907,6 +4911,13 @@ puzzle.verify(2, day24e_part2)
 # (363206674204110, 368909610239045, 156592420220258, -164, -127, 223, 807026090068, 665395648062, 117549288974)
 
 
+# %% [markdown]
+# From ChatGPT:
+# > In the case of a system of quadratic equations, sympy.solve might be employing resultants or Groebner bases to find the solutions symbolically, avoiding floating-point arithmetic. This method ensures that if the solutions are expressible in integers or exact forms (like fractions or radicals), they will be presented as such.
+#
+# > In all, sympy.solve's ability to return solutions with integer coefficients for a system of quadratic equations is due to its symbolic computation approach, which maintains the arithmetic in the integer domain and uses algebraic methods to solve the equations without resorting to numerical approximation. This avoids the rounding errors and imprecisions inherent in floating-point computations.
+
+
 # %%
 def day24f_part2(s, use=3):  # More concise.
   array = np.array([line.replace('@', ',').split(',') for line in s.splitlines()], int)
@@ -4922,7 +4933,7 @@ puzzle.verify(2, day24f_part2)
 
 
 # %%
-def day24_part2(s):  # Most concise.
+def day24g_part2(s):  # Most concise.
   rows = [list(map(int, re.findall(r'[-\d]+', line))) for line in s.splitlines()]
   p, v, ts = (sympy.symbols(f'{ch}(:3)') for ch in 'pvt')
   equations = [
@@ -4931,11 +4942,32 @@ def day24_part2(s):  # Most concise.
   return sum(sympy.solve(equations, (*p, *v, *ts))[0][:3])
 
 
-check_eq(day24_part2(s1), 47)
-puzzle.verify(2, day24_part2)
+check_eq(day24g_part2(s1), 47)
+puzzle.verify(2, day24g_part2)
+
 
 # %%
-# TODO: The constraint that the coordinates of p and v must be integer might lead to a combinatorial search approach?
+def day24_part2(s):  # Fastest: solve system of 6 linear equations based on cross-products.
+  # From https://github.com/maneatingape/advent-of-code-rust/blob/main/src/year2023/day24.rs
+  rows = [list(map(int, re.findall(r'[-\d]+', line))) for line in s.splitlines()]
+  a, b, c, d, e, f = rows[0]
+  g, h, i, j, k, l = rows[1]
+  m, n, o, p, q, r = rows[2]
+  system = sympy.Matrix([
+      [0, l - f, e - k, 0, c - i, h - b, e * c - b * f + h * l - k * i],
+      [0, r - f, e - q, 0, c - o, n - b, e * c - b * f + n * r - q * o],
+      [f - l, 0, j - d, i - c, 0, a - g, a * f - d * c + j * i - g * l],
+      [f - r, 0, p - d, o - c, 0, a - m, a * f - d * c + p * o - m * r],
+      [k - e, d - j, 0, b - h, g - a, 0, d * b - a * e + g * k - j * h],
+      [q - e, d - p, 0, b - n, m - a, 0, d * b - a * e + m * q - p * n],
+  ])
+  pos, vel = sympy.symbols('pos(:3)'), sympy.symbols('vel(:3)')
+  sol = sympy.solve_linear_system(system, *pos, *vel)
+  return sum(sol[sym] for sym in pos)
+
+
+check_eq(day24_part2(s1), 47)
+puzzle.verify(2, day24_part2)
 
 # %% [markdown]
 # <a name="day25"></a>
@@ -5074,7 +5106,7 @@ def day25b(s):  # networkx.minimum_edge_cut
 
 
 check_eq(day25b(s1), 54)
-puzzle.verify(1, day25b)  # ~3.0 s
+# puzzle.verify(1, day25b)  # ~3.0 s
 
 
 # %%
