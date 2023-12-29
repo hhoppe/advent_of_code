@@ -75,6 +75,7 @@ import itertools
 import math
 import pathlib
 import re
+import tempfile
 from typing import Any, Literal
 import warnings
 
@@ -828,7 +829,11 @@ def day6_part1_visualize(s, fps=20, delay_start=20, delay_end=40):
       plt.rcParams['animation.html'] = 'html5'  # Enable HTML video; default is 'none'.
       hh.display(animator)
 
-  if (path := pathlib.Path('results') / 'day06.gif').parent.is_dir():
+  with tempfile.TemporaryDirectory() as temp_dir:
+    dir = pathlib.Path('results')
+    if not dir.is_dir():
+      dir = pathlib.Path(temp_dir)
+    path = dir / 'day06.gif'
     animator.save(path, writer='ffmpeg', fps=fps, dpi=100, codec='gif')
     with media.VideoReader(path) as reader:
       h, w = reader.shape
