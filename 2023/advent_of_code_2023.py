@@ -63,7 +63,8 @@
 # !dpkg -l | grep -q libgraphviz-dev || (apt-get -qq update && apt-get -qq -y install libgraphviz-dev) >/dev/null  # https://stackoverflow.com/a/66380001
 
 # %%
-# !pip install -q advent-of-code-hhoppe hhoppe-tools kaleido matplotlib mediapy more-itertools numba numpy plotly pygraphviz scipy scikit-image sympy
+# !pip install -q advent-of-code-hhoppe hhoppe-tools kaleido matplotlib mediapy more-itertools \
+#   numba numpy plotly pygraphviz scipy scikit-image sympy
 
 # %%
 import ast
@@ -2379,10 +2380,6 @@ puzzle.verify(2, day14b_part2)
 
 
 # %%
-# hh.prun(lambda: day14b_part2(puzzle.input))
-
-
-# %%
 @numba.njit  # numba is crucial for speed with np.uint8 (not 'U1').
 def day14_slide_left(grid):
   for row in grid:
@@ -2432,9 +2429,6 @@ puzzle.verify(1, day14)
 day14_part2 = functools.partial(day14, part2=True)
 check_eq(day14_part2(s1), 64)
 puzzle.verify(2, day14_part2)
-
-# %%
-# hh.prun(lambda: day14(puzzle.input, part2=True))
 
 # %%
 # Numba is clever enough to jit two different versions of day14_slide_left because the grid view
@@ -2728,7 +2722,7 @@ if SHOW_BIG_MEDIA:
 
 
 # %% [markdown]
-# (This visualization is a bit misleading in that it involves a breadth-first traversal,
+# (This visualization is a bit misleading as it involves a breadth-first traversal,
 # which is not what most algorithms implement, but it looks cool.)
 
 
@@ -3044,7 +3038,7 @@ puzzle.verify(2, day17_part2)
 #   We add therefore extra single-wide path areas on the "down" and "right" segments
 #   to complete the full perimeter.
 #
-# It looks like the more general approach (for a polygon with non-axis-aligned edges) is called the
+# The more general approach to computing area, for a polygon with non-axis-aligned edges, is called the
 # [shoelace formula](https://en.wikipedia.org/wiki/Shoelace_formula).
 
 # %%
@@ -4537,10 +4531,10 @@ puzzle.verify(2, day23_part2)  # ~60 ms (~18 s without numba).
 # with given positions $p_1, p_2$ and velocities $v_1, v_2$,
 # we obtain their paths' intersection by solving for the time parameters $t_1, t_2$ in:
 # $$
-# \begin{align}
+# \begin{align*}
 # p_{1,x} + v_{1,x}\,t_1 = p_{2,x} + v_{2,x}\,t_2 \\
 # p_{1,y} + v_{1,y}\,t_1 = p_{2,y} + v_{2,y}\,t_2
-# \end{align},
+# \end{align*}
 # $$
 # or equivalently,
 # $$
@@ -4583,8 +4577,10 @@ puzzle.verify(2, day23_part2)  # ~60 ms (~18 s without numba).
 # - **day24d_part2** finds the correct solution using `scipy.optimize.least_squares()`
 #   by considering $k=20$ hailstones.
 #
-# - The simplest approach **day24g_part2** is to invoke the symbolic solver in `sympy.solve`
+# - The simplest approach **day24g_part2** is to invoke the symbolic solver in `sympy.solve()`
 #   directly on the system of quadratic equations.
+#
+# - Similarly, **day24z_part2** invokes the Z3 symbolic solver `z3.Solver()`.
 #
 # - The fastest approach **day24_part2** is based on the
 #   [clever observation](https://github.com/maneatingape/advent-of-code-rust/blob/main/src/year2023/day24.rs)
@@ -4790,10 +4786,10 @@ if 0:
 # %% [markdown]
 # The solution can be obtained by minimizing a least-squares objective function $E$:
 # $$
-# \begin{align}
+# \begin{align*}
 # E(p, v, t) &= \sum_i \sum_c \left\| p_c + v_c\,t_i - p_{i, c} - v_{i, c}\,t_i \right\|^2 \\
 # &= \sum_i \sum_c \left\| p_c + t_i \left(v_c - v_{i, c}\right) - p_{i, c} \right\|^2.
-# \end{align}
+# \end{align*}
 # $$
 
 
@@ -4823,11 +4819,11 @@ check_eq(day24c1_part2(s1), 47)
 # %% [markdown]
 # Its Jacobian (or gradient) is:
 # $$
-# \begin{align}
+# \begin{align*}
 # \frac{\partial E}{\partial p_c} &= \sum_i 2 \left(p_c + t_i \left(v_c - v_{i,c}\right) - p_{i,c}\right) \\
 # \frac{\partial E}{\partial v_c} &= \sum_i 2 t_i \left(p_c + t_i \left(v_c - v_{i,c}\right) - p_{i,c}\right) \\
-# \frac{\partial E}{\partial t_i} &= \sum_c 2 (v_c - v_{i,c}) \left(p_c + t_i \left(v_c - v_{i,c}\right) - p_{i,c}\right) \\
-# \end{align}.
+# \frac{\partial E}{\partial t_i} &= \sum_c 2 (v_c - v_{i,c}) \left(p_c + t_i \left(v_c - v_{i,c}\right) - p_{i,c}\right). \\
+# \end{align*}
 # $$
 #
 # I verified both the Jacobian formulas and the associated numpy code
@@ -4926,7 +4922,7 @@ puzzle.verify(2, day24e_part2)
 # %% [markdown]
 # From ChatGPT:
 # > In the case of a system of quadratic equations, sympy.solve might be employing resultants or Groebner bases to find the solutions symbolically, avoiding floating-point arithmetic. This method ensures that if the solutions are expressible in integers or exact forms (like fractions or radicals), they will be presented as such.
-#
+# >
 # > In all, sympy.solve's ability to return solutions with integer coefficients for a system of quadratic equations is due to its symbolic computation approach, which maintains the arithmetic in the integer domain and uses algebraic methods to solve the equations without resorting to numerical approximation. This avoids the rounding errors and imprecisions inherent in floating-point computations.
 
 
@@ -4956,6 +4952,28 @@ def day24g_part2(s):  # Most concise.
 
 check_eq(day24g_part2(s1), 47)
 puzzle.verify(2, day24g_part2)
+
+
+# %%
+def day24z_part2(s, use=3):  # Try Z3 solver.
+  import z3  # !pip install z3-solver
+
+  rows = [list(map(int, re.findall(r'[-\d]+', line))) for line in s.splitlines()][:use]
+
+  solver = z3.Solver()
+  p, v, ts = (z3.IntVector(ch, 3) for ch in 'pvt')
+  for row, t in zip(rows, ts):
+    for j in range(3):
+      solver.add(row[j] - p[j] + t * (row[3 + j] - v[j]) == 0)
+
+  assert solver.check() == z3.sat
+  model = solver.model()
+  return sum(model[p[c]].as_long() for c in range(3))
+
+
+if 0:
+  check_eq(day24z_part2(s1), 47)
+  puzzle.verify(2, day24z_part2)  # ~1.5 s; slow.
 
 
 # %%
