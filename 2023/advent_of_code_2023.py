@@ -61,10 +61,11 @@
 
 # %%
 # !dpkg -l | grep -q libgraphviz-dev || (apt-get -qq update && apt-get -qq -y install libgraphviz-dev) >/dev/null  # https://stackoverflow.com/a/66380001
+# !pip install -q pygraphviz
 
 # %%
 # !pip install -q advent-of-code-hhoppe hhoppe-tools kaleido matplotlib mediapy more-itertools \
-#   numba numpy plotly pygraphviz scipy scikit-image sympy
+#   numba numpy plotly scipy scikit-image sympy
 
 # %%
 import ast
@@ -4955,13 +4956,14 @@ puzzle.verify(2, day24g_part2)
 
 
 # %%
-def day24z_part2(s, use=3):  # Try Z3 solver.
+def day24z_part2(s, use_real=True, use=3):  # Try Z3 solver.
   import z3  # !pip install z3-solver
 
   rows = [list(map(int, re.findall(r'[-\d]+', line))) for line in s.splitlines()][:use]
 
   solver = z3.Solver()
-  p, v, ts = (z3.IntVector(ch, 3) for ch in 'pvt')
+  number = z3.RealVector if use_real else z3.IntVector
+  p, v, ts = (number(ch, 3) for ch in 'pvt')
   for row, t in zip(rows, ts):
     for j in range(3):
       solver.add(row[j] - p[j] + t * (row[3 + j] - v[j]) == 0)
@@ -4973,7 +4975,7 @@ def day24z_part2(s, use=3):  # Try Z3 solver.
 
 if 0:
   check_eq(day24z_part2(s1), 47)
-  puzzle.verify(2, day24z_part2)  # ~1.5 s; slow.
+  puzzle.verify(2, day24z_part2)  # ~0.1 s for RealVector; ~1.5 s for IntVector.
 
 
 # %%
