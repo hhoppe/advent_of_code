@@ -3146,7 +3146,7 @@ def day18_part2_visualize(s):
   ax.set(xlabel=r'$x$ units $\times 10^6$', ylabel=r'$y$ units $\times 10^6$')
   ax.yaxis.labelpad = -3
   ax.locator_params(nbins=6)  # Reduce the number of ticks and ticklabels.
-  # fig.tight_layout()
+  fig.tight_layout()
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
   plt.close()
   media.show_image(image, title='day18b')
@@ -3347,6 +3347,8 @@ def day19_visualize(s):
   assert networkx.is_tree(graph)
 
   pos = hh.graph_layout(graph, prog='neato')
+  pos = {yx: (np.round(p[0]), np.round(p[1])) for yx, p in pos.items()}  # Stable across runs.
+
   fig, ax = plt.subplots(figsize=(7, 7), dpi=80)
   ax.axes.set_aspect('equal')
   # 'C0' is the first color in the color cycle of the current matplotlib style.
@@ -4358,6 +4360,7 @@ def day23_visualize_graph(s, *, part2=False, optimize=True, node_size=700):
 
   pos = hh.graph_layout(graph, prog='neato')
   pos = hh.rotate_layout_so_node_is_on_left(pos, start_yx, math.tau / 8)
+  pos = {yx: (np.round(p[0]), np.round(p[1])) for yx, p in pos.items()}  # Stable across runs.
   most_upper_right_yx = max(graph_yx, key=lambda yx: yx[1] - yx[0])
   if pos[most_upper_right_yx][0] < np.mean(list(pos.values()), 0)[0]:
     pos = {node: (-y, -x) for node, (x, y) in pos.items()}  # Reflect about NW-SE line.
