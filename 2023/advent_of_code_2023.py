@@ -18,37 +18,53 @@
 # Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`):
 #
 # <p>
-# <a href="#day3">day3</a> <img src="results/day03a.png" width="120">&nbsp;
-# <img src="results/day03b.png" width="120">&emsp;
-# <a href="#day6">day6</a> <img src="results/day06.gif" width="220">&emsp;
-# <a href="#day7">day7</a> <img src="results/day07.png" width="200">
+# <a href="#day3">day3</a>
+#  <img src="results/day03a.png" width="120">&nbsp;
+#  <img src="results/day03b.png" width="120">&emsp;
+# <a href="#day6">day6</a>
+#  <img src="results/day06.gif" width="220">&emsp;
+# <a href="#day7">day7</a>
+#  <img src="results/day07.png" width="200">
 # </p>
 #
 # <p>
-# <a href="#day10">day10</a> <img src="results/day10a.png" width="100">&nbsp;
-# <img src="results/day10b.png" width="100">&emsp;
-# <a href="#day13">day13</a> <img src="results/day13.png" width="280">&emsp;
-# <a href="#day14">day14</a> <img src="results/day14.gif" width="140">
+# <a href="#day10">day10</a>
+#  <img src="results/day10a.png" width="100">&nbsp;
+#  <img src="results/day10b.png" width="100">&emsp;
+# <a href="#day13">day13</a>
+#  <img src="results/day13.png" width="280">&emsp;
+# <a href="#day14">day14</a>
+#  <img src="results/day14.gif" width="140">
 # </p>
 #
 # <p>
-# <a href="#day16">day16</a> <img src="results/day16a.gif" width="200">&emsp;
-# <a href="#day17">day17</a> <img src="results/day17a.gif" width="110">&nbsp;
-# <img src="results/day17b.gif" width="110">&emsp;
-# <a href="#day18">day18</a> <img src="results/day18b.png" width="220">
+# <a href="#day16">day16</a>
+#  <img src="results/day16a.gif" width="200">&emsp;
+# <a href="#day17">day17</a>
+#  <img src="results/day17a.gif" width="110">&nbsp;
+#  <img src="results/day17b.gif" width="110">&emsp;
+# <a href="#day18">day18</a>
+#  <img src="results/day18b.png" width="220">
 # </p>
 #
 # <p>
-# <a href="#day20">day20</a> <img src="results/day20.png" width="240">&emsp;
-# <a href="#day21">day21</a> <img src="results/day21a.gif" width="240">&emsp;
-# <a href="#day22">day22</a> <img src="results/day22a.png" width="60">&nbsp;
-# <img src="results/day22b.gif" width="72">
+# <a href="#day20">day20</a>
+#  <img src="results/day20.png" width="240">&emsp;
+# <a href="#day21">day21</a>
+#  <img src="results/day21a.gif" width="240">&emsp;
+# <a href="#day22">day22</a>
+#  <img src="results/day22a.png" width="60">&nbsp;
+#  <img src="results/day22b.gif" width="72">
 # </p>
 #
 # <p>
-# <a href="#day23">day23</a> <img src="results/day23d.png" width="180">&nbsp;
-# <img src="results/day23b.png" width="180">&emsp;
-# <a href="#day25">day25</a> <img src="results/day25.png" width="320">
+# <a href="#day23">day23</a>
+#  <img src="results/day23d.png" width="150">&nbsp;
+#  <img src="results/day23b.png" width="140">&emsp;
+# <a href="#day24">day24</a>
+#  <img src="results/day24.gif" width="160">&emsp;
+# <a href="#day25">day25</a>
+#  <img src="results/day25.png" width="180">
 # </p>
 
 # %% [markdown]
@@ -822,20 +838,20 @@ def day6_part1_visualize(s, fps=20, delay_start=20, delay_end=40):
       artist[1].set_color('blue' if d <= d1 else 'green')
     return itertools.chain.from_iterable(artists.values())
 
-  animator = matplotlib.animation.FuncAnimation(
+  animation = matplotlib.animation.FuncAnimation(
       fig, animate, frames=t1 + delay_start + delay_end, interval=1000 // fps, blit=True
   )
   if 0:
     with plt.rc_context():
       plt.rcParams['animation.html'] = 'html5'  # Enable HTML video; default is 'none'.
-      hh.display(animator)
+      hh.display(animation)
 
   with tempfile.TemporaryDirectory() as temp_dir:
     dir = pathlib.Path('results')
     if not dir.is_dir():
       dir = pathlib.Path(temp_dir)
     path = dir / 'day06.gif'
-    animator.save(path, writer='ffmpeg', fps=fps, dpi=100, codec='gif')
+    animation.save(path, writer='ffmpeg', fps=fps, dpi=100, codec='gif')
     with media.VideoReader(path) as reader:
       h, w = reader.shape
     html = media.html_from_compressed_image(path.read_bytes(), w, h, fmt='gif', pixelated=False)
@@ -848,7 +864,7 @@ if SHOW_BIG_MEDIA:
 
 # %% [markdown]
 # Cached result:<br/>
-# <img src="results/day06.gif"/><br/>
+# <img src="results/day06.gif"/>
 
 
 # %%
@@ -2718,7 +2734,7 @@ if SHOW_BIG_MEDIA:
 
 # %% [markdown]
 # Cached result:<br/>
-# <img src="results/day16a.gif"/><br/>
+# <img src="results/day16a.gif"/>
 
 
 # %% [markdown]
@@ -4336,7 +4352,7 @@ if SHOW_BIG_MEDIA:
 
 # %% [markdown]
 # Cached result:<br/>
-# <img src="results/day23b.png"/><br/>
+# <img src="results/day23b.png"/>
 
 
 # %%
@@ -4958,15 +4974,13 @@ puzzle.verify(2, day24g_part2)
 
 
 # %%
-def day24_part2_visualize(s, nframes=100, fps=20):
+def day24_part2_visualize(s, nframes=120, fps=30):
   array = np.array([line.replace('@', ',').split(',') for line in s.splitlines()], int)
   p_i, v_i = array[:, :3], array[:, 3:6]
 
   def get_solution():
     p, v, t = (sympy.symbols(f'{ch}(:3)') for ch in 'pvt')
-    equations = [
-        p_i[i, j] - p[j] + t[i] * (v_i[i, j] - v[j]) for i in range(3) for j in range(3)
-    ]
+    equations = [p_i[i, j] - p[j] + t[i] * (v_i[i, j] - v[j]) for i in range(3) for j in range(3)]
     (var,) = sympy.solve(equations, (*p, *v, *t))
     pos, vel = np.array(var[:3]), np.array(var[3:6])
     return pos, vel
@@ -4975,52 +4989,49 @@ def day24_part2_visualize(s, nframes=100, fps=20):
   t_i = (pos - p_i).sum(1) / (v_i - vel).sum(1)
   t_max = max(t_i)
 
-  fig = plt.figure(figsize=(7, 7))
-  ax = fig.add_subplot(111, projection='3d')
-  ax.set(xlabel='x', ylabel='y', zlabel='z')
+  fig = plt.figure(figsize=(7, 7), dpi=80)
+  ax: Any = fig.add_subplot(111, projection='3d')  # ax: mpl_toolkits.mplot3d.axes3d.Axes3D.
+  ax.set(xlabel='x', ylabel='y', zlabel='z', xlim=[0, 5e14], ylim=[0, 5e14], zlim=[0, 5e14])
 
-  x, y, z = p_i[:, 0], p_i[:, 1], p_i[:, 2]
-  scatter_i = ax.scatter(x, y, z, color='black', marker='o', s=2)
-  scatter_pos = ax.scatter([pos[0]], [pos[1]], [pos[2]], color='red', marker='o', s=10)
+  scatter_i = ax.scatter(*p_i.T, color='black', marker='o', s=3)
+  scatter_pos = ax.scatter(*pos[None].T, color='red', marker='o', s=12)
 
-  (line,) = ax.plot([pos[0]], [pos[1]], [pos[2]], color='red', linewidth=1)
+  (line,) = ax.plot(*pos[None].T, color='red', linewidth=1)
 
   # bbox2 = np.array([ax.get_xlim(), ax.get_ylim(), ax.get_zlim()]).T
-  ax.view_init(elev=30., azim=70)  # Default ax.elev=30, ax.azim=-60.
+  ax.view_init(elev=30, azim=75)  # Default ax.elev=30, ax.azim=-60.
   fig.tight_layout(pad=0)
   plt.close()
 
   def animate(n):
-    frac = np.clip(n / nframes * 2 - 0.5, -0.25, 1.25)
+    frac = n / nframes * 1.5 - 0.25
     t = int(frac * t_max + 0.5)
     pos2 = pos + vel * t
     pp = p_i + v_i * t
-    pp = pp[t < t_i]
-    if len(pp) == 0:
-      pp = pos2[None]  # Scatter must contain at least one point; hide under the red dot.
-    scatter_i._offsets3d = pp.T
-    scatter_pos._offsets3d = pos2[None].T
+    pp = a if len(a := pp[t < t_i]) > 0 else np.array([[0.0, 0.0, 1e20]])
+    scatter_i._offsets3d = pp.T  # pylint: disable=protected-access
+    # Bug in matplotlib: single scatter point becomes aliased; workaround: repeat(2, 0).
+    scatter_pos._offsets3d = pos2[None].repeat(2, 0).T  # pylint: disable=protected-access
     pos1, pos2 = (pos, pos + vel * np.clip(t, 0, t_max)) if frac > 0 else (pos2, pos2)
     line.set_data([pos1[0], pos2[0]], [pos1[1], pos2[1]])
     line.set_3d_properties([pos1[2], pos2[2]])
-    return scatter_i, scatter_pos, line
+    # return scatter_i, scatter_pos, line
 
-  animator = matplotlib.animation.FuncAnimation(
-      fig, animate, frames=nframes, interval=1000 // fps, blit=True
-  )
-  with tempfile.TemporaryDirectory() as temp_dir:
-    dir = pathlib.Path('results')
-    if not dir.is_dir():
-      dir = pathlib.Path(temp_dir)
-    path = dir / 'day24.gif'
-    animator.save(path, writer='ffmpeg', fps=fps, dpi=80, codec='gif')
-    with media.VideoReader(path) as reader:
-      h, w = reader.shape
-    html = media.html_from_compressed_image(path.read_bytes(), w, h, fmt='gif', pixelated=False)
-    hh.display_html(html)
+  # "blit=True" is no faster; "interval=1000 // fps" is unnecessary.
+  animation = matplotlib.animation.FuncAnimation(fig, animate, frames=nframes)
+  images: Any = hh.images_from_animation(animation)
+  images = [images[0]] * (fps // 2) + images + [images[-1]] * (fps // 2)
+  images = hh.bounding_crop(images, (255, 255, 255), margin=(0, 6, 6))
+  media.show_video(images, codec='gif', fps=fps, title='day24', border=True)
 
 
-day24_part2_visualize(puzzle.input)
+if SHOW_BIG_MEDIA:
+  day24_part2_visualize(puzzle.input)  # ~3.5 s.
+
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="results/day24.gif"/>
 
 
 # %%

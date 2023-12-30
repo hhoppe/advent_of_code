@@ -57,8 +57,10 @@ Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`
 
 <p>
 <a href="https://nbviewer.org/github/hhoppe/advent_of_code/blob/main/2023/advent_of_code_2023.ipynb#day23">day23</a>
- <img src="results/day23d.png" width="180">&nbsp;
- <img src="results/day23b.png" width="180">&emsp;
+ <img src="results/day23d.png" width="150">&nbsp;
+ <img src="results/day23b.png" width="140">&emsp;
+<a href="https://nbviewer.org/github/hhoppe/advent_of_code/blob/main/2023/advent_of_code_2023.ipynb#day24">day24</a>
+ <img src="results/day24.gif" width="160">&emsp;
 <a href="https://nbviewer.org/github/hhoppe/advent_of_code/blob/main/2023/advent_of_code_2023.ipynb#day25">day25</a>
- <img src="results/day25.png" width="320">
+ <img src="results/day25.png" width="180">
 </p>
