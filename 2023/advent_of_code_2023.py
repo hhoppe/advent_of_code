@@ -1670,11 +1670,10 @@ def day11c(s, *, part2=False):  # Using sets of occupied rows/cols.  Most concis
 
 
 check_eq(day11c(s1), 374)
-puzzle.verify(1, day11c)
+# puzzle.verify(1, day11c)  # ~0.5 s.
 
 day11c_part2 = functools.partial(day11c, part2=True)
-puzzle.verify(2, day11c_part2)
-
+# puzzle.verify(2, day11c_part2)  # ~0.5 s.
 
 # %%
 def day11d(s, *, part2=False):  # Outer loop over empty rows/cols.
@@ -4986,7 +4985,10 @@ def day24_part2_visualize(s, nframes=120, fps=30):
     return pos, vel
 
   pos, vel = get_solution()
-  t_i = (pos - p_i).sum(1) / (v_i - vel).sum(1)
+  with np.errstate(invalid='ignore'):  # 0 / 0 may lead to some NaNs.
+    all_t_i = (pos - p_i).astype(float) / (v_i - vel).astype(float)
+  t_i = np.array([row[~np.isnan(row)][0] for row in all_t_i])
+  assert all(len(np.unique(row[~np.isnan(row)])) == 1 for row in all_t_i)
   t_max = max(t_i)
 
   fig = plt.figure(figsize=(7, 7), dpi=80)
@@ -5026,7 +5028,7 @@ def day24_part2_visualize(s, nframes=120, fps=30):
 
 
 if SHOW_BIG_MEDIA:
-  day24_part2_visualize(puzzle.input)  # ~3.5 s.
+  day24_part2_visualize(puzzle.input)  # ~5.4 s.
 
 
 # %% [markdown]
