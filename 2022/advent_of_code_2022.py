@@ -8,7 +8,7 @@
 # with Python solutions to the
 # [2022 Advent of Code puzzles](https://adventofcode.com/2022),
 # completed in December 2022,
-# by [Hugues Hoppe](http://hhoppe.com/).
+# by [Hugues Hoppe](https://hhoppe.com/).
 #
 # See [reddit](https://www.reddit.com/r/adventofcode/comments/108taz7/2022_advent_notebook_with_gif_visualizations/).
 #

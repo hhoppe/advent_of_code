@@ -8,7 +8,7 @@
 # with Python solutions to the
 # [2021 Advent of Code puzzles](https://adventofcode.com/2021),
 # completed in December 2021,
-# by [Hugues Hoppe](http://hhoppe.com/).
+# by [Hugues Hoppe](https://hhoppe.com/).
 #
 # See [reddit](https://www.reddit.com/r/adventofcode/comments/rtx354/advent_of_code_2021_notebook_of_compact_and_fast/).
 #

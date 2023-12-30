@@ -8,7 +8,7 @@
 # with Python solutions to the
 # [2018 Advent of Code puzzles](https://adventofcode.com/2018),
 # completed in November 2021,
-# by [Hugues Hoppe](http://hhoppe.com/).
+# by [Hugues Hoppe](https://hhoppe.com/).
 #
 # The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 #

@@ -1,5 +1,4 @@
 # %% [markdown]
-# <a name="top"></a>
 # # Advent of code 2023
 
 # %% [markdown]
@@ -9,7 +8,7 @@
 # with Python solutions to the
 # [2023 Advent of Code puzzles](https://adventofcode.com/2023),
 # completed in December 2023,
-# by [Hugues Hoppe](http://hhoppe.com/).
+# by [Hugues Hoppe](https://hhoppe.com/).
 #
 # The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 #
@@ -4956,6 +4955,72 @@ def day24g_part2(s):  # Most concise.
 
 check_eq(day24g_part2(s1), 47)
 puzzle.verify(2, day24g_part2)
+
+
+# %%
+def day24_part2_visualize(s, nframes=100, fps=20):
+  array = np.array([line.replace('@', ',').split(',') for line in s.splitlines()], int)
+  p_i, v_i = array[:, :3], array[:, 3:6]
+
+  def get_solution():
+    p, v, t = (sympy.symbols(f'{ch}(:3)') for ch in 'pvt')
+    equations = [
+        p_i[i, j] - p[j] + t[i] * (v_i[i, j] - v[j]) for i in range(3) for j in range(3)
+    ]
+    (var,) = sympy.solve(equations, (*p, *v, *t))
+    pos, vel = np.array(var[:3]), np.array(var[3:6])
+    return pos, vel
+
+  pos, vel = get_solution()
+  t_i = (pos - p_i).sum(1) / (v_i - vel).sum(1)
+  t_max = max(t_i)
+
+  fig = plt.figure(figsize=(7, 7))
+  ax = fig.add_subplot(111, projection='3d')
+  ax.set(xlabel='x', ylabel='y', zlabel='z')
+
+  x, y, z = p_i[:, 0], p_i[:, 1], p_i[:, 2]
+  scatter_i = ax.scatter(x, y, z, color='black', marker='o', s=2)
+  scatter_pos = ax.scatter([pos[0]], [pos[1]], [pos[2]], color='red', marker='o', s=10)
+
+  (line,) = ax.plot([pos[0]], [pos[1]], [pos[2]], color='red', linewidth=1)
+
+  # bbox2 = np.array([ax.get_xlim(), ax.get_ylim(), ax.get_zlim()]).T
+  ax.view_init(elev=30., azim=70)  # Default ax.elev=30, ax.azim=-60.
+  fig.tight_layout(pad=0)
+  plt.close()
+
+  def animate(n):
+    frac = np.clip(n / nframes * 2 - 0.5, -0.25, 1.25)
+    t = int(frac * t_max + 0.5)
+    pos2 = pos + vel * t
+    pp = p_i + v_i * t
+    pp = pp[t < t_i]
+    if len(pp) == 0:
+      pp = pos2[None]  # Scatter must contain at least one point; hide under the red dot.
+    scatter_i._offsets3d = pp.T
+    scatter_pos._offsets3d = pos2[None].T
+    pos1, pos2 = (pos, pos + vel * np.clip(t, 0, t_max)) if frac > 0 else (pos2, pos2)
+    line.set_data([pos1[0], pos2[0]], [pos1[1], pos2[1]])
+    line.set_3d_properties([pos1[2], pos2[2]])
+    return scatter_i, scatter_pos, line
+
+  animator = matplotlib.animation.FuncAnimation(
+      fig, animate, frames=nframes, interval=1000 // fps, blit=True
+  )
+  with tempfile.TemporaryDirectory() as temp_dir:
+    dir = pathlib.Path('results')
+    if not dir.is_dir():
+      dir = pathlib.Path(temp_dir)
+    path = dir / 'day24.gif'
+    animator.save(path, writer='ffmpeg', fps=fps, dpi=80, codec='gif')
+    with media.VideoReader(path) as reader:
+      h, w = reader.shape
+    html = media.html_from_compressed_image(path.read_bytes(), w, h, fmt='gif', pixelated=False)
+    hh.display_html(html)
+
+
+day24_part2_visualize(puzzle.input)
 
 
 # %%
