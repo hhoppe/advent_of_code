@@ -3151,6 +3151,7 @@ def day17d_compute(grid, part2, pad):
   next_y_mask = 1 << 30  # Bit indicating that next search direction is vertical (not horizontal).
   # {i + [0 or next_y_mask]: distance}
   distances = {start_i - nx + next_y_mask: -grid_flat[start_i], start_i - 1: -grid_flat[start_i]}
+  distances = {start_i + next_y_mask: 0, start_i: 0}
   priority_queue = [(distance, state) for state, distance in distances.items()]
 
   while priority_queue:
@@ -3209,8 +3210,8 @@ def day17_compute(grid, part2, pad):
   distances = {}  # {i + [0 or next_y_mask]: f},  for f defined as in A*.
   priority_queue = [(0, 0, 0) for _ in range(0)]
   for offset, next_y in [(nx, next_y_mask), (1, 0)]:
-    state = start_i - offset + next_y
-    distances[state] = distance = -grid_flat[start_i]
+    state = start_i + next_y
+    distances[state] = distance = 0
     heapq.heappush(priority_queue, (distance + lower_bound(start_i), distance, state))
 
   while priority_queue:
