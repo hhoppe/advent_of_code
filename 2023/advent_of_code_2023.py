@@ -80,12 +80,13 @@
 
 # %%
 # !pip install -q advent-of-code-hhoppe hhoppe-tools kaleido matplotlib mediapy more-itertools \
-#   numba numpy plotly scipy scikit-image sympy
+#   networkx numba numpy plotly scipy scikit-image sympy
 
 # %%
 import ast
 import collections
 from collections.abc import Iterable
+import dataclasses
 import functools
 import heapq
 import itertools
@@ -102,17 +103,13 @@ import matplotlib.animation
 import matplotlib.pyplot as plt
 import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
+import networkx
 import numba
 import numpy as np
 import plotly.graph_objects as go
 import scipy.optimize
 import skimage.segmentation
 import sympy
-
-try:
-  import networkx
-except ModuleNotFoundError:
-  print('Module networkx is unavailable.')
 
 # %%
 if not media.video_is_available():
@@ -221,6 +218,18 @@ puzzle.verify(1, day1a_part1)
 
 check_eq(day1a_part2(s2), 281)
 puzzle.verify(2, day1a_part2)
+
+
+# %%
+def day1b_part1(s):  # Use a multiline regular expression iteratively.
+  return sum(
+      int(match.group(1) + (match.group(2) or match.group(1)))
+      for match in re.finditer(r'(?m)^.*?(\d).*?(\d)?\D*$', s)
+  )
+
+
+check_eq(day1b_part1(s1), 142)
+puzzle.verify(1, day1b_part1)
 
 
 # %%
@@ -448,7 +457,7 @@ _ = day3b(puzzle.input, visualize=True, part2=True)
 
 
 # %%
-def day3(s, *, part2=False):
+def day3(s, *, part2=False):  # Compact solution.
   grid = np.pad([list(line) for line in s.splitlines()], 1, constant_values='.')
 
   def neighbors(y, x):
@@ -1165,9 +1174,8 @@ def day8_visualize(s):
   plt.close(fig)
 
 
-if 'networkx' in globals():
-  media.set_max_output_height(3000)
-  day8_visualize(puzzle.input)
+media.set_max_output_height(3000)
+day8_visualize(puzzle.input)
 
 
 # %% [markdown]
@@ -1675,6 +1683,7 @@ check_eq(day11c(s1), 374)
 day11c_part2 = functools.partial(day11c, part2=True)
 # puzzle.verify(2, day11c_part2)  # ~0.5 s.
 
+
 # %%
 def day11d(s, *, part2=False):  # Outer loop over empty rows/cols.
   growth = 999_999 if part2 else 1
@@ -1797,6 +1806,57 @@ s1 = """\
 """.replace(
     '*', '?'
 )
+
+
+# %%
+def day12m(s, part2=False):  # From mjpieters@.  TODO: a numba version might be fastest.
+  # From https://github.com/mjpieters/adventofcode/blob/master/2023/Day%2012.ipynb
+  @dataclasses.dataclass
+  class SpringsPattern:
+    patt: str
+    groups: tuple[int, ...]
+
+    @classmethod
+    def from_line(cls, line: str) -> Any:  # -> typing.Self in 3.11.
+      patt, _, rem = line.partition(' ')
+      rep = 5 if part2 else 1
+      return cls('?'.join([patt] * rep), tuple(map(int, rem.split(','))) * rep)
+
+    @property
+    def arrangement_count(self) -> int:
+      n, plen, tot = len(self.groups), len(self.patt), sum(self.groups)
+      r = plen - tot - (n - 1)
+      # Add a blank cell to the start and end of the pattern for easier checks.
+      patt = f'.{self.patt}.'
+      # The DP table tracking number of possible arrangements for each group.
+      table: list[list[int]] = [[0] * (plen + 2) for _ in range(n + 1)]
+      offset = 1  # Where to start for each group; incremented with group size + 1 after each group.
+      # Prime the counts for the first group with 1s and 0s, based on the first filled cell pos.
+      for i in range(patt.index('#') if '#' in patt else plen + 2):
+        table[0][i] = 1
+      for g, gsize in enumerate(self.groups, 1):
+        total = 0  # Total number of possible solutions for this group.
+        for p in range(offset, offset + r + 1):
+          # Check the pattern; the group must not have a filled cell before and after,
+          # and not have blanks for the cells of the group itself.
+          if patt[p + gsize] == '#':
+            total = 0
+          elif patt[p - 1] != '#' and all(c != '.' for c in patt[p : p + gsize]):
+            total += table[g - 1][p - 1]
+          table[g][p + gsize] = total
+        offset += gsize + 1
+      return table[-1][-1]
+
+  patterns = [SpringsPattern.from_line(line) for line in s.splitlines()]
+  return sum(p.arrangement_count for p in patterns)
+
+
+check_eq(day12m(s1), 21)
+puzzle.verify(1, day12m)
+
+day12m_part2 = functools.partial(day12m, part2=True)
+check_eq(day12m_part2(s1), 525152)
+puzzle.verify(2, day12m_part2)
 
 
 # %%
@@ -2327,8 +2387,6 @@ day14_part2_visualize(puzzle.input)
 # Precomputed jump tables, array-based and numpy-accelerated.
 # Inspired from https://github.com/lkesteloot/advent-of-code/blob/master/2023/14.py, which uses
 # lists and dicts and takes 0.4 s.
-
-
 @numba.njit
 def day14b_cycle(rolls, jumps, endpoints, counts, grid_dim):
   for jump, endpoint in zip(jumps, endpoints):
@@ -2482,7 +2540,7 @@ s1 = 'rn=1,cm-,qp=3,cm=2,qp-,pc=4,ot=9,ab=5,pc-,pc=6,ot=7'
 
 
 # %%
-def day15(s, *, part2=False):
+def day15a(s, *, part2=False):  # Using list[list[tuple[str, str]]].
   s = s.strip()
 
   def my_hash(s2):
@@ -2509,6 +2567,40 @@ def day15(s, *, part2=False):
         boxes[box_index].append((label, focal))
 
   return sum((b + 1) * (i + 1) * int(f) for b in range(256) for i, (l, f) in enumerate(boxes[b]))
+
+
+check_eq(day15a(s1), 1320)
+puzzle.verify(1, day15a)
+
+day15a_part2 = functools.partial(day15a, part2=True)
+check_eq(day15a_part2(s1), 145)
+puzzle.verify(2, day15a_part2)
+
+
+# %%
+def day15(s, *, part2=False):  # Using list[dict[str, int]].
+  s = s.strip()
+
+  def my_hash(s2):
+    # return 0 if not s2 else ((my_hash(s2[:-1]) + ord(s2[-1])) * 17) % 256
+    h = 0
+    for ch in s2:
+      h = ((h + ord(ch)) * 17) % 256
+    return h
+
+  if not part2:
+    return sum(my_hash(instruction) for instruction in s.split(','))
+
+  boxes: list[dict[str, int]] = [{} for _ in range(256)]
+  for instruction in s.split(','):
+    label, op, focal = hh.re_groups(r'^(.+)([-=])(.*)$', instruction)
+    box = boxes[my_hash(label)]
+    if op == '-':
+      box.pop(label, None)
+    else:
+      box[label] = int(focal)
+
+  return sum((b + 1) * (i + 1) * f for b in range(256) for i, (l, f) in enumerate(boxes[b].items()))
 
 
 check_eq(day15(s1), 1320)
@@ -2812,7 +2904,7 @@ puzzle.verify(2, day16_part2)
 #
 # - **day17b** is a straightforward `numba` acceleration of the first approach.
 #
-# - **day17** applies several optimizations for a further 2x speedup:
+# - **day17c** applies several optimizations for a further 2x speedup:
 #   padding all boundaries of the 2D array to avoid bounds checking,
 #   flattening the 2D array into 1D,
 #   representing all four directions as 1D offsets in this flat array,
@@ -2821,7 +2913,19 @@ puzzle.verify(2, day16_part2)
 #   and treating the (straight, left, right) cases explicitly
 #   rather than exploring all four directions.
 #
-# As the visualization shows, a clever design aspect of the puzzle input is that
+# An additional trick mentioned by
+# [mjpieters@](https://github.com/mjpieters/adventofcode/blob/master/2023/Day%2017.ipynb)
+# is to omit the "length of the path in the current direction" from the state of
+# each graph node by immediately pushing onto the priority queue the states resulting
+# from all possible straight-line paths from the current location.
+# The state retains a direction but only in the form of a horizontal/vertical boolean,
+# and we stored this as one bit within the 1D index accessing the flat array.
+#
+# - **day17d** implements the strategy just described with a Dijkstra shortest path search.
+#
+# - **day17** replaces the Dijkstra algorithm with A* search and obtains the fastest time.
+#
+# As a visualization shows, a clever design aspect of the puzzle input is that
 # the shortest path in Part 1 is nowhere close to the Part 2 solution,
 # so one could not perform a local "relaxation" to try to satisfy the path straightness constraints.
 
@@ -2951,13 +3055,25 @@ puzzle.verify(1, day17b)
 puzzle.verify(2, functools.partial(day17b, part2=True))
 
 
+# %% [markdown]
+# In the following code,
+# before introducing the optional optimization line
+# ```python
+#   if distance2 < distances.get((i2, dir, dn2), 30_000):  # Optional, for optimization!
+#     ...
+# ```
+# the computational time for Part 2 was ~2.6x longer than Part 1 due to
+# the ~2.3x increase in the number of graph nodes
+# as the `dn` state parameter generalizes from `[1, 2, 3]` to `[4, 5, 6, 7, 8, 9, 10]`.
+# Thanks to the optimization, many of these new states are never considered.
+
+
 # %%
 @numba.njit  # Faster numba, using flat array, padding, advance min dn.
-def day17_compute(grid, part2, pad):
+def day17c_compute(grid, part2, pad):
   ny, nx = grid.shape
   grid_flat = grid.flat
-  start_i = pad * nx + pad
-  target_i = (ny - 1 - pad) * nx + (nx - 1 - pad)
+  start_i, target_i = pad * nx + pad, (ny - 1 - pad) * nx + (nx - 1 - pad)
   dir2s = (1, 3), (2, 0), (3, 1), (0, 2)
   dn2 = 4 if part2 else 1
   offsets = nx, 1, -nx, -1
@@ -2993,14 +3109,141 @@ def day17_compute(grid, part2, pad):
       if distance2 < distances.get(state2, 30_000):
         distances[state2] = distance2
         heapq.heappush(priority_queue, (distance2, state2))
+  else:
+    assert False
 
   return distance
 
 
-def day17(s, *, part2=False):
+def day17c(s, *, part2=False):
   grid = np.array([list(line) for line in s.splitlines()], np.uint16)
   pad = 4 if part2 else 1
   grid = np.pad(grid, pad, constant_values=30_000)
+  return day17c_compute(grid, part2, pad)
+
+
+check_eq(day17c(s1), 102)
+puzzle.verify(1, day17c)
+day17c_part2 = functools.partial(day17c, part2=True)
+check_eq(day17c_part2(s1), 94)
+check_eq(day17c_part2(s2), 71)
+puzzle.verify(2, day17c_part2)
+
+
+# %% [markdown]
+# I explored other optimizations but these had negligible benefit:
+#
+# - Specializing the jitted function based on the setting of the parameter `part2`.
+#
+# - Reducing the `numba` precision of all values using `np.int16(...)`.
+#
+# - Precomputing `distance_dn = np.empty((4, grid.size), np.int16)` -- the distance summed over
+#   the next `dn2` cells in direction `dir` -- used when starting a new straight path after a turn.
+
+
+# %%
+@numba.njit  # Omit dn (number of steps) from the search state.  Use one bit for horiz/vert.
+def day17d_compute(grid, part2, pad):
+  # Inspired by https://github.com/mjpieters/adventofcode/blob/master/2023/Day%2017.ipynb
+  ny, nx = grid.shape
+  grid_flat = grid.flat
+  start_i, target_i = pad * nx + pad, (ny - 1 - pad) * nx + (nx - 1 - pad)
+  next_y_mask = 1 << 30  # Bit indicating that next search direction is vertical (not horizontal).
+  # {i + [0 or next_y_mask]: distance}
+  distances = {start_i - nx + next_y_mask: -grid_flat[start_i], start_i - 1: -grid_flat[start_i]}
+  priority_queue = [(distance, state) for state, distance in distances.items()]
+
+  while priority_queue:
+    distance, state = heapq.heappop(priority_queue)
+    i, next_y = state & ~next_y_mask, state & next_y_mask
+    if i == target_i:
+      return distance
+    for offset in [-nx, nx] if next_y != 0 else [-1, 1]:
+      i2, next_y2, distance2 = i, next_y ^ next_y_mask, distance
+      for _ in range(4 if part2 else 1):  # Minimum number of straight steps.
+        i2 += offset
+        distance2 += grid_flat[i2]
+      remaining_steps = 7 if part2 else 3
+      while distance2 < 2400:  # Possible additional straight steps.
+        state2 = i2 + next_y2
+        if distance2 < distances.get(state2, 2400):
+          distances[state2] = distance2
+          heapq.heappush(priority_queue, (distance2, state2))
+        remaining_steps -= 1
+        if remaining_steps == 0:
+          break
+        i2 += offset
+        distance2 += grid_flat[i2]
+  assert False
+
+
+def day17d(s, *, part2=False):
+  grid = np.array([list(line) for line in s.splitlines()], np.int16)
+  pad = 5 if part2 else 2
+  grid = np.pad(grid, pad, constant_values=2500)
+  return day17d_compute(grid, part2, pad)
+
+
+check_eq(day17d(s1), 102)
+puzzle.verify(1, day17d)
+day17d_part2 = functools.partial(day17d, part2=True)
+check_eq(day17d_part2(s1), 94)
+check_eq(day17d_part2(s2), 71)
+puzzle.verify(2, day17d_part2)
+
+
+# %%
+@numba.njit  # Modified from Dijkstra to A*-search.
+def day17_compute(grid, part2, pad):
+  ny, nx = grid.shape
+  grid_flat = grid.flat
+  target_y, target_x = ny - 1 - pad, nx - 1 - pad
+  start_i, target_i = pad * nx + pad, target_y * nx + target_x
+  next_y_mask = 1 << 30  # Bit indicating that next search direction is vertical (not horizontal).
+
+  def lower_bound(i):  # Lower bound on remaining distance to goal.
+    y, x = divmod(i, nx)
+    # assert y <= target_y and x <= target_x
+    return target_y - y + target_x - x
+
+  distances = {}  # {i + [0 or next_y_mask]: f},  for f defined as in A*.
+  priority_queue = [(0, 0, 0) for _ in range(0)]
+  for offset, next_y in [(nx, next_y_mask), (1, 0)]:
+    state = start_i - offset + next_y
+    distances[state] = distance = -grid_flat[start_i]
+    heapq.heappush(priority_queue, (distance + lower_bound(start_i), distance, state))
+
+  while priority_queue:
+    unused_f, old_distance, state = heapq.heappop(priority_queue)
+    distance = distances[state]
+    if distance != old_distance:
+      continue  # A better path was already found, so skip.
+    i, next_y = state & ~next_y_mask, state & next_y_mask
+    if i == target_i:
+      return distance
+    for offset in [-nx, nx] if next_y != 0 else [-1, 1]:
+      i2, next_y2, distance2 = i, next_y ^ next_y_mask, distance
+      for _ in range(4 if part2 else 1):  # Minimum number of straight steps.
+        i2 += offset
+        distance2 += grid_flat[i2]
+      remaining_steps = 7 if part2 else 3
+      while distance2 < 2400:  # Possible additional straight steps.
+        state2 = i2 + next_y2
+        if distance2 < distances.get(state2, 2400):
+          distances[state2] = distance2
+          heapq.heappush(priority_queue, (distance2 + lower_bound(i2), distance2, state2))
+        remaining_steps -= 1
+        if remaining_steps == 0:
+          break
+        i2 += offset
+        distance2 += grid_flat[i2]
+  assert False
+
+
+def day17(s, *, part2=False):
+  grid = np.array([list(line) for line in s.splitlines()], np.int16)
+  pad = 5 if part2 else 2
+  grid = np.pad(grid, pad, constant_values=2500)
   return day17_compute(grid, part2, pad)
 
 
@@ -3010,26 +3253,6 @@ day17_part2 = functools.partial(day17, part2=True)
 check_eq(day17_part2(s1), 94)
 check_eq(day17_part2(s2), 71)
 puzzle.verify(2, day17_part2)
-
-# %% [markdown]
-# Before introducing the optional optimization line
-# ```python
-#   if distance2 < distances.get((i2, dir, dn2), 30_000):  # Optional, for optimization!
-#     ...
-# ```
-# the computational time for Part 2 was ~2.6x longer than Part 1 due to
-# the ~2.3x increase in the number of graph nodes
-# as the `dn` state parameter generalizes from `[1, 2, 3]` to `[4, 5, 6, 7, 8, 9, 10]`.
-# Thanks to the optimization, many of these new states are never considered.
-#
-# I explored other optimizations but these had negligible benefit:
-#
-# - Specializing the jitted function based on the setting of the parameter `part2`.
-#
-# - Reducing the `numba` precision of all values using `np.int16(...)`.
-#
-# - Precomputing `distance_dn = np.empty((4, grid.size), np.int16)` -- the distance summed over
-#   the next `dn2` cells in direction `dir` -- used when starting a new straight path after a turn.
 
 # %% [markdown]
 # <a name="day18"></a>
@@ -3456,8 +3679,7 @@ def day20_visualize(s):
   plt.close(fig)
 
 
-if 'networkx' in globals():
-  day20_visualize(puzzle.input)
+day20_visualize(puzzle.input)
 
 
 # %%
@@ -3508,7 +3730,7 @@ puzzle.verify(2, day20a_part2)
 
 
 # %%
-def day20(s, *, part2=False, num_buttons=1000, debug=False):  # Faster.
+def day20b(s, *, part2=False, num_buttons=1000, debug=False):  # Faster.
   all_ch, outputs, flipflop = {}, {}, {}
   inputs = collections.defaultdict[str, dict[str, int]](dict)
   for line in s.splitlines():
@@ -3520,14 +3742,15 @@ def day20(s, *, part2=False, num_buttons=1000, debug=False):  # Faster.
   if part2:
     (main_nand,) = inputs['rx']
     trigger_indices: dict[str, list[int]] = {name: [] for name in inputs[main_nand]}  # (Length 4.)
+    outputs[main_nand].remove('rx')
 
-    for button_index in itertools.count():
+    for button_index in itertools.count(1):
       pulses = collections.deque([('button', 0, 'broadcaster'[1:])])
 
       while pulses:
         source, value, name = pulses.popleft()
         if name in trigger_indices and value == 0:
-          trigger_indices[name].append(button_index + 1)
+          trigger_indices[name].append(button_index)
           all_indices = list(trigger_indices.values())
           if all(len(indices) >= (1 + debug) for indices in all_indices):
             periods = [indices[0] for indices in all_indices]
@@ -3536,20 +3759,20 @@ def day20(s, *, part2=False, num_buttons=1000, debug=False):  # Faster.
             return math.lcm(*periods)
             # phases = [indices[-1] for indices in all_indices]
             # return 1 + _solve_modulo_congruences(periods, phases)
-        if (ch := all_ch[name]) == '%':
-          if value == 1:
-            continue
-          value = flipflop[name] = 1 - flipflop[name]
-        elif ch == '&':
-          inputs[name][source] = value
-          value = 1 - all(v == 1 for v in inputs[name].values())
+        match all_ch[name]:
+          case '%':
+            if value == 1:
+              continue
+            value = flipflop[name] = 1 - flipflop[name]
+          case '&':
+            inputs[name][source] = value
+            value = 1 - all(v == 1 for v in inputs[name].values())
         for output in outputs[name]:
-          if output != 'rx':
-            pulses.append((name, value, output))
+          pulses.append((name, value, output))
 
   # Part 1.
   counts = collections.Counter[int]()
-  for button_index in range(num_buttons):
+  for _ in range(num_buttons):
     if debug:
       print()
     counts[0] += 1  # Initial 'button'.
@@ -3557,13 +3780,14 @@ def day20(s, *, part2=False, num_buttons=1000, debug=False):  # Faster.
 
     while pulses:
       source, value, name = pulses.popleft()
-      if (ch := all_ch[name]) == '%':
-        if value == 1:
-          continue
-        value = flipflop[name] = 1 - flipflop[name]
-      elif ch == '&':
-        inputs[name][source] = value
-        value = 1 - all(inputs[name].values())
+      match ch := all_ch[name]:
+        case '%':
+          if value == 1:
+            continue
+          value = flipflop[name] = 1 - flipflop[name]
+        case '&':
+          inputs[name][source] = value
+          value = 1 - all(inputs[name].values())
       for output in outputs[name]:
         if debug:
           print(f'{ch}{name} -{["low", "high"][value]} -> {output}')
@@ -3575,8 +3799,100 @@ def day20(s, *, part2=False, num_buttons=1000, debug=False):  # Faster.
 
 
 if 0:
-  day20(s1, debug=True, num_buttons=2)
-  day20(s2, debug=True, num_buttons=4)
+  day20b(s1, debug=True, num_buttons=2)
+  day20b(s2, debug=True, num_buttons=4)
+check_eq(day20b(s1), 32000000)
+check_eq(day20b(s2), 11687500)
+puzzle.verify(1, day20b)
+
+day20b_part2 = functools.partial(day20b, part2=True)
+puzzle.verify(2, day20b_part2)
+
+
+# %%
+def day20(s, *, part2=False, num_buttons=1000, debug=False):  # Fastest, using dataclass.
+  @dataclasses.dataclass
+  class Node:
+    name: str
+    ch: str
+    state: int = 0
+    input_states: list[int] = dataclasses.field(default_factory=list)
+    input_states_num_zeros: int = 0
+    outputs: 'list[tuple[Node | None, int]]' = dataclasses.field(default_factory=list)
+    is_nand4_input: bool = False
+
+  nodes: dict[str, Node] = {}
+  outputs, inputs = {}, collections.defaultdict[str, list[str]](list)
+  for line in s.splitlines():
+    ch, name, rhs = hh.re_groups(r'^(.)(\w+) -> (.*)$', line)
+    nodes[name] = node = Node(name, ch)
+    outputs[name] = rhs.split(', ')
+    for output in outputs[name]:
+      inputs[output].append(name)
+  for name, node in nodes.items():
+    node.input_states = [0] * len(inputs[name])
+    node.input_states_num_zeros = len(inputs[name])
+    node.outputs = [(nodes.get(output), inputs[output].index(name)) for output in outputs[name]]
+
+  if part2:
+    (main_nand,) = inputs['rx']
+    trigger_indices: dict[str, list[int]] = {}
+    for name in inputs[main_nand]:
+      nodes[name].is_nand4_input = True
+      trigger_indices[name] = []
+    nodes[main_nand].outputs = []  # Remove link to 'rx'.
+
+    for button_index in itertools.count(1):
+      pulses = collections.deque([(0, nodes['broadcaster'[1:]], 0)])
+
+      while pulses:
+        value, node, input_index = pulses.popleft()
+        if node.is_nand4_input and value == 0:
+          trigger_indices[node.name].append(button_index)
+          all_indices = list(trigger_indices.values())
+          if all(len(indices) >= (1 + debug) for indices in all_indices):
+            periods = [indices[0] for indices in all_indices]
+            if debug:
+              assert all(indices[0] * 2 == indices[1] for indices in all_indices)
+            return math.lcm(*periods)
+        match node.ch:
+          case '%':
+            if value == 1:
+              continue
+            value = node.state = 1 - node.state
+          case '&':
+            node.input_states_num_zeros += node.input_states[input_index] - value
+            node.input_states[input_index] = value
+            value = 1 - (node.input_states_num_zeros == 0)
+        for node2, input_index2 in node.outputs:
+          # assert node2
+          pulses.append((value, node2, input_index2))  # type: ignore[arg-type]
+
+  # Part 1.
+  counts = collections.Counter[int]()
+  for _ in range(num_buttons):
+    counts[0] += 1  # Initial 'button'.
+    pulses = collections.deque([(0, nodes['broadcaster'[1:]], 0)])
+
+    while pulses:
+      value, node, input_index = pulses.popleft()
+      match node.ch:
+        case '%':
+          if value == 1:
+            continue
+          value = node.state = 1 - node.state
+        case '&':
+          node.input_states_num_zeros += node.input_states[input_index] - value
+          node.input_states[input_index] = value
+          value = 1 - (node.input_states_num_zeros == 0)
+      for node2, input_index2 in node.outputs:
+        counts[value] += 1
+        if node2 is not None:
+          pulses.append((value, node2, input_index2))
+
+  return math.prod(counts.values())
+
+
 check_eq(day20(s1), 32000000)
 check_eq(day20(s2), 11687500)
 puzzle.verify(1, day20)
@@ -4408,10 +4724,9 @@ def day23_visualize_graph(s, *, part2=False, optimize=True, node_size=700):
   plt.close(fig)
 
 
-if 'networkx' in globals():
-  media.set_max_output_height(3000)
-  day23_visualize_graph(puzzle.input)
-  day23_visualize_graph(puzzle.input, part2=True)
+media.set_max_output_height(3000)
+day23_visualize_graph(puzzle.input)
+day23_visualize_graph(puzzle.input, part2=True)
 
 
 # %% [markdown]
