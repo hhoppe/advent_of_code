@@ -3589,14 +3589,21 @@ def day19_visualize(s):
   node_color = ['red' if node == 'in' else 'C0' for node in graph]
   networkx.draw(graph, pos, node_size=15, node_color=node_color, width=0.5, arrowsize=8)
 
-  hh.display_html("In the following visualization, the (root) 'in' node is shown in red.")
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
   media.show_image(image, border=True, title='day19')
   plt.close(fig)
 
 
-day19_visualize(puzzle.input)
+if SHOW_BIG_MEDIA:
+  day19_visualize(puzzle.input)
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="results/day19.png"/>
+
+# %% [markdown]
+# In the above visualization, the (root) `'in'` node is shown in red.
 
 # %% [markdown]
 # <a name="day20"></a>
@@ -4721,10 +4728,16 @@ def day23_visualize_graph(s, *, part2=False, optimize=True, node_size=700):
   plt.close(fig)
 
 
-media.set_max_output_height(3000)
-day23_visualize_graph(puzzle.input)
-day23_visualize_graph(puzzle.input, part2=True)
+if SHOW_BIG_MEDIA:
+  media.set_max_output_height(3000)
+  day23_visualize_graph(puzzle.input)
+  day23_visualize_graph(puzzle.input, part2=True)
 
+
+# %% [markdown]
+# Cached results:<br/>
+# <img src="results/day23c.png"/><br/>
+# <img src="results/day23d.png"/>
 
 # %% [markdown]
 # In the above graph (corresponding to Part 2), the edges along the grid perimeter
