@@ -10,7 +10,7 @@ by [Hugues Hoppe](http://hhoppe.com/).
 
 The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 
-For the fast solutions, the cumulative time across all 25 puzzles is less than 1 s on my PC.<br/>
+For the fast solutions, the cumulative time across all 25 puzzles is less than 0.5 s on my PC.<br/>
 (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)
 
 Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`):

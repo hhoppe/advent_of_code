@@ -12,7 +12,7 @@
 #
 # The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 #
-# For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is less than 1 s on my PC.<br/>
+# For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is less than 0.5 s on my PC.<br/>
 # (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)
 #
 # Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`):
@@ -1426,7 +1426,7 @@ def day10a(s, *, part2=False, visualize=False):  # Initial implementation, and v
       case 'F':
         dir = {(-1, 0): (0, 1), (0, -1): (1, 0)}[dir]
       case _:
-        assert False, (yx, ch)
+        raise ValueError(f'Unrecognized {ch=} at {yx=}')
     yx = yx[0] + dir[0], yx[1] + dir[1]
 
   if not part2:
@@ -2693,7 +2693,7 @@ def day16a(s, *, part2=False):  # Initial slow version: (dy, dx), always on stac
         case '.':
           pass
         case _:
-          assert 0
+          raise ValueError(f'Unrecognized {grid[y, x]=} at {y=} {x=}.')
       y, x = y + dy, x + dx
       stack.append((y, x, dy, dx))
     return visited.any(2).sum()
@@ -3042,6 +3042,8 @@ def day17b_compute(grid, part2):
           if distance2 < distances.get(state2, 10**9):
             distances[state2] = distance2
             heapq.heappush(priority_queue, (distance2, state2))
+  else:
+    raise ValueError('No solution found.')
 
   return distance
 
@@ -3110,7 +3112,7 @@ def day17c_compute(grid, part2, pad):
         distances[state2] = distance2
         heapq.heappush(priority_queue, (distance2, state2))
   else:
-    assert False
+    raise ValueError('No solution found.')
 
   return distance
 
@@ -3149,8 +3151,7 @@ def day17d_compute(grid, part2, pad):
   grid_flat = grid.flat
   start_i, target_i = pad * nx + pad, (ny - 1 - pad) * nx + (nx - 1 - pad)
   next_y_mask = 1 << 30  # Bit indicating that next search direction is vertical (not horizontal).
-  # {i + [0 or next_y_mask]: distance}
-  distances = {start_i + next_y_mask: 0, start_i: 0}
+  distances = {start_i + next_y_mask: 0, start_i: 0}  # {i + [0 or next_y_mask]: distance}.
   priority_queue = [(distance, state) for state, distance in distances.items()]
 
   while priority_queue:
@@ -3174,7 +3175,7 @@ def day17d_compute(grid, part2, pad):
           break
         i2 += offset
         distance2 += grid_flat[i2]
-  assert False
+  raise ValueError('No solution found.')
 
 
 def day17d(s, *, part2=False):
@@ -3206,8 +3207,8 @@ def day17_compute(grid, part2, pad):
     # assert y <= target_y and x <= target_x
     return target_y - y + target_x - x
 
-  distances = {start_i + next_y_mask: 0, start_i: 0}
-  priority_queue = [(lower_bound(start_i), d, state) for state, d in distances.items()]
+  distances = {start_i + next_y_mask: 0, start_i: 0}  # {i + [0 or next_y_mask]: distance}.
+  priority_queue = [(d + lower_bound(start_i), d, state) for state, d in distances.items()]
 
   while priority_queue:
     unused_f, old_distance, state = heapq.heappop(priority_queue)
@@ -3233,7 +3234,7 @@ def day17_compute(grid, part2, pad):
           break
         i2 += offset
         distance2 += grid_flat[i2]
-  assert False
+  raise ValueError('No solution found.')
 
 
 def day17(s, *, part2=False):
@@ -3700,7 +3701,7 @@ def day20a(s, *, part2=False, num_buttons=1000):  # Compact.
       if name in period and value == 0:
         period[name] = button_index + 1
         if all(period.values()):
-          return math.lcm(*period.values())
+          return math.lcm(*period.values())  # For Part 2.
       match all_ch[name]:
         case '%':
           if value == 1:
@@ -3714,7 +3715,7 @@ def day20a(s, *, part2=False, num_buttons=1000):  # Compact.
         if output not in {'rx', 'output'}:
           pulses.append((name, value, output))
 
-  return math.prod(counts.values())
+  return math.prod(counts.values())  # For Part 1.
 
 
 check_eq(day20a(s1), 32000000)
@@ -4729,6 +4730,7 @@ day23_visualize_graph(puzzle.input, part2=True)
 # In the above graph (corresponding to Part 2), the edges along the grid perimeter
 # are made *directional*, pointing towards the target node.
 # This optimization speeds up the search process.
+# The black (non-gray) edges indicate the longest path solution.
 
 
 # %%
@@ -4795,8 +4797,9 @@ def day23d(s, *, part2=False):  # Stack-based with `visited` as bitmask; fastest
       max_length = max(max_length, length)
       continue
     for node2, dist in graph[node]:
-      if visited & (1 << node2) == 0:
-        stack.append((node2, length + dist, visited | (1 << node2)))
+      bit = 1 << node2
+      if visited & bit == 0:
+        stack.append((node2, length + dist, visited | bit))
 
   return max_length
 
@@ -4813,6 +4816,8 @@ check_eq(day23d_part2(s1), 154)
 @numba.njit  # Numba version of stack-based with `visited` as a bitmask.
 def day23_length_of_longest_path(graph_array, start, target):
   assert len(graph_array) <= 64  # Number of bits in bitmask.
+  # Use int(...) casts to unwrap numpy scalars if not using numba.
+  graph = [[(int(node2), int(dist)) for node2, dist in row if node2 >= 0] for row in graph_array]
   stack = [(start, 0, 1 << start)]
   max_length = 0
 
@@ -4821,9 +4826,10 @@ def day23_length_of_longest_path(graph_array, start, target):
     if node == target:
       max_length = max(max_length, length)
       continue
-    for node2, dist in graph_array[node]:
-      if node2 >= 0 and visited & (1 << node2) == 0:
-        stack.append((node2, length + dist, visited | (1 << node2)))
+    for node2, dist in graph[node]:
+      bit = 1 << node2
+      if visited & bit == 0:
+        stack.append((node2, length + dist, visited | bit))
 
   return max_length
 
@@ -4831,9 +4837,9 @@ def day23_length_of_longest_path(graph_array, start, target):
 def day23(s, *, part2=False):
   graph, start, target = day23_graph(s, part2)
   graph_array = np.full((len(graph), 4, 2), -1)  # np.int16 is no faster.
-  for index, index2_paths in enumerate(graph):
-    if index2_paths:
-      graph_array[index, : len(index2_paths)] = index2_paths
+  for node, node2_dists in enumerate(graph):
+    if node2_dists:
+      graph_array[node, : len(node2_dists)] = node2_dists
   return day23_length_of_longest_path(graph_array, start, target)
 
 
@@ -4842,7 +4848,7 @@ puzzle.verify(1, day23)
 
 day23_part2 = functools.partial(day23, part2=True)
 check_eq(day23_part2(s1), 154)
-puzzle.verify(2, day23_part2)  # ~60 ms (~18 s without numba).
+puzzle.verify(2, day23_part2)  # ~48 ms (~1.7 s without numba).
 
 # %% [markdown]
 # <a name="day24"></a>
