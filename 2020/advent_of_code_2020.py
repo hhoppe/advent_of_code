@@ -60,7 +60,8 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-hhoppe hhoppe-tools matplotlib mediapy more-itertools numba numpy scipy
+# !pip install -q advent-of-code-hhoppe hhoppe-tools matplotlib mediapy more-itertools \
+#   numba numpy scipy
 
 # %%
 import bisect
@@ -99,7 +100,7 @@ hh.start_timing_notebook_cells()
 YEAR = 2020
 PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
-SHOW_BIG_MEDIA = False
+SHOW_BIG_MEDIA = hh.get_env_bool('SHOW_BIG_MEDIA')
 # # echo 53616... >~/.config/aocd/token  # session cookie from "adventofcode.com" (valid 1 month).
 
 # %%

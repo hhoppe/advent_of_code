@@ -56,7 +56,8 @@
 # !dpkg -l | grep -q libgraphviz-dev || (apt-get -qq update && apt-get -qq -y install libgraphviz-dev) >/dev/null  # https://stackoverflow.com/a/66380001
 
 # %%
-# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools kaleido matplotlib mediapy more-itertools numba numpy plotly pygraphviz resampler scipy
+# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools kaleido \
+#   matplotlib mediapy more-itertools numba numpy plotly pygraphviz resampler scipy
 
 # %%
 import ast
@@ -110,7 +111,7 @@ hh.start_timing_notebook_cells()
 YEAR = 2022
 PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
-SHOW_BIG_MEDIA = False
+SHOW_BIG_MEDIA = hh.get_env_bool('SHOW_BIG_MEDIA')
 # # echo 53616... >~/.config/aocd/token  # session cookie from "adventofcode.com" (valid 1 month).
 
 # %%
@@ -1072,7 +1073,7 @@ def day8w(s):  # Use plotly to create 3D visualization.
     fig.layout.update(width=700, height=350, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
 
   set_fig_layout(for_tilt=False)
-  if SHOW_BIG_MEDIA:
+  if SHOW_BIG_MEDIA and hh.in_notebook():
     hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
     fig.show()
 
@@ -1845,7 +1846,7 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
       width=700, height=350, margin=dict(l=0, r=0, b=0, t=0), scene=scene, showlegend=False
   )
 
-  if SHOW_BIG_MEDIA:
+  if SHOW_BIG_MEDIA and hh.in_notebook():
     hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
     fig.show()
 
@@ -2388,7 +2389,7 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
   fig.update_yaxes(scaleanchor='x', scaleratio=1.0)  # Preserve aspect ratio!
   fig.layout.xaxis.visible = fig.layout.yaxis.visible = False  # For smooth scroll-zooming.
 
-  if SHOW_BIG_MEDIA:
+  if SHOW_BIG_MEDIA and hh.in_notebook():
     hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
     config = dict(
         scrollZoom=True,
@@ -3382,7 +3383,7 @@ def day18v(s):  # Visualize Part 1 using plotly 3D rendering.
   scene = dict(aspectratio=dict(x=1, y=1, z=1), camera=camera, **no_axes)
   fig.layout.update(width=400, height=400, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
 
-  if SHOW_BIG_MEDIA:
+  if SHOW_BIG_MEDIA and hh.in_notebook():
     hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
     fig.show()
 

@@ -45,7 +45,8 @@
 # !dpkg -l | grep -q libgraphviz-dev || (apt-get -qq update && apt-get -qq -y install libgraphviz-dev) >/dev/null  # https://stackoverflow.com/a/66380001
 
 # %%
-# !pip install -q advent-of-code-hhoppe hhoppe-tools matplotlib mediapy more-itertools numba numpy pygraphviz pyparsing
+# !pip install -q advent-of-code-hhoppe hhoppe-tools matplotlib mediapy more-itertools \
+#   numba numpy pygraphviz pyparsing
 
 # %%
 import ast
@@ -95,7 +96,7 @@ hh.start_timing_notebook_cells()
 YEAR = 2015
 PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
-SHOW_BIG_MEDIA = False
+SHOW_BIG_MEDIA = hh.get_env_bool('SHOW_BIG_MEDIA')
 # # echo 53616... >~/.config/aocd/token  # session cookie from "adventofcode.com" (valid 1 month).
 
 # %%

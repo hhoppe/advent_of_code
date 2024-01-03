@@ -76,11 +76,10 @@
 
 # %%
 # !dpkg -l | grep -q libgraphviz-dev || (apt-get -qq update && apt-get -qq -y install libgraphviz-dev) >/dev/null  # https://stackoverflow.com/a/66380001
-# !pip install -q pygraphviz
 
 # %%
-# !pip install -q advent-of-code-hhoppe hhoppe-tools kaleido matplotlib mediapy more-itertools \
-#   networkx numba numpy plotly scipy scikit-image sympy
+# !pip install -q advent-of-code-hhoppe hhoppe-tools kaleido matplotlib mediapy \
+#   more-itertools networkx numba numpy plotly pygraphviz scipy scikit-image sympy
 
 # %%
 import ast
@@ -126,7 +125,7 @@ hh.start_timing_notebook_cells()
 YEAR = 2023
 PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
-SHOW_BIG_MEDIA = False
+SHOW_BIG_MEDIA = hh.get_env_bool('SHOW_BIG_MEDIA')
 # # echo 53616... >~/.config/aocd/token  # session cookie from "adventofcode.com" (valid 1 month).
 
 # %%
@@ -4444,7 +4443,7 @@ def day22_visualize_3d(s):
 
   fig = go.Figure(data=surface, layout=fig_layout())
 
-  if SHOW_BIG_MEDIA:
+  if hh.in_notebook():
     media.set_max_output_height(3000)
     hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
     fig.show()

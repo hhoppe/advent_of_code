@@ -45,7 +45,8 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools mediapy more-itertools numba numpy
+# !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools mediapy \
+#   more-itertools numba numpy
 
 # %%
 import collections
