@@ -56,7 +56,8 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
 
 # %%
-# !pip install -q advent-of-code-hhoppe hhoppe-tools mediapy more_itertools numba numpy scipy
+# !pip install -q advent-of-code-hhoppe hhoppe-tools mediapy more_itertools networkx \
+#   numba numpy scipy
 
 # %%
 from __future__ import annotations
@@ -78,15 +79,11 @@ import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
 import mediapy as media
 import more_itertools
+import networkx
 import numba
 import numpy as np
 import scipy.optimize
 import scipy.signal
-
-try:
-  import networkx
-except ModuleNotFoundError:
-  print('Module networkx is unavailable.')
 
 # %%
 if not media.video_is_available():
@@ -3033,10 +3030,9 @@ def day22a(s, *, part2=False, pad=60):  # Using networkx; slower.
 check_eq(day22a(s1), 114)
 puzzle.verify(1, day22a)
 
-if 'networkx' in globals():
-  day22a_part2 = functools.partial(day22a, part2=True)
-  check_eq(day22a_part2(s1), 45)
-  # puzzle.verify(2, day22a_part2)  # Slow using Dijkstra; even slower (~1.5 x) using A*.
+day22a_part2 = functools.partial(day22a, part2=True)
+check_eq(day22a_part2(s1), 45)
+# puzzle.verify(2, day22a_part2)  # Slow using Dijkstra; even slower (~1.5 x) using A*.
 
 
 # %%

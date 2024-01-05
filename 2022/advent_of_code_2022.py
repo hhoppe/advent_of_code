@@ -57,7 +57,7 @@
 
 # %%
 # !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools kaleido \
-#   matplotlib mediapy more-itertools numba numpy plotly pygraphviz resampler scipy
+#   matplotlib mediapy more-itertools networkx numba numpy plotly pygraphviz resampler scipy
 
 # %%
 import ast
@@ -83,6 +83,7 @@ import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hh
 import matplotlib.pyplot as plt
 import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
+import networkx
 import numba
 import numpy as np
 import plotly
@@ -90,11 +91,6 @@ import plotly.graph_objects as go
 import resampler  # https://github.com/hhoppe/resampler/
 import scipy.ndimage
 import scipy.signal
-
-try:
-  import networkx
-except ModuleNotFoundError:
-  print('Module networkx is unavailable.')
 
 # %%
 if not media.video_is_available():
@@ -874,8 +870,7 @@ def day7v(s):  # Visualization
   plt.close(fig)
 
 
-if 'networkx' in globals():
-  day7v(puzzle.input)
+day7v(puzzle.input)
 
 
 # %%
@@ -2736,22 +2731,20 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
   return total_flow
 
 
-if 'networkx' in globals():
-  check_eq(day16c(s1), 1651)
-  # puzzle.verify(1, day16c)  # ~0.4 s.
+check_eq(day16c(s1), 1651)
+# puzzle.verify(1, day16c)  # ~0.4 s.
 
-  day16c_part2 = functools.partial(day16c, part2=True)
-  check_eq(day16c_part2(s1), 1707)
-  # puzzle.verify(2, day16c_part2)  # ~16 s.
-
-# %%
-if 'networkx' in globals():
-  media.show_image(
-      day16c(puzzle.input, visualize=True, only_last_frame=True)[0], border=True, title='day16a'
-  )
+day16c_part2 = functools.partial(day16c, part2=True)
+check_eq(day16c_part2(s1), 1707)
+# puzzle.verify(2, day16c_part2)  # ~16 s.
 
 # %%
-if 'networkx' in globals() and SHOW_BIG_MEDIA:  # Slow due to search(); ~16 s.
+media.show_image(
+    day16c(puzzle.input, visualize=True, only_last_frame=True)[0], border=True, title='day16a'
+)
+
+# %%
+if SHOW_BIG_MEDIA:  # Slow due to search(); ~16 s.
   media.show_video(
       day16c_part2(puzzle.input, visualize=True), codec='gif', fps=2, border=True, title='day16b'
   )
@@ -4287,19 +4280,18 @@ def day21v(
   return image
 
 
-if 'networkx' in globals():
-  media.show_image(day21v(s1))
-  media.show_image(day21v(s1, simplify=True))
+media.show_image(day21v(s1))
+media.show_image(day21v(s1, simplify=True))
+media.show_image(
+    day21v(puzzle.input, simplify=True, figsize=(30, 15)), border=True, title='day21a'
+)
+if SHOW_BIG_MEDIA:
   media.show_image(
-      day21v(puzzle.input, simplify=True, figsize=(30, 15)), border=True, title='day21a'
+      day21v(puzzle.input, prog='neato', figsize=(40, 20), rot=0), border=True, title='day21b'
   )
-  if SHOW_BIG_MEDIA:
-    media.show_image(
-        day21v(puzzle.input, prog='neato', figsize=(40, 20), rot=0), border=True, title='day21b'
-    )
-    _image = day21v(puzzle.input, figsize=(60, 30), rot=None)
-    media.show_image(_image, title='day21c', border=True, height=800, downsample=False)
-  media.set_max_output_height(5000)
+  _image = day21v(puzzle.input, figsize=(60, 30), rot=None)
+  media.show_image(_image, title='day21c', border=True, height=800, downsample=False)
+media.set_max_output_height(5000)
 
 
 # %% [markdown]

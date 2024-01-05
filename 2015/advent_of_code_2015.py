@@ -46,7 +46,7 @@
 
 # %%
 # !pip install -q advent-of-code-hhoppe hhoppe-tools matplotlib mediapy more-itertools \
-#   numba numpy pygraphviz pyparsing
+#   networkx numba numpy pygraphviz pyparsing
 
 # %%
 import ast
@@ -72,14 +72,10 @@ import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hh
 import matplotlib.pyplot as plt
 import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
+import networkx
 import numba
 import numpy as np
 import pyparsing
-
-try:
-  import networkx
-except ModuleNotFoundError:
-  print('Module networkx is unavailable.')
 
 # %%
 if not media.video_is_available():
@@ -683,8 +679,7 @@ def day7_visualize(s):
   plt.close(fig)
 
 
-if 'networkx' in globals():
-  day7_visualize(puzzle.input)
+day7_visualize(puzzle.input)
 
 # %% [markdown]
 # <a name="day8"></a>
