@@ -1792,8 +1792,8 @@ puzzle.verify(2, day14_part2)
 #
 # 2. A solution that adds **padding** around the grid to eliminate boundary-condition testing and compiles with `numba`.  This is my reference solution.  It also provides a visualization of the solution path.
 #
-# 3. An **A\* search** where the heuristic "remaining cost" is taken to the Manhattan distance from the current node to the destination node, multiplied by a `heuristic_weight`, which defaults to 2.
-# A\* is unhelpful here because the edge weights vary quite a bit, so it's difficult to get a useful heuristic which is also a valid lower bound on the remaining distance to the destination.
+# 3. An **A\* search** where the lower-bound "remaining cost" is taken to be the Manhattan distance from the current node to the destination node.
+# A\* is only slightly helpful here (and only for the non-numba version) because the edge weights vary quite a bit, so the lower bound is not very tight.
 # Also, there is little opportunity for improvement because the advancing front must traverse nearly the entire domain in any case.
 #
 # 4. A succession of **diagonal sweeps** (upper-left to lower-right, and lower-right to upper-left) that greedily update the distance grid, similar to a [Manhattan distance transform](https://en.wikipedia.org/wiki/Distance_transform).
@@ -1826,20 +1826,22 @@ def day15a(s, *, part2=False):  # Compact Dijkstra.
     a = [np.concatenate([(grid + (y + x - 1)) % 9 + 1 for x in range(5)], axis=1) for y in range(5)]
     grid = np.concatenate(a, axis=0)
 
+  target_yx = grid.shape[0] - 1, grid.shape[1] - 1
   distances = np.full(grid.shape, 10**6)
   distances[0, 0] = 0
-  pq = [(0, (0, 0))]
-  while pq:
-    d, yx = heapq.heappop(pq)
-    if yx == (grid.shape[0] - 1, grid.shape[1] - 1):
-      return d
-    for dyx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-      yx2 = yx[0] + dyx[0], yx[1] + dyx[1]
+  priority_queue = [(0, (0, 0))]
+  while priority_queue:
+    distance, yx = heapq.heappop(priority_queue)
+    if yx == target_yx:
+      return distance
+    y, x = yx
+    for yx2 in [(y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)]:
       if 0 <= yx2[0] < grid.shape[0] and 0 <= yx2[1] < grid.shape[1]:
-        candidate_d = d + grid[yx2]
-        if candidate_d < distances[yx2]:
-          distances[yx2] = candidate_d
-          heapq.heappush(pq, (candidate_d, yx2))
+        distance2 = distance + grid[yx2]
+        if distance2 < distances[yx2]:
+          distances[yx2] = distance2
+          heapq.heappush(priority_queue, (distance2, yx2))
+  raise ValueError('No solution.')
 
 
 check_eq(day15a(s1), 40)
@@ -1857,38 +1859,32 @@ def day15b(s, *, part2=False):  # Try A* search.
     grid = np.concatenate(a, axis=0)
 
   grid = np.pad(grid, 1, constant_values=10**8)  # To avoid boundary checks.
-  c0 = grid.shape[0] - 2 + grid.shape[1] - 2
-
-  def hfunc(yx):  # Estimated lower bound on remaining distance to goal.
-    heuristic_weight = 2
-    return (c0 - yx[0] - yx[1]) * heuristic_weight
-
   start = 1, 1
   destination = grid.shape[0] - 2, grid.shape[1] - 2
-  check_eq(hfunc(destination), 0)
+  c0 = destination[0] + destination[1]
+
+  def lower_bound(yx):  # Estimated lower bound on remaining distance to goal.
+    return c0 - yx[0] - yx[1]
+
+  check_eq(lower_bound(destination), 0)
   distances = np.full(grid.shape, 10**6)
   distances[start] = 0
-  pq = [(hfunc(start), start)]
-  best_solution = 10**6
-  while pq:
-    f, yx = heapq.heappop(pq)
-    d = distances[yx]
+  priority_queue = [(0 + lower_bound(start), 0, start)]
+  while priority_queue:
+    unused_f, old_distance, yx = heapq.heappop(priority_queue)
+    distance = distances[yx]
+    if distance != old_distance:
+      continue  # A better path was already found, so skip.
     if yx == destination:
-      # return d
-      best_solution = min(best_solution, d)
-      # print(f'{best_solution=}')
-    if 1 and d > best_solution + 40:
-      break
+      return distance
     y, x = yx
-    for dy, dx in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
-      yx2 = y + dy, x + dx
+    for yx2 in [(y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)]:
       # https://en.wikipedia.org/wiki/A*_search_algorithm
-      g = d + grid[yx2]
-      if g < distances[yx2]:
-        distances[yx2] = g
-        f = g + hfunc(yx2)
-        heapq.heappush(pq, (f, yx2))
-  return best_solution
+      distance2 = distance + grid[yx2]
+      if distance2 < distances[yx2]:
+        distances[yx2] = distance2
+        heapq.heappush(priority_queue, (distance2 + lower_bound(yx2), distance2, yx2))
+  raise ValueError('No solution.')
 
 
 check_eq(day15b(s1), 40)
@@ -1913,8 +1909,8 @@ def day15c_func(grid):
   while True:
     last_distance = distances[destination]
     for index in range(start, destination + 1):
-      d = flat[index] + min(distances[index - 1], distances[index - stride])
-      distances[index] = min(distances[index], d)
+      distance2 = flat[index] + min(distances[index - 1], distances[index - stride])
+      distances[index] = min(distances[index], distance2)
 
     # Not a guarantee though.
     if distances[destination] == last_distance:
@@ -1923,8 +1919,10 @@ def day15c_func(grid):
         return distances[destination]
 
     for index in range(destination, start - 1, -1):
-      d = flat[index] + min(distances[index + 1], distances[index + stride])
-      distances[index] = min(distances[index], d)
+      distance2 = flat[index] + min(distances[index + 1], distances[index + stride])
+      distances[index] = min(distances[index], distance2)
+
+  raise ValueError('No solution.')
 
 
 def day15c(s, *, part2=False):
@@ -1944,6 +1942,52 @@ check_eq(day15c_part2(s1), 315)
 
 
 # %%
+# Padded A* search, numba.  With numba, it is slower than the Dijkstra algorithm.
+@numba.njit
+def day15d_func(grid):
+  start = 1, 1
+  destination = grid.shape[0] - 2, grid.shape[1] - 2
+  c0 = destination[0] + destination[1]
+
+  def lower_bound(yx):  # Estimated lower bound on remaining distance to goal.
+    return c0 - yx[0] - yx[1]
+
+  distances = np.full(grid.shape, 10**6)
+  distances[start] = 0
+  priority_queue = [(0 + lower_bound(start), 0, start)]
+  while priority_queue:
+    unused_f, old_distance, yx = heapq.heappop(priority_queue)
+    distance = distances[yx]
+    if distance != old_distance:
+      continue  # A better path was already found, so skip.
+    if yx == destination:
+      return distance
+    y, x = yx
+    for yx2 in [(y - 1, x), (y + 1, x), (y, x - 1), (y, x + 1)]:
+      distance2 = distance + grid[yx2]
+      if distance2 < distances[yx2]:
+        distances[yx2] = distance2
+        heapq.heappush(priority_queue, (distance2 + lower_bound(yx2), distance2, yx2))
+  raise ValueError('No solution.')
+
+
+def day15d(s, *, part2=False):
+  grid = np.array([list(line) for line in s.splitlines()], int)
+  if part2:
+    a = [np.concatenate([(grid + (y + x - 1)) % 9 + 1 for x in range(5)], axis=1) for y in range(5)]
+    grid = np.concatenate(a, axis=0)
+  grid = np.pad(grid, 1, constant_values=10**8)  # To avoid boundary checks.
+  return day15d_func(grid)
+
+
+check_eq(day15d(s1), 40)
+puzzle.verify(1, day15d)
+day15d_part2 = functools.partial(day15d, part2=True)
+check_eq(day15d_part2(s1), 315)
+puzzle.verify(2, day15d_part2)
+
+
+# %%
 # Padded Dijkstra, numba, visualization.
 @numba.njit
 def day15_func(grid, visualize):
@@ -1952,10 +1996,10 @@ def day15_func(grid, visualize):
   distances = np.full(grid.shape, 10**6)
   distances[start] = 0
   prev = np.empty((*grid.shape, 2), np.int32)
-  pq = [(0, start)]
-  while pq:
-    d, yx = heapq.heappop(pq)
-    # if d > distances[yx]: continue  # Skip finalized.  No change in speed.
+  priority_queue = [(0, start)]
+  while priority_queue:
+    distance, yx = heapq.heappop(priority_queue)
+    # if distance > distances[yx]: continue  # Skip finalized.  No change in speed.
     if yx == destination:
       path_image = None
       if visualize:
@@ -1963,16 +2007,17 @@ def day15_func(grid, visualize):
         while yx != start:
           path_image[yx] = True
           yx = prev[yx][0], prev[yx][1]
-      return d, path_image
+      return distance, path_image
     y, x = yx
     for dy, dx in ((-1, 0), (1, 0), (0, -1), (0, 1)):
       yx2 = y + dy, x + dx
-      candidate_d = d + grid[yx2]
-      if candidate_d < distances[yx2]:
-        distances[yx2] = candidate_d
-        heapq.heappush(pq, (candidate_d, yx2))
+      distance2 = distance + grid[yx2]
+      if distance2 < distances[yx2]:
+        distances[yx2] = distance2
+        heapq.heappush(priority_queue, (distance2, yx2))
         if visualize:
           prev[yx2] = yx
+  raise ValueError('No solution.')
 
 
 def day15(s, *, part2=False, visualize=False):
@@ -1981,13 +2026,13 @@ def day15(s, *, part2=False, visualize=False):
     a = [np.concatenate([(grid + (y + x - 1)) % 9 + 1 for x in range(5)], axis=1) for y in range(5)]
     grid = np.concatenate(a, axis=0)
   grid = np.pad(grid, 1, constant_values=10**8)  # To avoid boundary checks.
-  d, path_image = day15_func(grid, visualize)
+  distance, path_image = day15_func(grid, visualize)
   if visualize:
     # media.show_image(~path_image, border=True)
     frame0 = media.to_rgb(grid[1:-1, 1:-1] * 1.0, cmap='bwr')
     frame1 = np.where(path_image[1:-1, 1:-1, None], 0, frame0)
     media.show_video([frame0, frame1], codec='gif', fps=1, title='day15')
-  return d
+  return distance
 
 
 check_eq(day15(s1), 40)
@@ -4609,20 +4654,23 @@ def day23c(s, *, part2=False):  # Dijkstra or A* search.
   use_a_star = True  # Else ordinary Dijkstra search.
   distances = collections.defaultdict(lambda: 10**8)
   distances[start_state] = 0
-  pq = [(0, start_state)]
-  while pq:
-    _, state = heapq.heappop(pq)
-    distance = distances[state]  # For A*.
+  priority_queue = [(0, 0, start_state)]
+  while priority_queue:
+    unused_f, old_distance, state = heapq.heappop(priority_queue)
+    distance = distances[state]
+    if distance != old_distance:
+      continue  # A better path was already found, so skip.
     if state == end_state:
       return distance
     for i0, i1, move_cost in eligible_moves(state):
-      candidate_d = distance + move_cost
+      distance2 = distance + move_cost
       state2 = apply_move(state, i0, i1)
-      if candidate_d < distances[state2]:
-        distances[state2] = candidate_d
+      if distance2 < distances[state2]:
+        distances[state2] = distance2
         # https://en.wikipedia.org/wiki/A*_search_algorithm
-        f = candidate_d + lower_bound_cost(state2) if use_a_star else candidate_d
-        heapq.heappush(pq, (f, state2))
+        f = distance2 + lower_bound_cost(state2) if use_a_star else distance2
+        heapq.heappush(priority_queue, (f, distance2, state2))
+  raise ValueError('No solution.')
 
 
 check_eq(day23c(s1), 12521)
@@ -4682,21 +4730,23 @@ def day23_func(nrows, start_state, end_state, state_size):
   assert lower_bound_cost(end_state) == 0
   use_a_star = True  # A* search rather than ordinary Dijkstra algorithm.
   distances = {start_state: 0}
-  pq = [(0, start_state)]
-  while pq:
-    _, state = heapq.heappop(pq)
-    distance = distances[state]  # For A*.
+  priority_queue = [(0, 0, start_state)]
+  while priority_queue:
+    unused_f, old_distance, state = heapq.heappop(priority_queue)
+    distance = distances[state]
+    if distance != old_distance:
+      continue  # A better path was already found, so skip.
     if state == end_state:
       return distance
 
     def consider(i0, i1, move_cost):
-      candidate_d = distance + move_cost
+      distance2 = distance + move_cost
       state2 = apply_move(state, i0, i1)
-      if state2 not in distances or candidate_d < distances[state2]:
-        distances[state2] = candidate_d
+      if state2 not in distances or distance2 < distances[state2]:
+        distances[state2] = distance2
         # https://en.wikipedia.org/wiki/A*_search_algorithm
-        f = candidate_d + lower_bound_cost(state2) if use_a_star else candidate_d
-        heapq.heappush(pq, (f, state2))
+        f = distance2 + lower_bound_cost(state2) if use_a_star else distance2
+        heapq.heappush(priority_queue, (f, distance2, state2))
 
     # Move from the hallway position `i0` to a room `j`.
     for i0 in range(7):
@@ -4758,6 +4808,7 @@ def day23_func(nrows, start_state, end_state, state_size):
         else:
           move_cost = ((j - i1 + 2) * 2 - (i1 == 0) + row) * cost_for_id[id]
           consider(i0, i1, move_cost)
+  raise ValueError('No solution.')
 
 
 def day23(s, *, part2=False):
@@ -5363,10 +5414,10 @@ if 0:  # Experiments with encoding three small ints into a large int.
 #   import scipy.linalg
 #   in_matrix_band = scipy.linalg.toeplitz(
 #       np.arange(stride) <= max_band).ravel()
-#   if candidate_d < distances[index2]:
+#   if distance2 < distances[index2]:
 #     if in_matrix_band[index2]:
-#       distances[index2] = candidate_d
-#       heappush(pq, (candidate_d, index2))
+#       distances[index2] = distance2
+#       heappush(priority_queue, (distance2, index2))
 
 # %%
 if 0:
