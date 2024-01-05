@@ -3010,11 +3010,11 @@ puzzle.verify(1, day17a)
 day17a_part2 = functools.partial(day17a, part2=True)
 check_eq(day17a_part2(s1), 94)
 check_eq(day17a_part2(s2), 71)
-puzzle.verify(2, day17a_part2)
+# puzzle.verify(2, day17a_part2)  # ~1.8 s.
 
 # %%
 _ = day17a(puzzle.input, visualize=True)
-_ = day17a(puzzle.input, part2=True, visualize=True)
+_ = day17a(puzzle.input, part2=True, visualize=True)  # ~2.0 s.
 
 
 # %%

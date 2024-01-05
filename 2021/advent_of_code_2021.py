@@ -4651,7 +4651,7 @@ def day23c(s, *, part2=False):  # Dijkstra or A* search.
     return cost
 
   check_eq(lower_bound_cost(end_state), 0)
-  use_a_star = True  # Else ordinary Dijkstra search.
+  use_astar = True  # Else ordinary Dijkstra search.
   distances = collections.defaultdict(lambda: 10**8)
   distances[start_state] = 0
   priority_queue = [(0, 0, start_state)]
@@ -4668,7 +4668,7 @@ def day23c(s, *, part2=False):  # Dijkstra or A* search.
       if distance2 < distances[state2]:
         distances[state2] = distance2
         # https://en.wikipedia.org/wiki/A*_search_algorithm
-        f = distance2 + lower_bound_cost(state2) if use_a_star else distance2
+        f = distance2 + lower_bound_cost(state2) if use_astar else distance2
         heapq.heappush(priority_queue, (f, distance2, state2))
   raise ValueError('No solution.')
 
@@ -4728,7 +4728,7 @@ def day23_func(nrows, start_state, end_state, state_size):
     return cost
 
   assert lower_bound_cost(end_state) == 0
-  use_a_star = True  # A* search rather than ordinary Dijkstra algorithm.
+  use_astar = True  # A* search rather than ordinary Dijkstra algorithm.
   distances = {start_state: 0}
   priority_queue = [(0, 0, start_state)]
   while priority_queue:
@@ -4745,7 +4745,7 @@ def day23_func(nrows, start_state, end_state, state_size):
       if state2 not in distances or distance2 < distances[state2]:
         distances[state2] = distance2
         # https://en.wikipedia.org/wiki/A*_search_algorithm
-        f = distance2 + lower_bound_cost(state2) if use_a_star else distance2
+        f = distance2 + lower_bound_cost(state2) if use_astar else distance2
         heapq.heappush(priority_queue, (f, distance2, state2))
 
     # Move from the hallway position `i0` to a room `j`.

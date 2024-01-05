@@ -1874,7 +1874,7 @@ def day15a_part1(s, verbose=False, elf_attack_power=3, fail_if_elf_dies=False):
       for yx in queue:
         for yx2 in empty_adjacent_yxs(yx):
           if yx2 not in distances:
-            if distance + manhattan(yx2, unit.yx) <= nearest_distance:  # A*
+            if distance + manhattan(yx2, unit.yx) <= nearest_distance:  # A* pruning.
               distances[yx2] = distance + 1
               next_queue.append(yx2)
     return min(empty_adjacent_yxs(unit.yx), key=lambda yx: (distances.get(yx, math.inf), yx))
@@ -1974,7 +1974,7 @@ def day15_adjacent_towards_opponent(grid, unit_yx, inrange):
       for yx2 in ((y - 1, x), (y, x - 1), (y, x + 1), (y + 1, x)):
         if grid[yx2] == '.' and yx2 not in distances:
           remaining = abs(unit_yx[0] - yx2[0]) + abs(unit_yx[1] - yx2[1])
-          if distance + remaining <= nearest_distance:  # A*.
+          if distance + remaining <= nearest_distance:  # A* pruning.
             distances[yx2] = distance + 1
             next_queue.append(yx2)
 
@@ -3023,7 +3023,7 @@ def day22a(s, *, part2=False, pad=60):  # Using networkx; slower.
   shape = target[0] + pad, target[1] + pad
   grid = {c: v[2] for c, v in (generate_grid(depth, shape)).items()}
   graph = generate_graph(grid, shape)
-  use_astar = True
+  use_astar = True  # Use A* search pruning.
   args = graph, (0, 0, torch), (*target, torch)
   if use_astar:
     return networkx.astar_path_length(*args, heuristic=cost_lower_bound)

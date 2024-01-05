@@ -2796,7 +2796,7 @@ def day16d(s, *, part2=False):  # Heuristically order edges and add branch-and-b
         for n, t in possible_paths(nodes[0])
         if t < time_left - other_working
     )
-    if cur_benefit + remaining <= best_benefit_found:  # A*-like pruning.
+    if cur_benefit + remaining <= best_benefit_found:  # Branch-and-bound pruning.
       return
 
     for dst, time in possible_paths(nodes[0]):
@@ -2811,7 +2811,7 @@ def day16d(s, *, part2=False):  # Heuristically order edges and add branch-and-b
         )
         consider_benefit(cur_benefit2, time_left2, enabled | {dst}, nodes2, other_working2)
     if other_working < time_left:
-      if cur_benefit + (time_left - other_working) * 30 > best_benefit_found:  # A*-like pruning.
+      if cur_benefit + (time_left - other_working) * 30 > best_benefit_found:  # Branch-and-bound.
         consider_benefit(cur_benefit, time_left - other_working, enabled, nodes[::-1], 99)
 
   consider_benefit(0, 26 if part2 else 30, set(), ('AA', 'AA'), 0 if part2 else 99)
@@ -2859,7 +2859,7 @@ def day16e(s, *, part2=False):  # Heuristically order edges and add heuristic pr
           best_benefit_found = cur_benefit2
         per_time = 45 if part2 else 55  # For my puzzle inputs, min are (40, 51) and (44, 49).
         optimistic_remaining = (time_left - time + max(time_left - other_working, 0) + 3) * per_time
-        if cur_benefit2 + optimistic_remaining <= best_benefit_found:  # A*-like pruning.
+        if cur_benefit2 + optimistic_remaining <= best_benefit_found:  # Branch-and-bound pruning.
           continue
         nodes2, time_left2, other_working2 = (
             ((nodes[1], dst), time_left - other_working, time - other_working)
@@ -2868,7 +2868,7 @@ def day16e(s, *, part2=False):  # Heuristically order edges and add heuristic pr
         )
         consider_benefit(cur_benefit2, time_left2, enabled | {dst}, nodes2, other_working2)
     if other_working < time_left:
-      if cur_benefit + (time_left - other_working) * 30 > best_benefit_found:  # A*-like pruning.
+      if cur_benefit + (time_left - other_working) * 30 > best_benefit_found:  # Branch-and-bound.
         consider_benefit(cur_benefit, time_left - other_working, enabled, nodes[::-1], 99)
 
   consider_benefit(0, 26 if part2 else 30, set(), ('AA', 'AA'), 0 if part2 else 99)
@@ -2916,7 +2916,7 @@ def day16(s, *, part2=False):
         if benefit2 > best_benefit_found:
           best_benefit_found = benefit2
           best_nodes_found = enabled | {dst}
-        if benefit2 + time_left2 * 60 > best_benefit_found:  # A*-like pruning.
+        if benefit2 + time_left2 * 60 > best_benefit_found:  # Branch-and-bound pruning.
           consider_benefit(benefit2, time_left2, enabled | {dst}, dst)
 
   consider_benefit(0, 26 if part2 else 30, set(), 'AA')
@@ -3551,7 +3551,7 @@ def day19a_process(recipes, part2):
     if tl <= 1:  # (Includes case of tl < 0; in the last time step, don't build any robots.)
       return
 
-    if n3 + tl * (tl - 1) // 2 <= best_num_geodes:  # A* pruning
+    if n3 + tl * (tl - 1) // 2 <= best_num_geodes:  # Branch-and-bound pruning.
       return
 
     def adjust(nn0, nn1, nn2):
@@ -4689,7 +4689,7 @@ s1 = """\
 
 
 # %%
-# Single queue; `previous` dict; find shortest path.
+# Single queue; `previous` dict; find shortest path, with heuristic pruning.
 def day24a(s, *, part2=False, visualize=False, repeat=3):
   grid0 = np.array([list(line) for line in s.splitlines()])
   grid = grid0[1:-1, 1:-1]  # Remove walls to simplify modulo addressing.
@@ -4698,7 +4698,7 @@ def day24a(s, *, part2=False, visualize=False, repeat=3):
   def shortest_path_to_dst(start_time, start_yx, dst_yx):
     previous: dict[tuple[int, int, int], tuple[int, int]] = {}
     queue = collections.deque([(start_time, *start_yx)])
-    max_time = start_time + shape[0] + shape[1] + 150  # 113 is min for my puzzle input.
+    max_time = start_time + shape[0] + shape[1] + 150  # Heuristic; 113 is min for my puzzle input.
     while queue:
       time, y, x = queue.popleft()
       if (y, x) == dst_yx:
@@ -4720,7 +4720,7 @@ def day24a(s, *, part2=False, visualize=False, repeat=3):
         ):
           remaining_dist = abs(y2 - dst_yx[0]) + abs(x2 - dst_yx[1])
           tyx2 = time, y2, x2
-          if time + remaining_dist <= max_time and tyx2 not in previous:  # Approx. A* pruning.
+          if time + remaining_dist <= max_time and tyx2 not in previous:  # Heuristic pruning.
             previous[tyx2] = y, x
             queue.append(tyx2)
     raise ValueError(f'No path found at {time=} {start_yx=}.')
@@ -4786,12 +4786,12 @@ if SHOW_BIG_MEDIA:
 
 
 # %%
-# Numba; use `active` set for each time step; use max_time.
+# Numba; use `active` set for each time step; use max_time heuristic pruning.
 @numba.njit
 def day24b_min_time_at_dst(grid, time, start_yx, dst_yx):
   shape = grid.shape
   active = {start_yx}
-  max_time = time + shape[0] + shape[1] + 150  # 113 is min for my puzzle input.
+  max_time = time + shape[0] + shape[1] + 150  # Heuristic; 113 is min for my puzzle input.
   while active:
     time += 1
     new_active = set()
@@ -4809,7 +4809,7 @@ def day24b_min_time_at_dst(grid, time, start_yx, dst_yx):
             and grid[(y2 + time) % shape[0], x2] != '^'
         ):
           remaining_dist = abs(y2 - dst_yx[0]) + abs(x2 - dst_yx[1])
-          if time + remaining_dist <= max_time:
+          if time + remaining_dist <= max_time:  # Heuristic pruning.
             new_active.add(yx2)
     active = new_active
 
