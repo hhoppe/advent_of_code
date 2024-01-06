@@ -4282,9 +4282,7 @@ def day21v(
 
 media.show_image(day21v(s1))
 media.show_image(day21v(s1, simplify=True))
-media.show_image(
-    day21v(puzzle.input, simplify=True, figsize=(30, 15)), border=True, title='day21a'
-)
+media.show_image(day21v(puzzle.input, simplify=True, figsize=(30, 15)), border=True, title='day21a')
 if SHOW_BIG_MEDIA:
   media.show_image(
       day21v(puzzle.input, prog='neato', figsize=(40, 20), rot=0), border=True, title='day21b'
