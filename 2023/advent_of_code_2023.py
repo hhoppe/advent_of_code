@@ -1173,7 +1173,7 @@ def day8_visualize(s):
   plt.close(fig)
 
 
-media.set_max_output_height(3000)
+hh.no_vertical_scroll()
 day8_visualize(puzzle.input)
 
 
@@ -4261,7 +4261,7 @@ check_eq(day22b_part2(s1), 7)
 puzzle.verify(2, day22b_part2)
 
 # %%
-media.set_max_output_height(3000)
+hh.no_vertical_scroll()
 day22b(puzzle.input, visualize=True)
 
 
@@ -4444,7 +4444,7 @@ def day22_visualize_3d(s):
   fig = go.Figure(data=surface, layout=fig_layout())
 
   if hh.in_notebook():
-    media.set_max_output_height(3000)
+    hh.no_vertical_scroll()
     hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
     fig.show()
 
@@ -4728,7 +4728,7 @@ def day23_visualize_graph(s, *, part2=False, optimize=True, node_size=700):
 
 
 if SHOW_BIG_MEDIA:
-  media.set_max_output_height(3000)
+  hh.no_vertical_scroll()
   day23_visualize_graph(puzzle.input)
   day23_visualize_graph(puzzle.input, part2=True)
 
