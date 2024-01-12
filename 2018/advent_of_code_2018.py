@@ -366,7 +366,7 @@ check_eq(day3_part2('#1 @ 1,3: 4x4\n#2 @ 3,1: 4x4\n#3 @ 5,5: 2x2\n'), 3)
 puzzle.verify(2, day3_part2)
 
 # %%
-media.set_max_output_height(3000)
+hh.no_vertical_scroll()
 _ = day3_part2(puzzle.input, visualize=True)
 
 # %% [markdown]

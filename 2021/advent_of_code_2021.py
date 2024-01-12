@@ -571,7 +571,7 @@ puzzle.verify(2, day5_part2)
 
 # %%
 _ = day5_part2(puzzle.input, visualize=True)
-media.set_max_output_height(3000)
+hh.no_vertical_scroll()
 
 # %% [markdown]
 # <a name="day6"></a>

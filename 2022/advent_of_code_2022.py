@@ -1082,7 +1082,7 @@ def day8w(s):  # Use plotly to create 3D visualization.
     video = np.array(hh.tilt_video(fig))[:, :, 140:-140]
     media.show_video(video, codec='gif', fps=3, border=True, title='day08e')
 
-  media.set_max_output_height(5000)
+  hh.no_vertical_scroll()
 
 
 day8w(puzzle.input)
@@ -1861,7 +1861,7 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
     fps = 3 if use_tilt else 10
     media.show_video(video, codec='gif', fps=fps, border=True, title='day12c')
 
-  media.set_max_output_height(5000)
+  hh.no_vertical_scroll()
 
 
 day12w(puzzle.input)
@@ -2415,7 +2415,7 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
     images = [images[0]] * 30 + images + [images[-1]] * 20
     media.show_video(images, codec='gif', fps=15, title='day15b')
 
-  media.set_max_output_height(5000)
+  hh.no_vertical_scroll()
 
 
 day15v(puzzle.input)
@@ -3387,7 +3387,7 @@ def day18v(s):  # Visualize Part 1 using plotly 3D rendering.
     video = hh.wobble_video(fig)
     media.show_video(video, codec='gif', fps=10, title='day18c')
 
-  media.set_max_output_height(5000)
+  hh.no_vertical_scroll()
 
 
 day18v(puzzle.input)
@@ -4289,7 +4289,7 @@ if SHOW_BIG_MEDIA:
   )
   _image = day21v(puzzle.input, figsize=(60, 30), rot=None)
   media.show_image(_image, title='day21c', border=True, height=800, downsample=False)
-media.set_max_output_height(5000)
+hh.no_vertical_scroll()
 
 
 # %% [markdown]

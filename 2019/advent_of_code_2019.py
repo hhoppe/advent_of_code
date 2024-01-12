@@ -2169,7 +2169,7 @@ puzzle = advent.puzzle(day=18)
 
 # %%
 if 0:
-  media.set_max_output_height(3000)
+  hh.no_vertical_scroll()
   print(puzzle.input)
 
 # %%
@@ -2689,7 +2689,7 @@ RE....#.#                           #......RFEOL
 
 # %%
 if 0:
-  media.set_max_output_height(3000)
+  hh.no_vertical_scroll()
   print(puzzle.input)
 
 
