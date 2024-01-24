@@ -4727,12 +4727,13 @@ def day24a(s, *, part2=False, visualize=False, repeat=3):
     images = []
     for time, (y, x) in enumerate(path):
       image = hh.to_image(grid0 == '#', 255, 120)
-      blizzards = np.array([
+      rolls = [
           np.roll(grid == '>', time, 1),
           np.roll(grid == '<', -time, 1),
           np.roll(grid == 'v', time, 0),
           np.roll(grid == '^', -time, 0),
-      ]).transpose(1, 2, 0)[..., None]
+      ]
+      blizzards = np.array(rolls).transpose(1, 2, 0)[..., None]
       # colors = 1.0 - blizzards * [(0.3, 0, 0), (0, 0.2, 0), (0, 0, 0.3), (0.2, 0, 0.2)]
       colors = 1.0 - blizzards * (0.1, 0.1, 0.1)
       image[1:-1, 1:-1] = colors.prod(2) * 255.999

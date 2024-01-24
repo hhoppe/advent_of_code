@@ -2520,10 +2520,8 @@ def day22a_part2(s):  # Slower code using deque.
       visited.add(state)
       cards = hands[0].popleft(), hands[1].popleft()
       if len(hands[0]) >= cards[0] and len(hands[1]) >= cards[1]:
-        _, winner = combat([
-            collections.deque(list(hands[0])[: cards[0]]),
-            collections.deque(list(hands[1])[: cards[1]]),
-        ])
+        hands2 = [collections.deque(list(hand)[:card]) for hand, card in zip(hands, cards)]
+        _, winner = combat(hands2)
       else:
         winner = 0 if cards[0] > cards[1] else 1
       hands[winner].extend([cards[winner], cards[1 - winner]])

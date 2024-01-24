@@ -5395,14 +5395,15 @@ def day24_part2(s):  # Fastest: solve system of 6 linear equations based on cros
   a, b, c, d, e, f = rows[0]
   g, h, i, j, k, l = rows[1]
   m, n, o, p, q, r = rows[2]
-  system = sympy.Matrix([
+  matrix_data = [
       [0, l - f, e - k, 0, c - i, h - b, e * c - b * f + h * l - k * i],
       [0, r - f, e - q, 0, c - o, n - b, e * c - b * f + n * r - q * o],
       [f - l, 0, j - d, i - c, 0, a - g, a * f - d * c + j * i - g * l],
       [f - r, 0, p - d, o - c, 0, a - m, a * f - d * c + p * o - m * r],
       [k - e, d - j, 0, b - h, g - a, 0, d * b - a * e + g * k - j * h],
       [q - e, d - p, 0, b - n, m - a, 0, d * b - a * e + m * q - p * n],
-  ])
+  ]
+  system = sympy.Matrix(matrix_data)
   pos, vel = sympy.symbols('pos(:3)'), sympy.symbols('vel(:3)')
   sol = sympy.solve_linear_system(system, *pos, *vel)
   return sum(sol[sym] for sym in pos)
