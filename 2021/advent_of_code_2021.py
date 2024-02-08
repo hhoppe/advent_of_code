@@ -366,7 +366,7 @@ def day4a(s, *, part2=False):  # Compact.
   )
   matches = boards < 0
   scores = []
-  previously_finished = False
+  previously_finished = np.full(len(boards), False)
   for number in map(int, sections[0].split(',')):
     matches[boards == number] = True
     finished = (matches.sum(1).max(1) == boards.shape[1]) | (
@@ -3756,7 +3756,8 @@ def day22b(s, *, part2=False):  # Using 3D grid over unique range coordinates.
       [
           [list(map(int, range_[2:].split('..'))) for range_ in l[3:].strip().split(',')]
           for l in lines
-      ]
+      ],
+      np.int64,
   )
   if not part2:
     boxes = boxes[((boxes[..., 0] >= -50) & (boxes[..., 1] <= 50)).all(axis=1)]
@@ -3833,7 +3834,7 @@ def day22c(s, *, part2=False):  # Using CSG of boxes.
       cells_to_add.add(cuboid)
     cells = (cells - cells_to_delete) | cells_to_add
 
-  return sum((np.diff(cell).T[0] + 1).prod() for cell in cells)
+  return sum((np.diff(np.array(cell, np.int64)).T[0] + 1).prod() for cell in cells)
   # pytype: enable=unsupported-operands,annotation-type-mismatch
 
 
@@ -3920,7 +3921,7 @@ def day22d(s, *, part2=False):  # Faster by reducing CSG fragment count.
       cells_to_add.add(cuboid)
     cells = (cells - cells_to_delete) | cells_to_add
 
-  return sum((np.diff(cell).T[0] + 1).prod() for cell in cells)
+  return sum((np.diff(np.array(cell, np.int64)).T[0] + 1).prod() for cell in cells)
   # pytype: enable=unsupported-operands,annotation-type-mismatch,container-type-mismatch,bad-unpacking
 
 
@@ -4197,7 +4198,7 @@ def day22e(s, *, part2=False):  # Using _Kdtree.
       kdtree.add(*to_bbox(cell), None)  # type: ignore[call-arg]
 
   cells = [from_bbox(entry.bb0, entry.bb1) for entry in kdtree.entries if entry.bb0[0] >= 0.0]
-  return (np.diff(list(cells)) + 1)[..., 0].prod(axis=-1).sum()
+  return (np.diff(np.array(cells, np.int64)) + 1)[..., 0].prod(axis=-1).sum()
   # pytype: enable=bad-unpacking,container-type-mismatch
 
 

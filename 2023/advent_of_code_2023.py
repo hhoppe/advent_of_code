@@ -1008,7 +1008,7 @@ puzzle = advent.puzzle(day=8)
 
 # %%
 # The sequence of moves 'RRRR' occurs only once within the instructions --- at its end.
-hh.display_html(f"{len(puzzle.input.splitlines()[0]) = }  {puzzle.input.index('RRRR') = }")
+hh.display_html(f"{len(puzzle.input.splitlines()[0])=}  {puzzle.input.index('RRRR')=}")
 
 # %%
 s1 = """\
@@ -1132,7 +1132,7 @@ def day8a(s, *, part2=False):  # General algorithm that finds periods and phases
   if 1:
     # The length of each graph loop (e.g., 43, 47, 59, 61, 67, 79) is co-prime with the number of
     # instructions (e.g, 281) so each observed cycle period is the pairwise product.
-    hh.display_html(f'{len(moves) = }<br/>{moduli = }<br/>{remainders = }')
+    hh.display_html(f'{len(moves)=}<br/>{moduli=}<br/>{remainders=}')
     hh.display_html(f'moduli factors: {[hh.prime_factors(v) for v in moduli]}')
 
   index = num + _solve_modulo_congruences(moduli, remainders)
@@ -1984,7 +1984,7 @@ def day12d(s0, *, part2=False):  # Dynamic programming, without numba.
 
     s += '.'
     # Dynamic programming over the string position and the counts position.
-    num_matches = np.zeros((len(s) + 1, len(counts) + 1), int)
+    num_matches = np.zeros((len(s) + 1, len(counts) + 1), np.int64)
     num_matches[0, 0] = 1
 
     for s_index, ch in enumerate(s):
@@ -4065,7 +4065,7 @@ def day21a_part2(s, nsteps=26_501_365):  # Concise yet readable.
         active[:-2, 1:-1] | active[2:, 1:-1] | active[1:-1, :-2] | active[1:-1, 2:]
     )
 
-  counts = active[1:-1, 1:-1].reshape(num_tiles, n, num_tiles, n).sum((1, 3))
+  counts = active[1:-1, 1:-1].reshape(num_tiles, n, num_tiles, n).sum((1, 3)).astype(np.int64)
   hh.display_math(as_latex(counts))
   return (
       counts[2, 2] * (1 + 4 * (nrings // 2) * (nrings // 2 - 1))
@@ -4087,7 +4087,7 @@ def day21_part2(s):  # Most concise but highly specialized and obscure.
   for _ in range(327):
     a[1:-1, 1:-1] = empty & (a[:-2, 1:-1] | a[2:, 1:-1] | a[1:-1, :-2] | a[1:-1, 2:])
 
-  counts = a[1:-1, 1:-1].reshape(5, 131, 5, 131).sum((1, 3)).flat
+  counts = a[1:-1, 1:-1].reshape(5, 131, 5, 131).sum((1, 3)).astype(np.int64).flat
   return (
       counts[12] * 40924885401
       + counts[7] * 40925290000
@@ -5239,7 +5239,7 @@ puzzle.verify(2, day24d_part2)
 
 # %%
 def day24e_part2(s, debug=False):
-  array = np.array([line.replace('@', ',').split(',') for line in s.splitlines()], int)
+  array = np.array([line.replace('@', ',').split(',') for line in s.splitlines()], np.int64)
   px, py, pz, vx, vy, vz, t0, t1, t2 = sympy.symbols('px py pz vx vy vz t0 t1 t2')
   equations = [
       (array[0, 0] + t0 * array[0, 3]) - (px + vx * t0),
@@ -5275,7 +5275,7 @@ puzzle.verify(2, day24e_part2)
 
 # %%
 def day24f_part2(s, use=3):  # More concise.
-  array = np.array([line.replace('@', ',').split(',') for line in s.splitlines()], int)
+  array = np.array([line.replace('@', ',').split(',') for line in s.splitlines()], np.int64)
   p, v, t = sympy.symbols('p(:3)'), sympy.symbols('v(:3)'), sympy.symbols(f't(:{use})')
   equations = [
       array[i, j] - p[j] + t[i] * (array[i, 3 + j] - v[j]) for i in range(3) for j in range(3)
@@ -5303,7 +5303,7 @@ puzzle.verify(2, day24g_part2)
 
 # %%
 def day24_part2_visualize(s, nframes=120, fps=30):
-  array = np.array([line.replace('@', ',').split(',') for line in s.splitlines()], int)
+  array = np.array([line.replace('@', ',').split(',') for line in s.splitlines()], np.int64)
   p_i, v_i = array[:, :3], array[:, 3:6]
 
   def get_solution():

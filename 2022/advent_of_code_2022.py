@@ -455,23 +455,24 @@ puzzle.verify(2, day4b_part2)
 
 
 # %%
-def _run_in_shell(command: str, s: str) -> str:
-  command = textwrap.dedent(command.strip())
+def _run_in_shell(command: list[str], s: str) -> str:
   return subprocess.run(
-      command, shell=True, check=True, encoding='utf-8', input=s, capture_output=True
+      command, shell=False, check=True, encoding='utf-8', input=s, capture_output=True
   ).stdout
 
 
 # %%
 def day4c(s, *, part2=False):  # Using Perl.
-  part1_command = r"""
-    perl -F'\D' -lane '$n += $F[0] <= $F[2] && $F[1] >= $F[3] ||
-        $F[2] <= $F[0] && $F[3] >= $F[1]; END {print $n}'
-  """
-  part2_command = r"""
-    perl -F'\D' -lane '$n += $F[1] >= $F[2] && $F[3] >= $F[0]; END {print $n}'
-  """
-  command = part2_command if part2 else part1_command
+  # part1_command = r"""
+  #   perl -F'\D' -lane '$n += $F[0] <= $F[2] && $F[1] >= $F[3] ||
+  #       $F[2] <= $F[0] && $F[3] >= $F[1]; END {print $n}'
+  # """
+  # part2_command = r"""
+  #   perl -F'\D' -lane '$n += $F[1] >= $F[2] && $F[3] >= $F[0]; END {print $n}'
+  # """
+  p1 = '$n += $F[0] <= $F[2] && $F[1] >= $F[3] || $F[2] <= $F[0] && $F[3] >= $F[1]; END {print $n}'
+  p2 = '$n += $F[1] >= $F[2] && $F[3] >= $F[0]; END {print $n}'
+  command = ['perl', r'-F\D', '-lane', (p2 if part2 else p1)]
   return int(_run_in_shell(command, s))
 
 
@@ -1152,7 +1153,7 @@ def day8_part2_inner(grid):
 
 
 def day8_part2(s):
-  grid = np.array([list(line) for line in s.splitlines()], int)
+  grid = np.array([list(line) for line in s.splitlines()], np.int64)
   return day8_part2_inner(grid)
 
 
@@ -1630,10 +1631,10 @@ def day11(s, *, part2=False):
   ss = s.split('\n\n')
   itemss = []
   ops = np.full(len(ss), ' ')
-  args = np.full(len(ss), 0)
-  divisible_bys = np.full(len(ss), 0)
-  throwss = np.full((len(ss), 2), 0)
-  activities = np.full(len(ss), 0)
+  args = np.full(len(ss), 0, np.int64)
+  divisible_bys = np.full(len(ss), 0, np.int64)
+  throwss = np.full((len(ss), 2), 0, np.int64)
+  activities = np.full(len(ss), 0, np.int64)
 
   for i, s2 in enumerate(ss):
     lines = s2.splitlines()
@@ -1645,7 +1646,7 @@ def day11(s, *, part2=False):
 
   # Convert list of lists to "ragged" array.
   max_items = max(len(items) for items in itemss)
-  itemss1 = np.full((len(ss), max_items), -1)
+  itemss1 = np.full((len(ss), max_items), -1, np.int64)
   for i, items in enumerate(itemss):
     itemss1[i, : len(items)] = items
   mod = math.prod(divisible_bys)
@@ -2255,7 +2256,7 @@ def day15a(s, *, part2=False, y_part1=2_000_000, side_part2=4_000_000):
 
     return np.count_nonzero(grid)
 
-  xl, xh = np.array([0, 0]), np.array([side_part2] * 2)
+  xl, xh = np.array([0, 0], np.int64), np.array([side_part2] * 2, np.int64)
   stack = [(xl, xh)]
 
   while True:
@@ -2429,7 +2430,9 @@ day15v(puzzle.input)
 # %%
 # Compact and fast; Part 1 assumes contiguous line covering; Part 2 works in any dimension.
 def day15(s, *, part2=False, y_part1=2_000_000, side_part2=4_000_000):
-  tmp = np.array([list(map(int, re.findall(r'([\d-]+)', line))) for line in s.splitlines()])
+  tmp = np.array(
+      [list(map(int, re.findall(r'([\d-]+)', line))) for line in s.splitlines()], np.int64
+  )
   sensor, beacon = np.split(tmp, 2, axis=1)
   beacon_dist = abs(sensor - beacon).sum(1)
 
@@ -3464,7 +3467,7 @@ def day18_march_along_exterior(grid, adjacent, start):
 
 def day18(s, *, part2=False):
   # Above, we consider cubes p2 which are 2 away from the cubes, so we must pad by 2.
-  cubes = np.array([line.split(',') for line in s.splitlines()], int) + 2
+  cubes = np.array([line.split(',') for line in s.splitlines()], np.int64) + 2
   shape = tuple(cubes.max(0) + 3)
   grid = np.full(shape, False)
   grid[tuple(cubes.T)] = True
@@ -3849,7 +3852,7 @@ puzzle.verify(2, day20b_part2)
 
 # %%
 def day20c(s, *, part2=False):  # Faster, using numpy.
-  a = np.array(list(enumerate(map(int, s.splitlines()))))
+  a = np.array(list(enumerate(map(int, s.splitlines()))), np.int64)
   a[:, 1] *= 811_589_153 if part2 else 1
 
   for _ in range(10 if part2 else 1):
@@ -3907,7 +3910,7 @@ def day20_mix(a_value, a_prev, a_next):
 
 
 def day20(s, *, part2=False):
-  a_value = np.array(list(map(int, s.splitlines())))
+  a_value = np.array(list(map(int, s.splitlines())), np.int64)
   n = len(a_value)
   a_value *= 811_589_153 if part2 else 1
   a_prev = np.array([(i - 1) % n for i in range(n)], np.uint16)

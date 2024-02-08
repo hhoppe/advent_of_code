@@ -1893,7 +1893,7 @@ def day16a_part2(s, *, repeat_input=10_000):
   index = int(s[:7])
   l = list(map(int, s.strip())) * repeat_input
   assert index > len(l) * 0.51  # output is only valid over last half
-  l = np.array(l[index:])  # (Setting dtype has no effect on numba performance.)
+  l = np.array(l[index:], dtype=np.int64)  # (Setting dtype has no effect on numba performance.)
   fft_transform_helper(l)
   return ''.join(map(str, l[:8]))
 
