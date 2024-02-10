@@ -46,7 +46,7 @@
 # ## Preamble
 
 # %%
-# !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
+# !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null  # For mediapy.
 
 # %%
 # !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools matplotlib \

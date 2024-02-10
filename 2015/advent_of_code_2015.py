@@ -39,7 +39,7 @@
 # ## Preamble
 
 # %%
-# !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
+# !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null  # For mediapy.
 
 # %%
 # !dpkg -l | grep -q libgraphviz-dev || (apt-get -qq update && apt-get -qq -y install libgraphviz-dev) >/dev/null  # https://stackoverflow.com/a/66380001
@@ -326,6 +326,7 @@ day4a_part2 = functools.partial(day4a, part2=True)
 
 # %%
 # Multiprocessing with partition of index lists into index sublists.
+# The call of a function in the current module requires 'fork'.
 def day4b_test(prefix: bytes, indices: list[int], part2: bool) -> int:
   md5 = _get_md5()
   for index in indices:
@@ -346,39 +347,73 @@ def day4b(s, *, part2=False, group_size=240_000):
         return min(results)
 
 
-check_eq(day4b('abcdef'), 609_043)
-check_eq(day4b('pqrstuv'), 1_048_970)
-puzzle.verify(1, day4b)
+if multiprocessing.get_start_method() == 'fork':  # (It is 'spawn' on sys.platform == 'win32'.)
+  check_eq(day4b('abcdef'), 609_043)
+  check_eq(day4b('pqrstuv'), 1_048_970)
+  puzzle.verify(1, day4b)
 
-day4b_part2 = functools.partial(day4b, part2=True)
-puzzle.verify(2, day4b_part2)
+  day4b_part2 = functools.partial(day4b, part2=True)
+  puzzle.verify(2, day4b_part2)
+
+
+# %%
+# Multiprocessing with partition of index lists into index sublists.
+def day4c(s, *, part2=False, group_size=240_000):
+  def find_index(prefix: bytes, indices: list[int], part2: bool) -> int:
+    md5 = _get_md5()
+    for index in indices:
+      digest = md5(prefix + bytes(str(index), 'ascii')).digest()
+      if digest[:3] == b'\0\0\0' if part2 else (digest[:2] == b'\0\0' and digest.hex()[4] == '0'):
+        return index
+    return 10**9
+
+  prefix = s.strip().encode()
+  header = 'from typing import Any'
+  with hh.function_in_temporary_module(find_index, header=header, funcs=[_get_md5]) as function:
+    with multiprocessing.Pool() as pool:
+      for start in itertools.count(1, group_size):
+        num_processors = multiprocessing.cpu_count()
+        groups = more_itertools.divide(num_processors, range(start, start + group_size))
+        args = [(prefix, list(indices), part2) for indices in groups]
+        results: list[int] = pool.starmap(function, args)
+        if min(results) < 10**9:
+          return min(results)
+
+
+check_eq(day4c('abcdef'), 609_043)
+check_eq(day4c('pqrstuv'), 1_048_970)
+puzzle.verify(1, day4c)
+
+day4c_part2 = functools.partial(day4c, part2=True)
+puzzle.verify(2, day4c_part2)
 
 
 # %%
 # Multiprocessing with partition of index ranges into index subranges.
-def day4_test(prefix: bytes, start: int, stop: int, part2: bool) -> int:
-  md5 = _get_md5()
-  for index in range(start, stop):
-    digest = md5(prefix + bytes(str(index), 'ascii')).digest()
-    if digest[:3] == b'\0\0\0' if part2 else (digest[:2] == b'\0\0' and digest.hex()[4] == '0'):
-      return index
-  return 10**9
-
-
 def day4(s, *, part2=False, group_size=240_000):
+  def find_index(prefix: bytes, start: int, stop: int, part2: bool) -> int:
+    md5 = _get_md5()
+    for index in range(start, stop):
+      digest = md5(prefix + bytes(str(index), 'ascii')).digest()
+      if digest[:3] == b'\0\0\0' if part2 else (digest[:2] == b'\0\0' and digest.hex()[4] == '0'):
+        return index
+    return 10**9
+
   prefix = s.strip().encode()
-  with multiprocessing.Pool() as pool:
-    chunk_size = math.ceil(group_size / multiprocessing.cpu_count())
-    for start in itertools.count(1, group_size):
-      group_stop = start + group_size
-      args = []
-      while start < group_stop:
-        stop = min(start + chunk_size, group_stop)
-        args.append((prefix, start, stop, part2))
-        start = stop
-      results: list[int] = pool.starmap(day4_test, args)
-      if min(results) < 10**9:
-        return min(results)
+  header = 'from typing import Any'
+  with hh.function_in_temporary_module(find_index, header=header, funcs=[_get_md5]) as function:
+    with multiprocessing.Pool() as pool:
+      chunk_size = math.ceil(group_size / multiprocessing.cpu_count())
+      for start in itertools.count(1, group_size):
+        group_stop = start + group_size
+        args = []
+        while start < group_stop:
+          stop = min(start + chunk_size, group_stop)
+          args.append((prefix, start, stop, part2))
+          start = stop
+        results: list[int] = pool.starmap(function, args)
+        if min(results) < 10**9:
+          return min(results)
 
 
 check_eq(day4('abcdef'), 609_043)

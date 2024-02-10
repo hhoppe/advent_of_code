@@ -35,7 +35,7 @@ disable = [
 reports = false
 score = false
 recursive = true
-ignore-paths = [".*\\.ipynb_checkpoints"]
+ignore-paths = [".*ipynb_checkpoints"]
 
 [tool.pylint.basic]
 good-names-rgxs = "^[a-z][a-z0-9]?|[A-Z]([A-Z_]*[A-Z])?$"

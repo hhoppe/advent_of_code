@@ -42,7 +42,7 @@
 # ## Preamble
 
 # %%
-# !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null
+# !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null  # For mediapy.
 
 # %%
 # !pip install -q advent-of-code-hhoppe advent-of-code-ocr hhoppe-tools mediapy \
@@ -459,54 +459,51 @@ day5a_part2 = functools.partial(day5a, part2=True)
 
 # %%
 # Faster multiprocessing solution; also, small speedup using digest() rather than hexdigest().
-
-
-# Multiprocessing requires that this function be pickled, so it must be in the top module scope.
-def day5_find_zero_hashes(s, start, stop):
-  md5 = _get_md5()
-  results = []
-  prefix = s.encode()
-  # hasher0 = md5(prefix)
-  for index in range(start, stop):
-    # hasher = hasher0.copy()
-    # hasher.update(str(index).encode())
-    # hasher = md5((s + str(index)).encode())
-    hasher = md5(prefix + bytes(str(index), 'ascii'))
-    digest = hasher.digest()
-    if digest[:2] == b'\0\0' and digest.hex()[4] == '0':
-      results.append(index)
-  return results
-
-
 def day5(s, *, part2=False):
+  def find_hashes(s, start, stop):
+    md5 = _get_md5()
+    results = []
+    prefix = s.encode()
+    # hasher0 = md5(prefix)
+    for index in range(start, stop):
+      # hasher = hasher0.copy()
+      # hasher.update(str(index).encode())
+      # hasher = md5((s + str(index)).encode())
+      hasher = md5(prefix + bytes(str(index), 'ascii'))
+      digest = hasher.digest()
+      if digest[:2] == b'\0\0' and digest.hex()[4] == '0':
+        results.append(index)
+    return results
+
   s = s.strip()
   md5 = _get_md5()
   password = ['_'] * 8 if part2 else []
   group_size = 2_000_000 if part2 else 500_000
-
-  with multiprocessing.Pool() as pool:
-    for base in itertools.count(0, group_size):
-      chunk_size = group_size // multiprocessing.cpu_count() + 1
-      args = []
-      start, group_stop = base, base + group_size
-      while start < group_stop:
-        stop = min(start + chunk_size, group_stop)
-        args.append((s, start, stop))
-        start = stop
-      results = pool.starmap(day5_find_zero_hashes, args)
-      for index in more_itertools.flatten(results):
-        hashed = md5((s + str(index)).encode()).hexdigest()
-        check_eq(hashed[:5], '00000')
-        if part2:
-          position = int(hashed[5], 16)
-          if position < 8 and password[position] == '_':
-            password[position] = hashed[6]
-            if '_' not in password:
+  header = 'from typing import Any'
+  with hh.function_in_temporary_module(find_hashes, header=header, funcs=[_get_md5]) as function:
+    with multiprocessing.Pool() as pool:
+      for base in itertools.count(0, group_size):
+        chunk_size = group_size // multiprocessing.cpu_count() + 1
+        args = []
+        start, group_stop = base, base + group_size
+        while start < group_stop:
+          stop = min(start + chunk_size, group_stop)
+          args.append((s, start, stop))
+          start = stop
+        results = pool.starmap(function, args)
+        for index in more_itertools.flatten(results):
+          hashed = md5((s + str(index)).encode()).hexdigest()
+          check_eq(hashed[:5], '00000')
+          if part2:
+            position = int(hashed[5], 16)
+            if position < 8 and password[position] == '_':
+              password[position] = hashed[6]
+              if '_' not in password:
+                return ''.join(password)
+          else:
+            password.append(hashed[5])
+            if len(password) == 8:
               return ''.join(password)
-        else:
-          password.append(hashed[5])
-          if len(password) == 8:
-            return ''.join(password)
 
 
 check_eq(day5('abc'), '18f47a30')
@@ -1558,34 +1555,34 @@ day14a_part2 = functools.partial(day14a, part2=True)
 
 # %%
 # Faster multiprocessing solution.
-def day14_get_part2_hashed(s: str) -> str:
-  md5 = _get_md5()
-  hashed = md5(s.encode()).hexdigest()
-  for _ in range(2016):
-    hashed = md5(hashed.encode()).hexdigest()
-  return hashed
-
-
 def day14_part2(s):
+  def get_hashed(s: str) -> str:
+    md5 = _get_md5()
+    hashed = md5(s.encode()).hexdigest()
+    for _ in range(2016):
+      hashed = md5(hashed.encode()).hexdigest()
+    return hashed
+
   s = s.strip()
+  header = 'from typing import Any'
+  with hh.function_in_temporary_module(get_hashed, header=header, funcs=[_get_md5]) as function:
+    with multiprocessing.Pool() as pool:
+      hashes: list[str] = []
 
-  with multiprocessing.Pool() as pool:
-    hashes: list[str] = []
+      def replenish_hashes(group_size=2400, chunksize=100):
+        strings = [s + str(index) for index in range(len(hashes), len(hashes) + group_size)]
+        new_hashes = pool.map(function, strings, chunksize)
+        hashes.extend(new_hashes)
 
-    def replenish_hashes(group_size=2400, chunksize=100):
-      strings = [s + str(index) for index in range(len(hashes), len(hashes) + group_size)]
-      new_hashes = pool.map(day14_get_part2_hashed, strings, chunksize)
-      hashes.extend(new_hashes)
-
-    num_found = 0
-    for index in itertools.count():
-      if len(hashes) < index + 1001:
-        replenish_hashes()
-      ch = day14_find_triplet(hashes[index])
-      if ch and any(ch * 5 in hashed for hashed in hashes[index + 1 : index + 1001]):
-        num_found += 1
-        if num_found == 64:
-          return index
+      num_found = 0
+      for index in itertools.count():
+        if len(hashes) < index + 1001:
+          replenish_hashes()
+        ch = day14_find_triplet(hashes[index])
+        if ch and any(ch * 5 in hashed for hashed in hashes[index + 1 : index + 1001]):
+          num_found += 1
+          if num_found == 64:
+            return index
 
 
 # check_eq(day14_part2('abc'), 22551)  # ~1.2 s.
