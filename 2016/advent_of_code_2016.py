@@ -61,6 +61,8 @@ import math
 import multiprocessing
 import pathlib
 import re
+import subprocess
+import sys
 from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -70,6 +72,12 @@ import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/_
 import more_itertools
 import numba
 import numpy as np
+
+# %%
+# If run outside IPython, to enable 'spawn', instead launch a multiprocessing-safe main script.
+if 'In' not in globals() and __name__ == '__main__':
+  subprocess.run([sys.executable, __file__.replace('.py', '_run.py')], check=True)
+  sys.exit()
 
 # %%
 if not media.video_is_available():
@@ -457,6 +465,7 @@ day5a_part2 = functools.partial(day5a, part2=True)
 # check_eq(day5a_part2('abc'), '05ace8e3')
 # puzzle.verify(2, day5a_part2)  # ~10.5 s using _md5 (~16.5 s using hashlib).
 
+
 # %%
 # Faster multiprocessing solution; also, small speedup using digest() rather than hexdigest().
 def day5(s, *, part2=False):
@@ -481,7 +490,7 @@ def day5(s, *, part2=False):
   group_size = 2_000_000 if part2 else 500_000
   header = 'from typing import Any'
   with hh.function_in_temporary_module(find_hashes, header=header, funcs=[_get_md5]) as function:
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool() as pool:  # Either 'fork' or 'spawn' is OK.
       for base in itertools.count(0, group_size):
         chunk_size = group_size // multiprocessing.cpu_count() + 1
         args = []
@@ -1566,7 +1575,7 @@ def day14_part2(s):
   s = s.strip()
   header = 'from typing import Any'
   with hh.function_in_temporary_module(get_hashed, header=header, funcs=[_get_md5]) as function:
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool() as pool:  # Either 'fork' or 'spawn' is OK.
       hashes: list[str] = []
 
       def replenish_hashes(group_size=2400, chunksize=100):

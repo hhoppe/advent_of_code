@@ -2144,7 +2144,7 @@ In state B:
 # %%
 def day25a(s):  # Slow version using dicts and Python.
   parts = s.split('\n\n')
-  state, s_steps = hh.re_groups(r'^(?s)Begin in state (.+)\..* after (.+) steps', parts[0])
+  state, s_steps = hh.re_groups(r'(?s)^Begin in state (.+)\..* after (.+) steps', parts[0])
   num_steps = int(s_steps)
   logic = {}
   for part in parts[1:]:
@@ -2152,7 +2152,7 @@ def day25a(s):  # Slow version using dicts and Python.
     conditions = part.split('If the current ')[1:]
     assert len(conditions) == 2
     for condition in conditions:
-      pattern = r'^(?s)value is (.+):.*Write the value (.+)\..*to the (.+)\..* state (.+)\.'
+      pattern = r'(?s)^value is (.+):.*Write the value (.+)\..*to the (.+)\..* state (.+)\.'
       condition_state, s_write_value, s_move, next_state = hh.re_groups(pattern, condition)
       t = int(s_write_value), {'left': -1, 'right': +1}[s_move], next_state
       logic[current, int(condition_state)] = t
@@ -2187,7 +2187,7 @@ def day25_compute(size: int, num_steps: int, state: int, logic: np.ndarray) -> i
 
 def day25(s, *, size=100_000):
   parts = s.split('\n\n')
-  s_state, s_steps = hh.re_groups(r'^(?s)Begin in state (.+)\..* after (.+) steps', parts[0])
+  s_state, s_steps = hh.re_groups(r'(?s)^Begin in state (.+)\..* after (.+) steps', parts[0])
   state, num_steps = ord(s_state) - ord('A'), int(s_steps)
 
   logic_lines: list[tuple[int, int, int]] = []  # (write_value, move, next_state)

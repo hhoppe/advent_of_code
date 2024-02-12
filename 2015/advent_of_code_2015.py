@@ -65,6 +65,8 @@ import operator
 import pathlib
 import random
 import re
+import subprocess
+import sys
 from typing import Any, TypeVar
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -76,6 +78,12 @@ import networkx
 import numba
 import numpy as np
 import pyparsing
+
+# %%
+# If run outside IPython, to enable 'spawn', instead launch a multiprocessing-safe main script.
+if 'In' not in globals() and __name__ == '__main__':
+  subprocess.run([sys.executable, __file__.replace('.py', '_run.py')], check=True)
+  sys.exit()
 
 # %%
 if not media.video_is_available():
@@ -326,7 +334,7 @@ day4a_part2 = functools.partial(day4a, part2=True)
 
 # %%
 # Multiprocessing with partition of index lists into index sublists.
-# The call of a function in the current module requires 'fork'.
+# The call of a function in the current module requires 'fork' and that current is main.
 def day4b_test(prefix: bytes, indices: list[int], part2: bool) -> int:
   md5 = _get_md5()
   for index in indices:
@@ -338,7 +346,7 @@ def day4b_test(prefix: bytes, indices: list[int], part2: bool) -> int:
 
 def day4b(s, *, part2=False, group_size=240_000):
   prefix = s.strip().encode()
-  with multiprocessing.Pool() as pool:
+  with multiprocessing.Pool() as pool:  # Either 'fork' or 'spawn' is OK.
     for start in itertools.count(1, group_size):
       groups = more_itertools.divide(multiprocessing.cpu_count(), range(start, start + group_size))
       args = [(prefix, list(indices), part2) for indices in groups]
@@ -347,7 +355,8 @@ def day4b(s, *, part2=False, group_size=240_000):
         return min(results)
 
 
-if multiprocessing.get_start_method() == 'fork':  # (It is 'spawn' on sys.platform == 'win32'.)
+# If run inside IPython and multiprocessing will fork (e.g. sys.platform == 'linux'), test this.
+if __name__ == '__main__' and multiprocessing.get_start_method() == 'fork':
   check_eq(day4b('abcdef'), 609_043)
   check_eq(day4b('pqrstuv'), 1_048_970)
   puzzle.verify(1, day4b)
@@ -370,7 +379,7 @@ def day4c(s, *, part2=False, group_size=240_000):
   prefix = s.strip().encode()
   header = 'from typing import Any'
   with hh.function_in_temporary_module(find_index, header=header, funcs=[_get_md5]) as function:
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool() as pool:  # Either 'fork' or 'spawn' is OK.
       for start in itertools.count(1, group_size):
         num_processors = multiprocessing.cpu_count()
         groups = more_itertools.divide(num_processors, range(start, start + group_size))
@@ -402,7 +411,7 @@ def day4(s, *, part2=False, group_size=240_000):
   prefix = s.strip().encode()
   header = 'from typing import Any'
   with hh.function_in_temporary_module(find_index, header=header, funcs=[_get_md5]) as function:
-    with multiprocessing.Pool() as pool:
+    with multiprocessing.Pool() as pool:  # Either 'fork' or 'spawn' is OK.
       chunk_size = math.ceil(group_size / multiprocessing.cpu_count())
       for start in itertools.count(1, group_size):
         group_stop = start + group_size
@@ -927,7 +936,7 @@ def day10_process(np_array0: np.ndarray, num_iterations: int) -> int:
 
 
 def day10(s, *, num_iterations=40):
-  np_array0 = np.array(list(s.strip()), int)
+  np_array0 = np.array(list(s.strip()), np.int64)
   return day10_process(np_array0, num_iterations)
 
 
