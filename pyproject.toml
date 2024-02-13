@@ -47,3 +47,4 @@ expected-line-ending-format = "LF"
 
 [tool.pytype]
 keep_going = true
+exclude = ['**/*_run.py']
