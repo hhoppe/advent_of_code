@@ -2798,8 +2798,7 @@ def day16d(s, *, part2=False):  # Heuristically order edges and add branch-and-b
     for dst, time in possible_paths(nodes[0]):
       if dst not in enabled and time < time_left:
         cur_benefit2 = cur_benefit + (time_left - time) * rate[dst]
-        if cur_benefit2 > best_benefit_found:
-          best_benefit_found = cur_benefit2
+        best_benefit_found = max(best_benefit_found, cur_benefit2)
         nodes2, time_left2, other_working2 = (
             ((nodes[1], dst), time_left - other_working, time - other_working)
             if other_working < time
@@ -2851,8 +2850,7 @@ def day16e(s, *, part2=False):  # Heuristically order edges and add heuristic pr
     for dst, time in possible_paths(nodes[0]):
       if dst not in enabled and time < time_left:
         cur_benefit2 = cur_benefit + (time_left - time) * rate[dst]
-        if cur_benefit2 > best_benefit_found:
-          best_benefit_found = cur_benefit2
+        best_benefit_found = max(best_benefit_found, cur_benefit2)
         per_time = 45 if part2 else 55  # For my puzzle inputs, min are (40, 51) and (44, 49).
         optimistic_remaining = (time_left - time + max(time_left - other_working, 0) + 3) * per_time
         if cur_benefit2 + optimistic_remaining <= best_benefit_found:  # Branch-and-bound pruning.
