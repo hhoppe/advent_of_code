@@ -3101,9 +3101,9 @@ def day19(s, *, part2=False):  # Fast.
       continue  # Already joined.
     intersection = all_signature_sets[i] & all_signature_sets[j]
 
-    match_count: collections.defaultdict[
-        int, collections.defaultdict[int, int]
-    ] = collections.defaultdict(lambda: collections.defaultdict(int))
+    match_count: collections.defaultdict[int, collections.defaultdict[int, int]] = (
+        collections.defaultdict(lambda: collections.defaultdict(int))
+    )
     for encoding, indices_i in all_signatures[i].items():
       if encoding in intersection:
         indices_j = all_signatures[j][encoding]
