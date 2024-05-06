@@ -3506,7 +3506,7 @@ puzzle.verify(2, day18_part2)
 #
 # Solutions include:
 #
-# - `day19a()`: A depth-first search on which robot to buid next, with branch-and-bound pruning,
+# - `day19a()`: A depth-first search on which robot to build next, with branch-and-bound pruning,
 #   which guarantees the optimal solution but takes ~850 ms.
 #
 # - `day19b()`: A breadth-first-search in which the set of active of active states is heuristically pruned.

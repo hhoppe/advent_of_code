@@ -1329,7 +1329,7 @@ def day13(s, *, part2=False, verbose=False, visualize=False):
       # new_yx = tuple(np.array(cart.yx) + dyx)
       new_yx = cart.yx[0] + dyx[0], cart.yx[1] + dyx[1]
       cart2 = next((cart2 for cart2 in carts if cart2.yx == new_yx), None)
-      if cart2:  # Collison.
+      if cart2:  # Collision.
         if not part2:
           if visualize:
             image = image.copy()
