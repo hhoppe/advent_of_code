@@ -31,7 +31,7 @@ disable = [
     "duplicate-code",
     # Buggy pylint:
     "inconsistent-return-statements", "redundant-keyword-arg", "unbalanced-tuple-unpacking",
-    "unnecessary-direct-lambda-call", "undefined-loop-variable",
+    "unnecessary-direct-lambda-call", "undefined-loop-variable", "possibly-used-before-assignment",
 ]
 reports = false
 score = false
