@@ -2955,7 +2955,7 @@ if 0:  # Compute min execution times over several calls.
 # %%
 if 1:  # Look for unwanted pollution of namespace.
   for _name in globals().copy():
-    if not (re.match(r'^_|(day|Day|s)\d+|(puzzle$)', _name) or _name in _ORIGINAL_GLOBALS):
+    if not (re.match(r'^(_.*|(day|Day)\d+.*|s\d+|puzzle)$', _name) or _name in _ORIGINAL_GLOBALS):
       print(_name)
 
 # %%
