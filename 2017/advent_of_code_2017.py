@@ -732,7 +732,7 @@ def day11(s, *, part2=False, visualize=False):
     ax.plot(array[:, 0], array[:, 1])
     xy1 = xys[-1]
     _, xy2 = max(zip(radii, xys))
-    params = dict(fontsize=15, arrowprops=dict(arrowstyle='->', lw=1))
+    params: Any = dict(fontsize=15, arrowprops=dict(arrowstyle='->', lw=1))
     ax.annotate('start', xy=(0, 0), xytext=(-250, 150), ha='center', **params)
     ax.annotate('end', xy=xy1, xytext=(xy1[0] + 200, xy1[1]), ha='left', **params)
     ax.annotate('farthest', xy=xy2, xytext=(xy2[0] + 350, xy2[1]), ha='left', **params)

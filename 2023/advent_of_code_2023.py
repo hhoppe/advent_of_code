@@ -1164,7 +1164,7 @@ def day8_visualize(s):
 
   pos = hh.graph_layout(graph, prog='neato')  # prog='dot' is impossibly slow.
   fig, ax = plt.subplots(figsize=(12, 12), dpi=130)
-  ax.axes.set_aspect('equal')
+  ax.set_aspect('equal')
   node_color = [attr for _, attr in graph.nodes(data='node_color')]
   networkx.draw(graph, pos, node_size=15, node_color=node_color, width=0.5, arrowsize=2)
   fig.tight_layout(pad=0)
@@ -3583,7 +3583,7 @@ def day19_visualize(s):
   pos = {yx: (np.round(p[0]), np.round(p[1])) for yx, p in pos.items()}  # Stable across runs.
 
   fig, ax = plt.subplots(figsize=(7, 7), dpi=80)
-  ax.axes.set_aspect('equal')
+  ax.set_aspect('equal')
   # 'C0' is the first color in the color cycle of the current matplotlib style.
   node_color = ['red' if node == 'in' else 'C0' for node in graph]
   networkx.draw(graph, pos, node_size=15, node_color=node_color, width=0.5, arrowsize=8)
@@ -3673,7 +3673,7 @@ def day20_visualize(s):
   pos['rx'] = 360, 360
 
   fig, ax = plt.subplots(figsize=(6, 6), dpi=130)
-  ax.axes.set_aspect('equal')
+  ax.set_aspect('equal')
   node_color = [attr for _, attr in graph.nodes(data='node_color')]
   networkx.draw(graph, pos, node_size=200, node_color=node_color, with_labels=True, font_size=8)
   fig.tight_layout(pad=0)
@@ -4225,7 +4225,7 @@ def day22b(s, *, part2=False, visualize=False):  # First scheme, with unnecessar
     assert networkx.is_directed_acyclic_graph(graph)  # As expected.
     pos = hh.graph_layout(graph, prog='dot')
     fig, ax = plt.subplots(figsize=(5, 20), dpi=80)
-    ax.axes.set_aspect('equal')
+    ax.set_aspect('equal')
     node_color = [attr for _, attr in graph.nodes(data='node_color')]
     networkx.draw(graph, pos, node_color=node_color, node_size=15, width=0.5, arrowsize=4)
     fig.tight_layout(pad=0)
@@ -4699,7 +4699,7 @@ def day23_visualize_graph(s, *, part2=False, optimize=True, node_size=700):
     pos = {node: (-y, -x) for node, (x, y) in pos.items()}  # Reflect about NW-SE line.
 
   fig, ax = plt.subplots(figsize=(7, 7), dpi=90)
-  ax.axes.set_aspect('equal')
+  ax.set_aspect('equal')
   ax.set_axis_off()
 
   node_color = [attr for _, attr in graph.nodes(data='node_color')]
@@ -5478,7 +5478,7 @@ def day25_visualize(s):
   pos = hh.rotate_layout_so_principal_component_is_on_x_axis(pos)
 
   fig, ax = plt.subplots(figsize=(20, 20), dpi=80)
-  ax.axes.set_aspect('equal')
+  ax.set_aspect('equal')
   networkx.draw(graph, pos, node_color='#40A0E0', with_labels=True, font_size=8)
 
   fig.tight_layout(pad=0)

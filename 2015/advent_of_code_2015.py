@@ -714,7 +714,7 @@ def day7_visualize(s):
   pos = hh.graph_layout(graph, prog='neato')
   pos = hh.rotate_layout_so_node_is_on_left(pos, 'a', math.tau / 8)
   fig, ax = plt.subplots(figsize=(12, 12), dpi=60)
-  ax.axes.set_aspect('equal')
+  ax.set_aspect('equal')
   node_color = [(attr or 'green') for _, attr in graph.nodes(data='node_color')]
   networkx.draw(graph, pos, node_size=150, node_color=node_color, width=0.7)
   fig.tight_layout(pad=0)

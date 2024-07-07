@@ -861,7 +861,7 @@ def day7v(s):  # Visualization
 
   pos = hh.graph_layout(graph, prog='neato')
   fig, ax = plt.subplots(figsize=(12, 12), dpi=60)
-  ax.axes.set_aspect('equal')
+  ax.set_aspect('equal')
   # labels = networkx.get_node_attributes(graph, 'label')
   node_color = [attr for _, attr in graph.nodes(data='node_color')]
   networkx.draw(graph, pos, node_size=150, node_color=node_color, width=0.7)
@@ -2663,7 +2663,7 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
 
   if visualize:
     fig, ax = plt.subplots(figsize=(16, 12), dpi=66)
-    ax.axes.set_aspect('equal')  # Preserve aspect ratio.
+    ax.set_aspect('equal')  # Preserve aspect ratio.
 
   time = 26 if part2 else 30
   paths = {}
@@ -4271,7 +4271,7 @@ def day21v(
 
   dpi = 50  # Graph node labels are small yet readable at this resolution.
   fig, ax = plt.subplots(figsize=figsize, dpi=dpi)
-  ax.axes.set_aspect('equal')  # Preserve aspect ratio.
+  ax.set_aspect('equal')  # Preserve aspect ratio.
   labels = networkx.get_node_attributes(graph, 'label')
   node_color = [attr for _, attr in graph.nodes(data='color')]
   networkx.draw(graph, with_labels=True, labels=labels, node_color=node_color, pos=pos, ax=ax)
