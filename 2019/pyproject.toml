@@ -27,15 +27,16 @@ disable = [
     "missing-module-docstring", "missing-function-docstring", "redefined-outer-name", "missing-class-docstring",
     "too-many-branches", "too-many-statements", "multiple-statements", "condition-evals-to-constant",
     "too-many-return-statements", "too-many-nested-blocks", "too-many-boolean-expressions",
-    "too-many-instance-attributes",
+    "too-many-instance-attributes", "too-many-positional-arguments",
+    "duplicate-code",
     # Buggy pylint:
     "inconsistent-return-statements", "redundant-keyword-arg", "unbalanced-tuple-unpacking",
-    "unnecessary-direct-lambda-call", "undefined-loop-variable",
+    "unnecessary-direct-lambda-call", "undefined-loop-variable", "possibly-used-before-assignment",
 ]
 reports = false
 score = false
 recursive = true
-ignore-paths = [".*ipynb_checkpoints"]
+ignore-paths = [".*ipynb_checkpoints", "^.pytype", ".*/.pytype"]
 
 [tool.pylint.basic]
 good-names-rgxs = "^[a-z][a-z0-9]?|[A-Z]([A-Z_]*[A-Z])?$"
@@ -43,3 +44,7 @@ good-names-rgxs = "^[a-z][a-z0-9]?|[A-Z]([A-Z_]*[A-Z])?$"
 [tool.pylint.format]
 indent-string = "  "
 expected-line-ending-format = "LF"
+
+[tool.pytype]
+keep_going = true
+exclude = ['**/*_run.py']

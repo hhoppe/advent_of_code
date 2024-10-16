@@ -4368,6 +4368,7 @@ def day22_wrap_on_cube(shape, y, x, dy, dx):
         [(0, 100 + x, 1, 0), (100 + x, 49, 0, -1), (x - 50, 99, 0, -1)],
         [(50 + x, 50, 0, 1), (100 + x, 0, 0, 1), (199, x - 100, -1, 0)],
     ][row][col]
+  raise AssertionError
 
 
 # %%
@@ -4395,7 +4396,7 @@ def day22(s, *, part2=False, visualize=False, background=(252,) * 3):
             while not (0 <= y2 < shape[0] and 0 <= x2 < shape[1] and grid[y2, x2] != ' '):
               y2, x2 = (y2 + dy) % shape[0], (x2 + dx) % shape[1]
           elif not (0 <= y2 < shape[0] and 0 <= x2 < shape[1] and grid[y2, x2] != ' '):
-            y2, x2, dy2, dx2 = day22_wrap_on_cube(shape, y2, x2, dy, dx)  # pytype:disable=attribute-error
+            y2, x2, dy2, dx2 = day22_wrap_on_cube(shape, y2, x2, dy, dx)
           # assert 0 <= y2 < shape[0] and 0 <= x2 < shape[1] and grid[y2, x2] != ' '
           if grid[y2, x2] == '#':
             break
