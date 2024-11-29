@@ -3,5 +3,6 @@ __pycache__/
 .mypy_cache/
 /*/data/*/
 /Notes.txt
-# /2023/
+/generate_days.py
 /2024/
+/2025/
