@@ -211,7 +211,7 @@ def day1_visualize(s, *, repeat=2):
 
   points = np.array(points_list)
   points_min = points.min(axis=0)
-  shape = points.ptp(axis=0) + 3
+  shape = np.ptp(points, axis=0) + 3
   image = np.full((*shape, 3), 245, np.uint8)
   images = []
   visited = set()

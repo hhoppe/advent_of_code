@@ -987,7 +987,7 @@ def day10a(s, *, part2=False):  # Slow.
   positions, velocities = np.array(positions0), np.array(velocities0)
 
   for index in itertools.count():
-    shape = positions.ptp(axis=0) + 1
+    shape = np.ptp(positions, axis=0) + 1
     if shape[0] == 8 or (shape[0] == 10 and shape[1] > 30):
       break
     positions += velocities
@@ -1035,7 +1035,7 @@ def day10(s, *, part2=False, visualize=False):  # Quick initial jump; visualize.
   while True:
     if visualize:
       all_positions.extend([(index, y, x) for y, x in positions])
-    shape = positions.ptp(axis=0) + 1
+    shape = np.ptp(positions, axis=0) + 1
     if shape[0] == 8 or (shape[0] == 10 and shape[1] > 30):
       break
     positions += velocities
@@ -3314,7 +3314,7 @@ def day23b(s, *, part2=False):
     return (abs(xs - xs[i]).sum(axis=1) <= rs[i]).sum()
 
   x0 = xs.min(axis=0)
-  priority_queue = [(0, xs.ptp(axis=0).max(), abs(x0).sum(), *x0)]
+  priority_queue = [(0, np.ptp(xs, axis=0).max(), abs(x0).sum(), *x0)]
   while priority_queue:
     n_out_of_range, s, d, *x0 = heapq.heappop(priority_queue)
     x = np.array(x0)
