@@ -2120,7 +2120,7 @@ def day17_part2(s, *, visualize=False):
       for num_matches in range(2, 10):
         pattern = r'([LR\d][LR,\d]+[LR\d],)' + r'.*\1' * num_matches
         if match := re.search(pattern, s_routine[skip:]):
-          group1 = match.group(1)[:-1]
+          group1 = match[1][:-1]
           candidate = s_routine.replace(group1, chr(ord('A') + i))
           best = min(best, (len(candidate), group1, candidate))
       _, group1, candidate = best
@@ -3251,9 +3251,9 @@ class _Deck:
       if line == 'deal into new stack':
         deck = deck.deal_into_new_stack()
       elif match := re.fullmatch(r'cut ([\d-]+)', line):
-        deck = deck.cut_n_cards(int(match.group(1)))
+        deck = deck.cut_n_cards(int(match[1]))
       elif match := re.fullmatch(r'deal with increment (\d+)', line):
-        deck = deck.deal_with_increment(int(match.group(1)))
+        deck = deck.deal_with_increment(int(match[1]))
       else:
         assert line.startswith('Result:')
     return deck
@@ -3493,7 +3493,7 @@ def day25(s, *, num_steps=4000):
     if match := re.search(r'typing (\d+) on the keypad', message):
       if 0:
         print(sorted(items2))  # ['astrolabe', 'hologram', 'klein bottle', 'tambourine']
-      return match.group(1)
+      return match[1]
 
 
 puzzle.verify(1, day25)

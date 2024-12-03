@@ -222,7 +222,7 @@ puzzle.verify(2, day1a_part2)
 # %%
 def day1b_part1(s):  # Use a multiline regular expression iteratively.
   return sum(
-      int(match.group(1) + (match.group(2) or match.group(1)))
+      int(match[1] + (match[2] or match[1]))
       for match in re.finditer(r'(?m)^.*?(\d).*?(\d)?\D*$', s)
   )
 

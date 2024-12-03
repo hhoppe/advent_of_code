@@ -1636,7 +1636,7 @@ def day19_get_input(
   relabel = dict(zip(nodes, (chr(ord('A') + i) for i in itertools.count())))
 
   def translate(s: str) -> str:
-    return re.sub(r'[A-Z][a-z]*', lambda m: relabel[m.group(0)], s)
+    return re.sub(r'[A-Z][a-z]*', lambda m: relabel[m[0]], s)
 
   if translation:
     replacements = [(translate(src), translate(dst)) for src, dst in replacements]

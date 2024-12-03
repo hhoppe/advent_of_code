@@ -2119,7 +2119,7 @@ def day21(s, *, initial=None, part2=False, debug=False):
       i0, i1 = state.index(ch0), state.index(ch1)
       state[i0], state[i1] = ch1, ch0
     elif match := re.fullmatch(r'rotate (left|right) (\d+) steps?', line):
-      direction, delta = match.group(1), int(match.group(2))
+      direction, delta = match[1], int(match[2])
       if invert:
         direction = 'left' if direction == 'right' else 'right'
       assert 0 <= delta < num
