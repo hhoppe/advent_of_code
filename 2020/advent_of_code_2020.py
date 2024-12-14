@@ -1334,33 +1334,7 @@ puzzle.verify(1, day13_part1)
 
 
 # %%
-def _extended_gcd(a: int, b: int) -> tuple[int, int, int]:
-  """Finds the greatest common divisor using the extended Euclidean algorithm.
-
-  Returns:
-    (gcd(a, b), x, y) with the property that a * x + b * y = gcd(a, b).
-
-  >>> _extended_gcd(29, 71)
-  (1, -22, 9)
-  >>> (29 * -22) % 71
-  1
-  """
-  prev_x, x = 1, 0
-  prev_y, y = 0, 1
-  while b:
-    q = a // b
-    x, prev_x = prev_x - q * x, x
-    y, prev_y = prev_y - q * y, y
-    a, b = b, a % b
-  x, y = prev_x, prev_y
-  return a, x, y
-
-
-check_eq(_extended_gcd(29, 71), ((1, -22, 9)))
-
-
-# %%
-def day13a_part2(s):  # Using pairwise reduction with _extended_gcd.
+def day13a_part2(s):  # Using pairwise reduction with extended_gcd().
   s = s.splitlines()[-1]
   buses = [int(e) for e in s.replace('x', '1').split(',')]
   check_eq(math.lcm(*buses), math.prod(buses))  # verify all coprime
@@ -1369,7 +1343,7 @@ def day13a_part2(s):  # Using pairwise reduction with _extended_gcd.
   def merge_buses(bus1, bus2):
     (b1, r1), (b2, r2) = bus1, bus2
     # https://en.wikipedia.org/wiki/Chinese_remainder_theorem
-    _, x, y = _extended_gcd(b1, b2)
+    _, x, y = hh.extended_gcd(b1, b2)
     return b1 * b2, (r1 * y * b2 + r2 * x * b1) % (b1 * b2)
 
   _, r = functools.reduce(merge_buses, bus_remainders)
@@ -1392,27 +1366,29 @@ def day13_part2(s):  # Using built-in modular inverses and general Chinese Remai
   check_eq(math.lcm(*buses), math.prod(buses))  # verify all coprime
   remainders, moduli = zip(*[(-i % bus, bus) for i, bus in enumerate(buses)])  # Or "if bus > 1".
 
-  def solve_mod_congruences(values: Iterable[int], moduli: Iterable[int]) -> int:
-    """Returns `x` satisfying `values[i] == x % moduli[i]`.
+  def solve_modulo_congruences(remainders: Iterable[int], moduli: Iterable[int]) -> int:
+    """Returns `x` satisfying `remainders[i] == x % moduli[i]` for coprime moduli.
 
     The Chinese Remainder Theorem shows the system has a unique solution if `moduli` are coprime.
     See https://en.wikipedia.org/wiki/Modular_multiplicative_inverse#Applications .
 
     Args:
-      values: Desired remainders with respect to a corresponding sequence of moduli.
+      remainders: Desired remainders with respect to a corresponding sequence of moduli.
       moduli: Positive integers, which must be coprime.
 
-    >>> solve_mod_congruences([3, 6, 6], [5, 7, 11])
+    >>> solve_modulo_congruences([3, 6, 6], [5, 7, 11])
     83
     """
-    values, moduli = tuple(values), tuple(moduli)
-    assert len(values) == len(moduli) > 0
+    remainders, moduli = tuple(remainders), tuple(moduli)
+    assert len(remainders) == len(moduli) > 0
     mod_prod = math.prod(moduli)
     other_mods = [mod_prod // mod for mod in moduli]
     inverses = [pow(other_mod, -1, mod=mod) for other_mod, mod in zip(other_mods, moduli)]
-    return sum(i * o * v for i, o, v in zip(inverses, other_mods, values)) % mod_prod
+    return sum(i * o * r for i, o, r in zip(inverses, other_mods, remainders)) % mod_prod
 
-  return solve_mod_congruences(remainders, moduli)
+  result = solve_modulo_congruences(remainders, moduli)
+  assert result == hh.solve_modulo_congruences(remainders, moduli)
+  return result
 
 
 check_eq(day13_part2(s1.splitlines()[1]), 1068781)

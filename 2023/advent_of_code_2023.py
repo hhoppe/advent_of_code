@@ -84,7 +84,6 @@
 # %%
 import ast
 import collections
-from collections.abc import Iterable
 import dataclasses
 import functools
 import heapq
@@ -1048,46 +1047,6 @@ XXX = (XXX, XXX)
 
 
 # %%
-def _extended_gcd(a: int, b: int) -> tuple[int, int, int]:
-  """Finds the greatest common divisor using the extended Euclidean algorithm."""
-  # Returns: (gcd(a, b), x, y) with the property that a * x + b * y = gcd(a, b).
-  prev_x, x = 1, 0
-  prev_y, y = 0, 1
-  while b:
-    q = a // b
-    x, prev_x = prev_x - q * x, x
-    y, prev_y = prev_y - q * y, y
-    a, b = b, a % b
-  return a, prev_x, prev_y
-
-
-assert _extended_gcd(29, 71) == (1, -22, 9) and (29 * -22) % 71 == 1
-
-
-# %%
-def _solve_modulo_congruences(moduli: Iterable[int], remainders: Iterable[int]) -> int:
-  """Returns `x` satisfying `x % moduli[i] == remainders[i]`; handles non-coprime moduli."""
-
-  def merge(mr1, mr2):
-    (m, a), (n, b) = mr1, mr2
-    gcd, u, v = _extended_gcd(m, n)
-    if 0:  # Simpler algorithm that assumes the moduli are coprime.
-      return m * n, (a * v * n + b * u * m) % (m * n)
-    # General algorithm; see https://math.stackexchange.com/a/1644698.
-    lamb = (a - b) // gcd
-    sigma = a - m * u * lamb
-    assert sigma == b + n * v * lamb
-    lcm = math.lcm(m, n)
-    return lcm, sigma % lcm
-
-  return functools.reduce(merge, zip(moduli, remainders))[1]
-
-
-assert _solve_modulo_congruences([5, 7, 11], [3, 6, 6]) == 83
-assert _solve_modulo_congruences([2, 3, 4, 5, 6], [1, 1, 1, 1, 1]) == 1
-
-
-# %%
 def day8a(s, *, part2=False):  # General algorithm that finds periods and phases.
   lines = s.splitlines()
   moves = lines[0]
@@ -1115,7 +1074,7 @@ def day8a(s, *, part2=False):  # General algorithm that finds periods and phases
     nodes = {advance(node, move) for node in nodes}
 
   # Identify the periods and phases of the cycles.
-  moduli, remainders = [], []
+  remainders, moduli = [], []
   for node in nodes:
     last_seen: dict[str, int] = {}
     for index, move in enumerate(itertools.islice(itertools.cycle(moves), num, None)):
@@ -1135,10 +1094,10 @@ def day8a(s, *, part2=False):  # General algorithm that finds periods and phases
     hh.display_html(f'{len(moves)=}<br/>{moduli=}<br/>{remainders=}')
     hh.display_html(f'moduli factors: {[hh.prime_factors(v) for v in moduli]}')
 
-  index = num + _solve_modulo_congruences(moduli, remainders)
+  index = num + hh.solve_modulo_congruences(remainders, moduli)
   if 1:  # A particular property of this particular input:
     # The remainders happen to align such that the solution lies exactly at math.lcm(*moduli)!
-    assert all(remainder + num == modulo for modulo, remainder in zip(moduli, remainders))
+    assert all(remainder + num == modulo for remainder, modulo in zip(remainders, moduli))
     assert index == math.lcm(*moduli)
   return index
 
@@ -3761,7 +3720,7 @@ def day20b(s, *, part2=False, num_buttons=1000, debug=False):  # Faster.
               assert all(indices[0] * 2 == indices[1] for indices in all_indices)
             return math.lcm(*periods)
             # phases = [indices[-1] for indices in all_indices]
-            # return 1 + _solve_modulo_congruences(periods, phases)
+            # return 1 + hh.solve_modulo_congruences(phases, periods)
         match all_ch[name]:
           case '%':
             if value == 1:
