@@ -801,12 +801,12 @@ check_eq(day6a_part2(s1), 71503)
 def day6b(s, *, part2=False):  # Brute-force, compactified.
   if part2:
     s = s.replace(' ', '')
-  ts, ds = (list(map(int, line.split(':')[1].split())) for line in s.splitlines())
+  times, distances = (list(map(int, line.split(':')[1].split())) for line in s.splitlines())
 
   def num_wins(t, d):
     return sum((t - x) * x > d for x in range(t))
 
-  return math.prod(num_wins(t, d) for t, d in zip(ts, ds))
+  return math.prod(num_wins(t, d) for t, d in zip(times, distances))
 
 
 check_eq(day6b(s1), 288)
@@ -819,8 +819,8 @@ check_eq(day6b_part2(s1), 71503)
 
 # %%
 def day6_part1_visualize(s, fps=20, delay_start=20, delay_end=40):
-  ts, ds = (list(map(int, line.split(':')[1].split())) for line in s.splitlines())
-  t1, d1 = ts[0], ds[0]
+  times, distances = (list(map(int, line.split(':')[1].split())) for line in s.splitlines())
+  t1, d1 = times[0], distances[0]
 
   fig, ax = plt.subplots(figsize=(6, 4), dpi=80)
   ax.set(title=f'Successful start times for Time={t1} Distance={d1}')
@@ -878,7 +878,7 @@ if SHOW_BIG_MEDIA:
 def day6(s, *, part2=False):  # Solving quadratic equation.
   if part2:
     s = s.replace(' ', '')
-  ts, ds = (map(int, line.split(':')[1].split()) for line in s.splitlines())
+  times, distances = (map(int, line.split(':')[1].split()) for line in s.splitlines())
 
   def num_wins(t, d):
     # Quadratic equation -t**2 * x**2 + t * x - d = 0 has roots x = u \pm v with:
@@ -886,7 +886,7 @@ def day6(s, *, part2=False):  # Solving quadratic equation.
     # return math.ceil(u + v - 1) - math.floor(u - v + 1) + 1
     return math.ceil(u + v) - math.floor(u - v) - 1
 
-  return math.prod(num_wins(t, d) for t, d in zip(ts, ds))
+  return math.prod(num_wins(t, d) for t, d in zip(times, distances))
 
 
 check_eq(day6(s1), 288)
@@ -991,9 +991,8 @@ puzzle.verify(2, day7_part2)
 # The general implementation **day8a** below determines these periods and phases.
 #
 # We observe that there is only one phase for each cycle.
-# Thus, we obtain the solution by applying the Chinese remainder theorem.
-# However, that theorem requires that the periods (moduli) be co-prime, which is not the case here.
-# We implement a generalized version that supports non-co-prime moduli.
+# Thus, we obtain the solution by applying the generalized Chinese remainder theorem (which allows
+# periods (moduli) that are not co-prime.
 #
 # We further observe that the phase equals zero for all cycles.
 # Because all phases are zero, a simpler solution **day8** simply computes the
@@ -1594,7 +1593,7 @@ puzzle.verify(1, day11a)
 
 
 # %%
-def day11b(s, *, part2=False, growth=1_000_000):  # Using sets of empty rows/cols.
+def day11b(s, *, part2=False, growth=10**6):  # Using sets of empty rows/cols.
   grid = np.array([list(line) for line in s.splitlines()])
   galaxies = np.argwhere(grid == '#')
   growth = growth - 1 if part2 else 1
@@ -1671,7 +1670,7 @@ puzzle.verify(2, day11d_part2)
 # %%
 def day11e(s, *, part2=False):  # Adjust galaxy positions and sum all distances.
   # Adapted from https://github.com/lkesteloot/advent-of-code/blob/master/2023/11.py
-  expand = 1_000_000 if part2 else 2
+  expand = 10**6 if part2 else 2
   lines = s.splitlines()
   width, height = len(lines[0]), len(lines)
   galaxies = [(y, x) for y in range(height) for x in range(width) if lines[y][x] == '#']
@@ -1696,7 +1695,7 @@ puzzle.verify(2, day11e_part2)
 
 # %%
 def day11(s, *, part2=False):  # Fastest, using itertools.groupby() on each coordinate.
-  expand = 1_000_000 if part2 else 2
+  expand = 10**6 if part2 else 2
   grid = np.array([list(line) for line in s.splitlines()])
   coords = np.argwhere(grid == '#').T  # (The y values in coords[0] are in sorted order.)
 
@@ -2223,7 +2222,7 @@ O.#..O.#.#
 
 
 # %%
-def day14a(s, *, part2=False, num=1_000_000_000):  # Compact but slow.
+def day14a(s, *, part2=False, num=10**9):  # Compact but slow.
   grid = np.rot90(np.array([list(line) for line in s.splitlines()]))  # North is left.
 
   def slide_left():
@@ -2271,7 +2270,7 @@ puzzle.verify(2, day14a_part2)
 
 
 # %%
-def day14_part2_visualize(s, num=1_000_000_000):
+def day14_part2_visualize(s, num=10**9):
   grid = np.rot90(np.array([list(line) for line in s.splitlines()]))  # North is left.
   images = []
 
@@ -2360,7 +2359,7 @@ def day14b_cycle(rolls, jumps, endpoints, counts, grid_dim):
   # rolls[:] = np.array(sorted([(y, x) for y, x in rolls]))  # Slow.
 
 
-def day14b_part2(s, *, num=1_000_000_000, dtype=np.int16):
+def day14b_part2(s, *, num=10**9, dtype=np.int16):
   grid = np.array([list(line) for line in s.splitlines()])
   grid = np.rot90(grid)  # North is now left.
   rolls = np.argwhere(grid == 'O').astype(dtype)
@@ -2426,7 +2425,7 @@ def day14_slide_left(grid):
         open = x + 1
 
 
-def day14(s, *, part2=False, num=1_000_000_000):
+def day14(s, *, part2=False, num=10**9):
   grid = np.array([[ord(ch) for ch in line] for line in s.splitlines()], np.uint8)
   grid = np.rot90(grid)  # North is now left.
   grid = np.ascontiguousarray(grid)  # Layout in C-order, for efficient tobytes().
@@ -4912,7 +4911,7 @@ s1 = """\
 
 
 # %%
-def day24a_part1(s, low=200_000_000_000_000, high=400_000_000_000_000):  # np.linalg.solve().
+def day24a_part1(s, low=2 * 10**14, high=4 * 10**14):  # np.linalg.solve().
   array = np.array([line.replace(' @', ',').split(',') for line in s.splitlines()], float)
   total = 0
   for row1, row2 in itertools.combinations(array, 2):
@@ -4930,7 +4929,7 @@ puzzle.verify(1, day24a_part1)
 
 
 # %%
-def day24b_part1(s, low=200_000_000_000_000, high=400_000_000_000_000):  # Manual solution.
+def day24b_part1(s, low=2 * 10**14, high=4 * 10**14):  # Manual solution.
   array = np.array([line.replace(' @', ',').split(',') for line in s.splitlines()], float)
   total = 0
   for row1, row2 in itertools.combinations(array, 2):
@@ -4970,7 +4969,7 @@ def day24c_compute(array, low, high):
   return total
 
 
-def day24c_part1(s, low=200_000_000_000_000, high=400_000_000_000_000):
+def day24c_part1(s, low=2 * 10**14, high=4 * 10**14):
   array = np.array([line.replace(' @', ',').split(',') for line in s.splitlines()], float)
   return day24c_compute(array, low, high)
 
@@ -4999,7 +4998,7 @@ def day24_compute(array, low, high):
   return total
 
 
-def day24_part1(s, low=200_000_000_000_000, high=400_000_000_000_000):
+def day24_part1(s, low=2 * 10**14, high=4 * 10**14):
   array = np.array([line.replace(' @', ',').split(',') for line in s.splitlines()], float)
   return day24_compute(array, low, high)
 
@@ -5248,7 +5247,7 @@ puzzle.verify(2, day24f_part2)
 
 # %%
 def day24g_part2(s):  # Most concise.
-  rows = [list(map(int, re.findall(r'[-\d]+', line))) for line in s.splitlines()]
+  rows = [list(map(int, re.findall(r'-?\d+', line))) for line in s.splitlines()]
   p, v, ts = (sympy.symbols(f'{ch}(:3)') for ch in 'pvt')
   equations = [
       row[j] - p[j] + t * (row[3 + j] - v[j]) for row, t in zip(rows, ts) for j in range(3)
@@ -5328,7 +5327,7 @@ if SHOW_BIG_MEDIA:
 def day24z_part2(s, use_real=True, use=3):  # Try Z3 solver.
   import z3  # !pip install z3-solver
 
-  rows = [list(map(int, re.findall(r'[-\d]+', line))) for line in s.splitlines()][:use]
+  rows = [list(map(int, re.findall(r'-?\d+', line))) for line in s.splitlines()][:use]
 
   solver = z3.Solver()
   number = z3.RealVector if use_real else z3.IntVector
@@ -5350,7 +5349,7 @@ if 0:
 # %%
 def day24_part2(s):  # Fastest: solve system of 6 linear equations based on cross-products.
   # From https://github.com/maneatingape/advent-of-code-rust/blob/main/src/year2023/day24.rs
-  rows = [list(map(int, re.findall(r'[-\d]+', line))) for line in s.splitlines()]
+  rows = [list(map(int, re.findall(r'-?\d+', line))) for line in s.splitlines()]
   a, b, c, d, e, f = rows[0]
   g, h, i, j, k, l = rows[1]
   m, n, o, p, q, r = rows[2]

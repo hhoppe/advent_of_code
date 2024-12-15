@@ -1360,7 +1360,7 @@ puzzle.verify(2, day13a_part2)
 
 
 # %%
-def day13_part2(s):  # Using built-in modular inverses and general Chinese Remainder method.
+def day13b_part2(s):  # Using built-in modular inverse and Chinese Remainder method.
   s = s.splitlines()[-1]
   buses = [int(e) for e in s.replace('x', '1').split(',')]
   check_eq(math.lcm(*buses), math.prod(buses))  # verify all coprime
@@ -1386,9 +1386,25 @@ def day13_part2(s):  # Using built-in modular inverses and general Chinese Remai
     inverses = [pow(other_mod, -1, mod=mod) for other_mod, mod in zip(other_mods, moduli)]
     return sum(i * o * r for i, o, r in zip(inverses, other_mods, remainders)) % mod_prod
 
-  result = solve_modulo_congruences(remainders, moduli)
-  assert result == hh.solve_modulo_congruences(remainders, moduli)
-  return result
+  return solve_modulo_congruences(remainders, moduli)
+
+
+check_eq(day13b_part2(s1.splitlines()[1]), 1068781)
+check_eq(day13b_part2('17,x,13,19'), 3417)
+check_eq(day13b_part2('67,7,59,61'), 754018)
+check_eq(day13b_part2('67,x,7,59,61'), 779210)
+check_eq(day13b_part2('67,7,x,59,61'), 1261476)
+check_eq(day13b_part2('1789,37,47,1889'), 1202161486)
+puzzle.verify(2, day13b_part2)
+
+
+# %%
+def day13_part2(s):  # Using generalized Chinese Remainder method.
+  s = s.splitlines()[-1]
+  buses = [int(e) for e in s.replace('x', '1').split(',')]
+  check_eq(math.lcm(*buses), math.prod(buses))  # verify all coprime
+  remainders, moduli = zip(*[(-i % bus, bus) for i, bus in enumerate(buses)])  # Or "if bus > 1".
+  return hh.solve_modulo_congruences(remainders, moduli)
 
 
 check_eq(day13_part2(s1.splitlines()[1]), 1068781)
@@ -2670,7 +2686,7 @@ check_eq(day23(s1, num_moves=10), '92658374')
 check_eq(day23(s1), '67384529')
 puzzle.verify(1, day23)
 
-day23_part2 = functools.partial(day23, num_moves=10_000_000, max_num=1_000_000)
+day23_part2 = functools.partial(day23, num_moves=10**7, max_num=10**6)
 check_eq(day23_part2(s1), 149245887792)  # Numba compilation.
 puzzle.verify(2, day23_part2)  # ~0.2 s with numba; ~58 s without numba.
 

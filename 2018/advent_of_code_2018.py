@@ -1496,7 +1496,7 @@ check_eq(day14a_part2('59414'), 2018)
 @numba.njit
 def day14b_part2_func(pattern):
   len_pattern = len(pattern)
-  max_recipes = 100_000_000
+  max_recipes = 10**8
   recipes = np.empty(max_recipes, np.uint8)
   num = 2
   recipes[0] = 3
@@ -1550,7 +1550,7 @@ puzzle.verify(2, day14b_part2)
 # Faster by generating batches.
 @numba.njit
 def day14c_part2_func(pattern: np.ndarray) -> int:
-  max_recipes = 100_000_000
+  max_recipes = 10**8
   recipes = np.empty(max_recipes, np.uint8)
   num = 2
   recipes[0] = 3
@@ -1628,7 +1628,7 @@ def day14d_part2_func(pattern: np.ndarray) -> int:
           j += 1
     return offsets
 
-  max_recipes = 100_000_000
+  max_recipes = 10**8
   recipes = np.empty(max_recipes, np.uint8)
   num = 2
   recipes[0] = 3
@@ -1694,7 +1694,7 @@ puzzle.verify(2, day14d_part2)  # Slower than naive algorithm.
 # Fastest, using Boyer-Moore-Horspool subsequence search.
 @numba.njit
 def day14_part2_func(pattern: np.ndarray) -> int:
-  max_recipes = 100_000_000
+  max_recipes = 10**8
   recipes = np.empty(max_recipes, np.uint8)
   num = 2
   recipes[:num] = 3, 7
@@ -2385,7 +2385,7 @@ def day18(s, *, num_minutes=10, part2=False, visualize=False):
   # Detect a repeating cycle to speed up the evolution.
   images = []
   configs: dict[Any, int] = {}  # hashed_grid -> remaining minute it first appeared.
-  remaining_minutes = 1_000_000_000
+  remaining_minutes = 10**9
   period = -1
   for minute in itertools.count():
     if visualize:
@@ -2540,7 +2540,7 @@ def day19(s, *, part2=False, verbose=False):
     else:
       machine.run_instruction()
     history.append(tuple(machine.registers))
-    if len(history) > 10_000_000:
+    if len(history) > 10**7:
       break
 
   if verbose:
@@ -2826,7 +2826,7 @@ if 0:
 
 # %%
 def day21_test():
-  def simulate(max_count=10_000_000, verbose=False):
+  def simulate(max_count=10**7, verbose=False):
     d = 65536
     e = 16098955
     for _ in range(max_count):
@@ -2843,7 +2843,7 @@ def day21_test():
         continue
       d //= 256
 
-  def count_for(a, max_count=10_000_000, verbose=False):
+  def count_for(a, max_count=10**7, verbose=False):
     for count, e in enumerate(simulate(verbose=verbose)):
       if count >= max_count:
         return None
@@ -3223,7 +3223,7 @@ def day23a(s, *, part2=False):
   good_position = tuple(max(positions, key=num_in_range))
 
   # len(polytopes2) = 529, max_count = 528; 0.4 s.
-  distance_threshold, prune_allowance = 10_000_000, 8
+  distance_threshold, prune_allowance = 10**7, 8
 
   while True:
     good_ds = tuple(np.dot(hvalue, good_position) for hvalue in hvalues)

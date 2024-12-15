@@ -1994,7 +1994,7 @@ if 0:
 
 
 # %%
-def day20b(s, *, part2=False, max_house=1_000_000):  # Faster inner loop using numpy.
+def day20b(s, *, part2=False, max_house=10**6):  # Faster inner loop using numpy.
   min_value = int(s.strip())
   array = np.full(max_house, 0)
 
@@ -2025,7 +2025,7 @@ check_eq(786240, math.prod([2, 2, 2, 2, 2, 2, 3, 3, 3, 5, 7, 13]))
 # Assume known factors (1.5x speedup) and faster outer loop using numba (30x speedup).
 @numba.njit
 def day20c_compute(min_value: int, factor: int, part2: bool) -> int:
-  max_house = 1_000_000
+  max_house = 10**6
   array = np.full(max_house // factor, 0)
   if factor > 1:
     for i in range(1, max_house):

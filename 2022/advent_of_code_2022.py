@@ -1216,7 +1216,7 @@ def day9a(s, *, part2=False):  # Most compact solution (but numpy abs() is slow)
     delta_yx = {'D': (1, 0), 'U': (-1, 0), 'R': (0, 1), 'L': (0, -1)}[line[0]]
     for _ in range(int(line[2:])):
       nodes[0] += delta_yx
-      for front, rear in zip(nodes[:-1], nodes[1:]):
+      for front, rear in itertools.pairwise(nodes):
         if abs(front - rear).max() <= 1:
           break
         rear += np.sign(front - rear)
@@ -1253,7 +1253,7 @@ def day9b(s, *, part2=False, visualize=False, pad=1, pad0=12, background=(245,) 
     delta_yx = {'D': (1, 0), 'U': (-1, 0), 'R': (0, 1), 'L': (0, -1)}[line[0]]
     for _ in range(int(line[2:])):
       nodes[0] += delta_yx
-      for front, rear in zip(nodes[:-1], nodes[1:]):
+      for front, rear in itertools.pairwise(nodes):
         if abs(front - rear).max() <= 1:
           break
         rear += np.sign(front - rear)

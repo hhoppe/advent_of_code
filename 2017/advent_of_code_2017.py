@@ -1233,7 +1233,7 @@ def day16(s, *, num=16, num_permutations=1):
 check_eq(day16('s1,x3/4,pe/b', num=5), 'baedc')
 puzzle.verify(1, day16)  # e.g. 'olgejankfhbmpidc'
 
-day16_part2 = functools.partial(day16, num_permutations=1_000_000_000)
+day16_part2 = functools.partial(day16, num_permutations=10**9)
 check_eq(day16_part2('s1,x3/4,pe/b', num=5, num_permutations=2), 'ceadb')
 puzzle.verify(2, day16_part2)
 
@@ -1563,7 +1563,7 @@ def day20(s, *, part2=False):
   position, velocity, acceleration = (parse(ch) for ch in 'pva')
 
   if not part2:
-    time = 1_000_000
+    time = 10**6
     position = position + velocity * time + acceleration * (time * (time + 1) // 2)
     return np.abs(position).sum(axis=1).argmin()
 
@@ -1711,7 +1711,7 @@ check_eq(day22a(s1, num_iterations=70), 41)
 check_eq(day22a(s1), 5587)
 puzzle.verify(1, day22a)
 
-day22a_part2 = functools.partial(day22a, num_iterations=10_000_000, part2=True)
+day22a_part2 = functools.partial(day22a, num_iterations=10**7, part2=True)
 check_eq(day22a_part2(s1, num_iterations=100), 26)
 # check_eq(day22a_part2(s1), 2_511_944)
 # puzzle.verify(2, day22a_part2)  # ~2.2 s.
@@ -1754,7 +1754,7 @@ check_eq(day22(s1, num_iterations=70), 41)
 check_eq(day22(s1), 5587)
 puzzle.verify(1, day22)
 
-day22_part2 = functools.partial(day22, num_iterations=10_000_000, part2=True)
+day22_part2 = functools.partial(day22, num_iterations=10**7, part2=True)
 check_eq(day22_part2(s1, num_iterations=100), 26)
 check_eq(day22_part2(s1), 2_511_944)
 puzzle.verify(2, day22_part2)

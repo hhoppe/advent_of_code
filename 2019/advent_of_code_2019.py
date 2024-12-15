@@ -157,7 +157,7 @@ class _PyMachine(_Machine):
     opcode = code % 100
 
     def possibly_grow_memory_to_access(i):
-      assert 0 <= i < 1_000_000, i
+      assert 0 <= i < 10**6, i
       if i >= len(self.mem):
         self.mem += [0] * i  # grow quickly
 
@@ -1617,10 +1617,10 @@ def day14_part2(s, *, debug=False):
   def ore_from_fuel(fuel):
     return day14(s, fuel=fuel)
 
-  ore_bound = 1_000_000_000_000
-  fuel = hh.discrete_binary_search(ore_from_fuel, 0, 10_000_000, ore_bound)
+  ore_bound = 10**12
+  fuel = hh.discrete_binary_search(ore_from_fuel, 0, 10**7, ore_bound)
   if debug:
-    assert ore_bound - 1_000_000 <= ore_from_fuel(fuel) < ore_bound
+    assert ore_bound - 10**6 <= ore_from_fuel(fuel) < ore_bound
   return fuel
 
 

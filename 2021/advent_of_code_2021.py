@@ -3973,6 +3973,7 @@ class _Kdtree(Generic[_T]):
 
   def add(self, bb0: tuple[float, ...], bb1: tuple[float, ...], data: _T) -> None:
     """Stores the box-bounded element."""
+    assert len(bb0) == len(bb1) == self.ndim
     assert all(0.0 <= b0 <= b1 <= 1.0 for b0, b1 in zip(bb0, bb1))
     entry_index = len(self.entries)
     self.entries.append(self.Entry[_T](bb0, bb1, data))
@@ -4010,6 +4011,7 @@ class _Kdtree(Generic[_T]):
 
   def remove(self, bb0: tuple[float, ...], bb1: tuple[float, ...], data: _T) -> None:
     """Removes the previously added element."""
+    assert len(bb0) == len(bb1) == self.ndim
     assert all(0.0 <= b0 <= b1 <= 1.0 for b0, b1 in zip(bb0, bb1))
     # entry = self.Entry[_T](bb0, bb1, data)
     entry_index = None
@@ -4049,6 +4051,7 @@ class _Kdtree(Generic[_T]):
       self, bb0: tuple[float, ...], bb1: tuple[float, ...]
   ) -> Iterator[tuple[tuple[float, ...], tuple[float, ...], _T]]:
     """Yields elements that overlap the bounding-box search range."""
+    assert len(bb0) == len(bb1) == self.ndim
     assert all(0.0 <= b0 <= b1 <= 1.0 for b0, b1 in zip(bb0, bb1))
 
     def recurse(node_index: int) -> Iterator[tuple[tuple[float, ...], tuple[float, ...], _T]]:

@@ -1649,25 +1649,49 @@ puzzle.verify(2, day15a_part2)
 
 
 # %%
-def day15(s, *, part2=False):  # Using modular inverses and general Chinese Remainder method.
+def day15b(s, *, part2=False):  # Using modular inverses and general Chinese Remainder method.
   # See `day13_part2()` in Advent Of Code 2020 Day 13:
   #  https://github.com/hhoppe/advent_of_code/blob/main/2020/advent_of_code_2020.py
-  values, moduli = [], []
+  remainders, moduli = [], []
   for line in s.splitlines():
     pattern = r'Disc #(\d+) has (\d+) positions; at time=0, it is at position (\d+)\.'
     disc, period, phase = map(int, hh.re_groups(pattern, line))
-    values.append(-(phase + disc) % period)  # Negative because "time % modulus = value".
+    remainders.append(-(phase + disc) % period)  # Negative because "time % modulus = value".
     moduli.append(period)
 
   if part2:
     disc, period, phase = disc + 1, 11, 0
-    values.append(-(phase + disc) % period)
+    remainders.append(-(phase + disc) % period)
     moduli.append(period)
 
   mod_prod = math.prod(moduli)
   other_mods = [mod_prod // mod for mod in moduli]
   inverses = [pow(other_mod, -1, mod=mod) for other_mod, mod in zip(other_mods, moduli)]
-  return sum(i * o * v for i, o, v in zip(inverses, other_mods, values)) % mod_prod
+  return sum(i * o * v for i, o, v in zip(inverses, other_mods, remainders)) % mod_prod
+
+
+check_eq(day15b(s1), 5)
+puzzle.verify(1, day15b)
+
+day15b_part2 = functools.partial(day15b, part2=True)
+puzzle.verify(2, day15b_part2)
+
+
+# %%
+def day15(s, *, part2=False):  # Using Chinese Remainder method.
+  remainders, moduli = [], []
+  for line in s.splitlines():
+    pattern = r'Disc #(\d+) has (\d+) positions; at time=0, it is at position (\d+)\.'
+    disc, period, phase = map(int, hh.re_groups(pattern, line))
+    remainders.append(-(phase + disc) % period)  # Negative because "time % modulus = value".
+    moduli.append(period)
+
+  if part2:
+    disc, period, phase = disc + 1, 11, 0
+    remainders.append(-(phase + disc) % period)
+    moduli.append(period)
+
+  return hh.solve_modulo_congruences(remainders, moduli)
 
 
 check_eq(day15(s1), 5)
