@@ -1798,23 +1798,16 @@ def day19e_part2(s, visualize=False):
         else:
           break
 
-  @functools.cache
-  def random_color(ch: str) -> tuple[int, int, int]:
-    random.seed(ch)
-    while True:
-      color = tuple(random.randrange(256) for _ in range(3))
-      if 50 <= sum(color) <= 550:
-        return color  # type: ignore
-
   replacements0, string0, _ = day19_get_input(s)
   seed, sequence = next(produce_sequence())
 
   if len(replacements0) > 10:
     if visualize:
       image = np.full((len(sequence), len(string0), 3), 245, np.uint8)
+      colors = hh.generate_random_colors(256)
       for row, string in enumerate(sequence):
         for col, ch in enumerate(string):
-          image[row, col] = random_color(ch)
+          image[row, col] = colors[ord(ch)]
       image = image.repeat(2, axis=0).repeat(2, axis=1)
       media.show_image(image, title='day19')
     else:
