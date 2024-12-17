@@ -1804,7 +1804,7 @@ def day19e_part2(s, visualize=False):
   if len(replacements0) > 10:
     if visualize:
       image = np.full((len(sequence), len(string0), 3), 245, np.uint8)
-      colors = hh.generate_random_colors(256)
+      colors = hh.generate_random_colors(128)
       for row, string in enumerate(sequence):
         for col, ch in enumerate(string):
           image[row, col] = colors[ord(ch)]
