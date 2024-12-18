@@ -3384,8 +3384,7 @@ def day24_part2(s, *, num_steps=200, visualize=False):
 
   def make_image(grid):
     grid = np.pad(grid.astype(bool), ((0, 0), (1, 1), (1, 1)))
-    shape = -1, math.isqrt(len(grid))
-    image = hh.assemble_arrays(grid, shape, round_to_even=True)
+    image = hh.assemble_arrays(grid, (-1, -1), round_to_even=True)
     return image.repeat(3, axis=0).repeat(3, axis=1)
 
   images = [make_image(grid)]
