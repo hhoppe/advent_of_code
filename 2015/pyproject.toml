@@ -1,6 +1,6 @@
 [tool.autopep8]
 indent_size = 2
-ignore = "E121,E125,E126,E129,E226,E302,E305,E501,W504,E741,E20,W503"
+ignore = "E121,E125,E126,E129,E226,E302,E305,E501,W504,E741,E20,W503,E731"
 exclude = "*.ipynb_checkpoints"
 aggressive = 3
 recursive = true
@@ -22,7 +22,7 @@ disable = [
     "fixme", "redefined-builtin", "cell-var-from-loop",
     "using-constant-test", "simplifiable-condition", "import-outside-toplevel", "line-too-long",
     "too-many-lines", "too-few-public-methods", "too-many-arguments", "too-many-locals",
-    "use-dict-literal",
+    "use-dict-literal", "unnecessary-lambda-assignment",
     # For advent:
     "missing-module-docstring", "missing-function-docstring", "redefined-outer-name", "missing-class-docstring",
     "too-many-branches", "too-many-statements", "multiple-statements", "condition-evals-to-constant",

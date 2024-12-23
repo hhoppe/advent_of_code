@@ -3383,8 +3383,10 @@ def day24_part2(s, *, num_steps=200, visualize=False):
   counts = np.empty_like(grid)
 
   def make_image(grid):
-    grid = np.pad(grid.astype(bool), ((0, 0), (1, 1), (1, 1)))
-    image = hh.assemble_arrays(grid, (-1, -1), round_to_even=True)
+    size = math.ceil(math.sqrt(len(grid)))
+    div0, mod0 = divmod(size**2 - len(grid), 2)  # To position start at center.
+    grid = np.pad(grid.astype(bool), ((div0, div0 + mod0), (1, 1), (1, 1)))
+    image = hh.assemble_arrays(grid, (size, size), round_to_even=True)
     return image.repeat(3, axis=0).repeat(3, axis=1)
 
   images = [make_image(grid)]

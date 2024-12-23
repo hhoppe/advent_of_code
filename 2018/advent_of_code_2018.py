@@ -613,10 +613,10 @@ def day6(s, *, part2=False, max_sum=10_000, visualize=False):
     counts = collections.Counter(closest.flat)
     count, i = max((c, i) for i, c in counts.items() if i not in unbounded | {-1})
     if visualize:
-      cmap = np.random.default_rng(0).choice(range(30, 150), (len(yxs) + 1, 3)).astype(np.uint8)
+      cmap = hh.generate_random_colors(len(yxs) + 1, min_intensity=50, max_intensity=80)
       image = cmap[closest + 1]
       unb = (closest[..., None] == np.array(list(unbounded))).sum(axis=-1) > 0
-      image[unb] += 105
+      image[unb] = (image[unb].astype(int) + 110).clip(0, 255)
       image[closest == -1] = 255, 255, 255
       image2 = image.copy()
       image2[closest == i] = 255, 0, 0

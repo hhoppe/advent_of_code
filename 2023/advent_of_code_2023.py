@@ -4386,7 +4386,8 @@ def day22_visualize_3d(s):
     heights[footprint] = height + brick[5] - brick[2] - 1
     cubes.append((*brick[:2], height, *brick[3:5], height + brick[5] - brick[2]))
 
-  facecolors = np.random.default_rng(0).random((len(cubes), 3)) * 0.7 + 0.2
+  colors = hh.generate_random_colors(50)
+  facecolors = np.random.default_rng(0).choice(colors, len(cubes))
   surface = hh.mesh3d_from_cubes(cubes, facecolors)
 
   def fig_layout(a=0.1):  # Downscale dimensions to avoid clipping eye coordinates to max ~100.

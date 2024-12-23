@@ -1113,10 +1113,11 @@ def day9(s, *, part2=False, visualize=False):  # Faster, using flat indexing.
     _, inverse = np.unique(indices, return_inverse=True)
     basins = {}
     for highlight in range(2):
-      cmap = np.random.default_rng(0).choice(range(30, 150), (len(count), 3)).astype(np.uint8)
+      cmap = hh.generate_random_colors(len(count), min_intensity=60, max_intensity=100)
       cmap[count == 1] = 0
       if highlight:
-        cmap[count >= heapq.nlargest(3, count)[-1]] += 100
+        largest = count >= heapq.nlargest(3, count)[-1]
+        cmap[largest] = (cmap[largest].astype(int) + 120).clip(0, 255)
       basin = cmap[inverse.reshape(grid.shape)]
       basin[low_point] = 255
       basins[highlight] = basin.repeat(3, axis=0).repeat(3, axis=1)
