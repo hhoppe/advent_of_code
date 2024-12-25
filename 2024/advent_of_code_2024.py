@@ -68,8 +68,8 @@
 # !dpkg -l | grep -q libgraphviz-dev || (apt-get -qq update && apt-get -qq -y install libgraphviz-dev) >/dev/null  # https://stackoverflow.com/a/66380001
 
 # %%
-# !pip install -q advent-of-code-hhoppe hhoppe-tools kaleido matplotlib mediapy \
-#   more-itertools networkx numba numpy plotly pygraphviz scipy scikit-image sympy
+# !pip install -q advent-of-code-hhoppe hhoppe-tools matplotlib mediapy \
+#   more-itertools networkx numba numpy pygraphviz resampler scipy scikit-image sympy
 
 # %%
 import collections
@@ -1199,7 +1199,7 @@ def day8a(s, *, part2=False):  # Concise.
   grid = np.array([list(line) for line in s.splitlines()])
   antinodes = set()
 
-  for symbol in set(np.unique_values(grid)) - {'.'}:
+  for symbol in set(np.unique(grid)) - {'.'}:
     for pair in itertools.permutations(np.argwhere(grid == symbol), 2):
       for t in itertools.count(1) if part2 else [2]:
         y, x = (1 - t) * pair[0] + t * pair[1]
@@ -1223,7 +1223,7 @@ def day8(s, *, part2=False):  # Fast.
   grid = np.array([list(line) for line in s.splitlines()])
   antinodes = np.full(grid.shape, 0)
 
-  for symbol in set(np.unique_values(grid)) - {'.'}:
+  for symbol in set(np.unique(grid)) - {'.'}:
     for pair in itertools.permutations(np.argwhere(grid == symbol), 2):
       dy, dx = pair[1] - pair[0]
       y, x = pair[1] if part2 else 2 * pair[1] - pair[0]
@@ -1255,7 +1255,7 @@ def day8_visualization(s, *, rep=6, fps=20):
 
   for t in itertools.count(2):
     images.append(image.copy())
-    for ch in set(np.unique_values(grid)) - {'.'}:
+    for ch in set(np.unique(grid)) - {'.'}:
       for pair in itertools.permutations(np.argwhere(grid == ch), 2):
         y, x = (1 - t) * pair[0] + t * pair[1]
         if 0 <= y < grid.shape[0] and 0 <= x < grid.shape[1] and grid[y, x] == '.':
@@ -1619,7 +1619,7 @@ puzzle.verify(2, day10c_part2)
 
 
 # %%
-# @roflgar https://github.com/rothos/advent-of-code/blob/master/2024/10.py
+# roflgar https://github.com/rothos/advent-of-code/blob/master/2024/10.py
 def day10d(s, part2=False):
   lines = s.splitlines()
   chart = tuple(tuple(int(c) for c in line) for line in lines)
@@ -1859,14 +1859,14 @@ EEEC
 # %%
 def day12a(s, *, part2=False):  # Using scipy.ndimage.label() for connected components.
   grid = np.array([list(line) for line in s.splitlines()])
-  unique_chars = np.unique(grid)
+  chars = np.unique(grid)
   structure = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]])
   neighbors = (-1, 0), (0, -1), (1, 0), (0, 1)
   regions = []
   # It is unfortunate that scipy.ndimage.label() cannot directly segment a non-binary image.
   # Note that OpenCV has the same limitation:
   #   retval, labels = cv.connectedComponents(mask, labeled_image, connectivity=4)
-  for char in unique_chars:
+  for char in chars:
     mask = (grid == char).astype(int)
     labeled_mask, num_features = scipy.ndimage.label(mask, structure=structure)
     for region_id in range(num_features):
@@ -1908,21 +1908,24 @@ puzzle.verify(2, day12a_part2)
 # Using skimage.segmentation.flood_fill().  It is slow.  The bottleneck is flood_fill().
 def day12b(s, *, part2=False):
   grid = np.pad(np.array([list(line) for line in s.splitlines()]).view(np.uint32), 1)
+  central = grid[1:-1, 1:-1]
   base_index = 100
   index = base_index
-  for (y, x), ch_int in np.ndenumerate(grid[1:-1, 1:-1]):
+  for (y, x), ch_int in np.ndenumerate(central):
     if ch_int < base_index:
       # Slow bottleneck.
       skimage.segmentation.flood_fill(grid, (y + 1, x + 1), index, connectivity=1, in_place=True)
       index += 1
 
-  areas = np.unique_counts(grid[1:-1, 1:-1]).counts
+  # areas = np.unique_counts(central).counts
+  areas = np.unique(central, return_counts=True)[1]
 
   if not part2:
     sl0, sl1, sl2 = slice(0, -2), slice(1, -1), slice(2, None)
     slices = ((sl1, sl2), (sl1, sl0), (sl2, sl1), (sl0, sl1))
     perimeters_dir = [
-        np.unique_counts(np.where(grid[1:-1, 1:-1] == grid[slice_], 0, grid[1:-1, 1:-1])).counts[1:]
+        # np.unique_counts(np.where(central == grid[slice_], 0, central)).counts[1:]
+        np.unique(np.where(central == grid[slice_], 0, central), return_counts=True)[1][1:]
         for slice_ in slices
     ]
     perimeters = np.sum(perimeters_dir, axis=0)
