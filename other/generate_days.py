@@ -9,10 +9,6 @@ part1 = """\
 # - Part 1: ?
 #
 # - Part 2: ?
-#
-# ---
-#
-# .
 
 # %%
 puzzle = advent.puzzle(day={DAY})

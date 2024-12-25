@@ -2578,7 +2578,7 @@ puzzle = advent.puzzle(day=20)
 # I created a general solution, which can work on inputs that define passageways with 2D cycles.
 # However, it appears that all instances of the puzzle inputs give rise to a simple tree
 # of passageways?  In the case of a tree, can one simply look for the longest expansion of the
-# regular expression?  No, it appears that the regexp expansions may involve backtracking along
+# regular expression?  No, it appears that the regex expansions may involve backtracking along
 # edges of the tree.  My solution is likely overkill for this simpler case.
 def day20(s, *, part2=False, visualize=False):
   (s,) = hh.re_groups(r'^\^([SNEW(|)]+)\$$', s.strip())
