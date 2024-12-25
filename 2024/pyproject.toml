@@ -1,0 +1,50 @@
+[tool.autopep8]
+indent_size = 2
+ignore = "E121,E125,E126,E129,E226,E302,E305,E501,W504,E741,E20,W503,E731"
+exclude = "*.ipynb_checkpoints"
+aggressive = 3
+recursive = true
+
+[tool.mypy]
+ignore_missing_imports = true
+strict = false
+check_untyped_defs = true
+
+[tool.pyink]
+pyink-indentation = 2
+line-length = 100  # Default is 88.
+pyink-use-majority-quotes = true
+extend-exclude = "\\.ipynb"
+
+[tool.pylint.main]
+# See pylint options using "pylint --generate-toml-config"
+disable = [
+    "fixme", "redefined-builtin", "cell-var-from-loop",
+    "using-constant-test", "simplifiable-condition", "import-outside-toplevel", "line-too-long",
+    "too-many-lines", "too-few-public-methods", "too-many-arguments", "too-many-locals",
+    "use-dict-literal", "unnecessary-lambda-assignment",
+    # For advent:
+    "missing-module-docstring", "missing-function-docstring", "redefined-outer-name", "missing-class-docstring",
+    "too-many-branches", "too-many-statements", "multiple-statements", "condition-evals-to-constant",
+    "too-many-return-statements", "too-many-nested-blocks", "too-many-boolean-expressions",
+    "too-many-instance-attributes", "too-many-positional-arguments",
+    "duplicate-code",
+    # Buggy pylint:
+    "inconsistent-return-statements", "redundant-keyword-arg", "unbalanced-tuple-unpacking",
+    "unnecessary-direct-lambda-call", "undefined-loop-variable", "possibly-used-before-assignment",
+]
+reports = false
+score = false
+recursive = true
+ignore-paths = [".*ipynb_checkpoints", "^.pytype", ".*/.pytype"]
+
+[tool.pylint.basic]
+good-names-rgxs = "^[a-z][a-z0-9]?|[A-Z]([A-Z_]*[A-Z])?$"
+
+[tool.pylint.format]
+indent-string = "  "
+expected-line-ending-format = "LF"
+
+[tool.pytype]
+keep_going = true
+exclude = ['**/*_run.py']
