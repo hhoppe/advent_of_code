@@ -1255,7 +1255,7 @@ def day8_visualization(s, *, rep=6, fps=20):
 
   for t in itertools.count(2):
     images.append(image.copy())
-    for ch in set(np.unique(grid)) - {'.'}:
+    for ch in sorted(set(np.unique(grid)) - {'.'}):
       for pair in itertools.permutations(np.argwhere(grid == ch), 2):
         y, x = (1 - t) * pair[0] + t * pair[1]
         if 0 <= y < grid.shape[0] and 0 <= x < grid.shape[1] and grid[y, x] == '.':
