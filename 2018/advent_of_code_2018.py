@@ -135,7 +135,7 @@ class _Machine:
   ip: int = 0
   operations: dict[str, Callable[..., None]] = dataclasses.field(default_factory=dict)
 
-  @dataclasses.dataclass
+  @dataclasses.dataclass(frozen=True)
   class Instruction:
     operation: str
     operands: tuple[int, ...]

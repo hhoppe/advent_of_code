@@ -1768,7 +1768,7 @@ s1 = """\
 # %%
 def day12m(s, part2=False):  # From mjpieters@.  TODO: a numba version might be fastest.
   # From https://github.com/mjpieters/adventofcode/blob/master/2023/Day%2012.ipynb
-  @dataclasses.dataclass
+  @dataclasses.dataclass(frozen=True)
   class SpringsPattern:
     patt: str
     groups: tuple[int, ...]

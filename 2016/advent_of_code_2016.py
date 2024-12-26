@@ -1618,7 +1618,7 @@ Disc #2 has 2 positions; at time=0, it is at position 1.
 
 # %%
 def day15a(s, *, part2=False):  # Using brute-force search over all time values.
-  @dataclasses.dataclass
+  @dataclasses.dataclass(frozen=True)
   class Wheel:
     period: int
     phase: int  # Phase of wheel when the ball reaches it if the ball is released at time 0.
