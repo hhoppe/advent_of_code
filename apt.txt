@@ -1,0 +1,12 @@
+# System packages (via apt) required for Binder environments (mybinder.org and similar
+# notebook hosting services) to install and run Python dependencies.
+
+# Media processing, used by "pip install mediapy".
+ffmpeg
+
+# Graph visualization, used by "pip install pygraphviz".
+graphviz
+libgraphviz-dev
+
+# Build tool that helps install Python packages that depend on C libraries (like pygraphviz).
+pkg-config
