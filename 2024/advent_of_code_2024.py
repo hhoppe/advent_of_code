@@ -2240,7 +2240,7 @@ puzzle.verify(2, day14a_part2)
 
 # %%
 if SHOW_BIG_MEDIA:
-  _ = day14a_part2(puzzle.input, visualize=True)
+  _ = day14a_part2(puzzle.input, visualize=True)  # ~1 s.
   # For my example, remainders = [12, 35], so t = 6398.
 
 
