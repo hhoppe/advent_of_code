@@ -79,7 +79,7 @@
 
 # %%
 # !pip install -q advent-of-code-hhoppe hhoppe-tools kaleido matplotlib mediapy \
-#   more-itertools networkx numba numpy plotly pygraphviz scipy scikit-image sympy
+#   more-itertools networkx numba numpy plotly pygraphviz scipy scikit-image sympy z3-solver
 
 # %%
 import ast
@@ -108,6 +108,7 @@ import plotly.graph_objects as go
 import scipy.optimize
 import skimage.segmentation
 import sympy
+import z3
 
 # %%
 if not media.video_is_available():
@@ -5269,7 +5270,7 @@ def day24_part2_visualize(s, nframes=120, fps=30):
     p, v, t = (sympy.symbols(f'{ch}(:3)') for ch in 'pvt')
     equations = [p_i[i, j] - p[j] + t[i] * (v_i[i, j] - v[j]) for i in range(3) for j in range(3)]
     (var,) = sympy.solve(equations, (*p, *v, *t))
-    pos, vel = np.array(var[:3]), np.array(var[3:6])
+    pos, vel = np.array(var[:3], np.int64), np.array(var[3:6], np.int64)
     return pos, vel
 
   pos, vel = get_solution()
@@ -5326,8 +5327,6 @@ if SHOW_BIG_MEDIA:
 
 # %%
 def day24z_part2(s, use_real=True, use=3):  # Try Z3 solver.
-  import z3  # !pip install z3-solver
-
   rows = [list(map(int, re.findall(r'-?\d+', line))) for line in s.splitlines()][:use]
 
   solver = z3.Solver()

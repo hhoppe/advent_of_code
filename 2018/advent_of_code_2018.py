@@ -970,10 +970,10 @@ position=<-3,  6> velocity=< 2, -1>
 """
 
 # %%
+# https://github.com/bsoyka/advent-of-code-ocr
 # "Support for 10-pixel-tall characters (2018 Day 10) is coming soon."
-if 0:  # https://pypi.org/project/advent-of-code-ocr/
-  hh.run('!pip -q install advent-of-code-ocr')
-  # import advent_of_code_ocr
+# !pip -q install advent-of-code-ocr
+# import advent_of_code_ocr
 
 
 # %%
