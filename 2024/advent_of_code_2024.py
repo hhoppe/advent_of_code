@@ -56,6 +56,11 @@
 # <a href="#day24">day24</a>
 #  <img src="results/day24.png" width="250">
 # </p>
+#
+# <p>
+# <a href="#day25">day25</a>
+#  <img src="results/day25.png" width="420">
+# </p>
 
 # %% [markdown]
 # <a name="preamble"></a>
@@ -4921,6 +4926,29 @@ def day25_part1(s):  # Faster.
 
 check_eq(day25_part1(s1), 3)
 puzzle.verify(1, day25_part1)
+
+
+# %%
+def day25_visualize(s, rep=3, background=255):
+  parts_images: tuple[list[_NDArray], list[_NDArray]] = [], []
+  for item in s.split('\n\n'):
+    part = np.array([list(line) for line in item.splitlines()]) == '#'
+    kind = part[0].all()
+    # part = part[:-1] if kind else part[1:]
+    part_image = hh.to_image(part, 0, 255).repeat(rep, 0).repeat(rep, 1)
+    parts_images[int(kind)].append(part_image)
+
+  n_cols = math.ceil(math.sqrt(sum(len(p) for p in parts_images)) * 2)
+  images = []
+  for kind in range(2):
+    kwargs = dict(background=background, spacing=rep, from_end=kind > 0)
+    images.append(hh.assemble_arrays(parts_images[kind], (-1, n_cols), **kwargs))
+  image = hh.assemble_arrays(images, (2, 1), background=background, align='start', spacing=3 * rep)
+  media.show_image(image, title='day25')
+
+
+# day25_visualize(s1, rep=10)
+day25_visualize(puzzle.input)
 
 # %%
 puzzle.verify(2, lambda s: '')  # (No "Part 2" on last day.)
