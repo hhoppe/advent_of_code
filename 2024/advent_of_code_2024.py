@@ -4930,7 +4930,7 @@ puzzle.verify(1, day25_part1)
 
 # %%
 def day25_visualize(s, rep=3, background=255):
-  parts_images: tuple[list[_NDArray], list[_NDArray]] = [], []
+  parts_images: tuple[list[np.ndarray], list[np.ndarray]] = [], []
   for item in s.split('\n\n'):
     part = np.array([list(line) for line in item.splitlines()]) == '#'
     kind = part[0].all()
