@@ -1007,9 +1007,9 @@ puzzle.verify(2, day10a_part2)
 def day10b_part2(s):
   l = [0] + sorted(map(int, s.split()))
   npaths = [1] + [0] * (len(l) - 1)
-  for i in range(len(l)):  # pylint: disable=consider-using-enumerate
+  for i, elem_i in enumerate(l):
     for j in range(i + 1, min(i + 4, len(l))):
-      if l[j] - l[i] <= 3:
+      if l[j] - elem_i <= 3:
         npaths[j] += npaths[i]
   return npaths[-1]
 

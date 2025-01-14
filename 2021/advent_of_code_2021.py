@@ -4272,8 +4272,7 @@ def day22_func(states, cuboids):
     return finalized
 
   # Disjoint union of "on" cubes.
-  # pylint: disable-next=consider-using-set-comprehension
-  cells = set([to_tuple(cuboids[0]) for _ in range(0)])  # Typed empty set.
+  cells = {to_tuple(cuboids[0])} - {to_tuple(cuboids[0])}  # Typed empty set.
 
   for state, cuboid_array in zip(states, cuboids):
     cuboid = to_tuple(cuboid_array)

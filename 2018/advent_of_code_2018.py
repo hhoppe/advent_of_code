@@ -3042,7 +3042,6 @@ def day22_dijkstra(grid, target_yx, visualize):
   # https://levelup.gitconnected.com/dijkstra-algorithm-in-python-8f0e75e3f16e
   TORCH = 1
   distances = {}
-  # pylint: disable-next=consider-using-set-comprehension
   parents = {(0, 0, 0): (0, 0, 0)}  # Dummy entry for numba typing.
   source_tyx = TORCH, 0, 0
   target_tyx = TORCH, *target_yx

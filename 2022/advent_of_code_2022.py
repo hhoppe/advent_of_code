@@ -3891,8 +3891,8 @@ puzzle.verify(2, day20c_part2)
 @numba.njit
 def day20_mix(a_value, a_prev, a_next):
   n = len(a_value)
-  for i in range(n):  # pylint: disable=consider-using-enumerate
-    value, prev_, next_ = a_value[i], a_prev[i], a_next[i]
+  for i, value in enumerate(a_value):
+    prev_, next_ = a_prev[i], a_next[i]
     offset = value % (n - 1)
     if offset != 0:
       a_prev[next_], a_next[prev_] = prev_, next_  # Disconnect node i.
