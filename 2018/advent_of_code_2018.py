@@ -60,8 +60,6 @@
 #   numba numpy scipy
 
 # %%
-from __future__ import annotations
-
 import collections
 from collections.abc import Callable
 import dataclasses
@@ -72,7 +70,7 @@ import itertools
 import math
 import pathlib
 import re
-from typing import Any
+from typing import Any, Union
 import warnings
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -131,7 +129,7 @@ class _Machine:
   num_registers: int = 6
   registers: list[int] = dataclasses.field(default_factory=list)
   ip_register: int | None = None
-  instructions: list[_Machine.Instruction] = dataclasses.field(default_factory=list)
+  instructions: list['_Machine.Instruction'] = dataclasses.field(default_factory=list)
   ip: int = 0
   operations: dict[str, Callable[..., None]] = dataclasses.field(default_factory=dict)
 
@@ -3414,7 +3412,7 @@ Infection:
 def day24(s, *, verbose=False, boost=0, immune_must_win=False):
   @dataclasses.dataclass
   class Group:
-    army: Army
+    army: 'Army'
     id: int
     units: int
     hit_points: int  # (per_unit)
@@ -3422,7 +3420,7 @@ def day24(s, *, verbose=False, boost=0, immune_must_win=False):
     attack_type: str
     initiative: int  # Higher initiative attacks first and wins ties.
     attributes: dict[str, set[str]]  # ['immune'] and ['weak']
-    target: 'Group' | None
+    target: Union['Group', None]
     targeted: bool
 
     def __init__(self, army, id, line):

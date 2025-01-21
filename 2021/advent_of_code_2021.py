@@ -65,7 +65,7 @@ import math
 import pathlib
 import re
 import typing
-from typing import Any, Generic, Tuple, TypeVar
+from typing import Any, Generic, TypeVar
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import advent_of_code_ocr  # https://github.com/bsoyka/advent-of-code-ocr/blob/main/advent_of_code_ocr/__init__.py
@@ -1037,7 +1037,7 @@ def day9a(s, *, part2=False):  # Solution using Union-Find.  Relatively slow.
   downward = dyxs[neighbors.argmin(axis=0)]
   downward[grid == 9] = 0
 
-  union_find = hh.UnionFind[Tuple[int, int]]()
+  union_find = hh.UnionFind[tuple[int, int]]()
   for y, x in np.ndindex(grid.shape):
     dy, dx = downward[y, x]
     union_find.union((y, x), (y + dy, x + dx))

@@ -52,7 +52,7 @@ import math
 import operator
 import pathlib
 import re
-from typing import Any, Tuple
+from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
@@ -1009,7 +1009,7 @@ def day14a(s, *, part2=False):  # Slower version.
     # hh.show(grid[:8, :8])
     return np.sum(grid)
 
-  union_find = hh.UnionFind[Tuple[int, int]]()
+  union_find = hh.UnionFind[tuple[int, int]]()
   for y, x in np.argwhere(grid):
     for y2, x2 in ((y + 1, x), (y, x + 1)):
       if y2 < shape[0] and x2 < shape[1] and grid[y2, x2]:
@@ -1077,7 +1077,7 @@ def day14(s, *, part2=False, visualize=False):  # Faster, without rotation or re
       media.show_image(image, border=True, title='day14')
     return np.sum(grid)
 
-  union_find = hh.UnionFind[Tuple[int, int]]()
+  union_find = hh.UnionFind[tuple[int, int]]()
   # for y, x in np.argwhere(grid):  # Slowest
   # for y, x in zip(*np.nonzero(grid)):  # Slow.
   # for y, x in np.ndindex(shape): if grid[y, x]:  # Only slightly slower.
