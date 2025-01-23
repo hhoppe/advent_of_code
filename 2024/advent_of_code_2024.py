@@ -932,30 +932,35 @@ def day6_visualize(s, rep=2, fps=50):
       dir = (dir + 1) % 4  # Rotate clockwise.
 
   y, x, dir = y0, x0, 1
-  t, interval = 0.0, 0.25
+  # See also 2017 day22b().
+  time_sim, time_current, time_interval, time_accel = 0, 0.0, 0.5, 0.005
   add_image()
-  while True:
-    image[y, x] = image[y, x] * (150, 150, 255) / 255
-    dy, dx = dydx_from_dir[dir]
-    y1, x1 = y + dy, x + dx
-    if not (0 <= y1 < grid.shape[0] and 0 <= x1 < grid.shape[1]):
-      break
-    if grid[y1, x1] == '#':
-      dir = (dir + 1) % 4  # Rotate clockwise.
-    else:
-      if grid[y1, x1] == '.':
-        grid[y1, x1] = 'Y'
-        if adding_obstacle_would_create_loop(y, x, dir, y1, x1):
-          image[y1, x1] = 255, 0, 0
-      y, x = y1, x1
-      if t >= interval:
-        add_image()
-        t = 0.0
-      t += 1.0
-      interval += 0.005
-  add_image()
+  done = False
 
-  images = [images[0]] * fps + images + [images[-1]] * int(fps * 2.5)
+  while not done:
+    time_current += time_interval
+    time_interval += time_accel
+    num_steps = int(time_current - time_sim)
+    for _ in range(num_steps):
+      time_sim += 1
+      image[y, x] = image[y, x] * (150, 150, 255) / 255
+      dy, dx = dydx_from_dir[dir]
+      y1, x1 = y + dy, x + dx
+      if not (0 <= y1 < grid.shape[0] and 0 <= x1 < grid.shape[1]):
+        done = True
+        break
+      if grid[y1, x1] == '#':
+        dir = (dir + 1) % 4  # Rotate clockwise.
+      else:
+        if grid[y1, x1] == '.':
+          grid[y1, x1] = 'Y'
+          if adding_obstacle_would_create_loop(y, x, dir, y1, x1):
+            image[y1, x1] = 255, 0, 0
+        y, x = y1, x1
+
+    add_image()
+
+  images = [images[0]] * (fps // 2) + images + [images[-1]] * int(fps * 2.5)
   media.show_video(images, codec='gif', fps=fps, title='day06')
 
 

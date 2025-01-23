@@ -15,7 +15,7 @@
 # For the fast solutions, the [cumulative time](#timings) across all 25 puzzles is less than 2 s on my PC.<br/>
 # (Some solutions use the `numba` package to jit-compile functions, which can take a few seconds.)
 #
-# Here are some visualization results:
+# Here are some visualization results (obtained by setting `SHOW_BIG_MEDIA = True`):
 #
 # <p>
 # <a href="#day11">day11</a> <img src="results/day11.png" width="256"> &emsp;
@@ -24,7 +24,7 @@
 #
 # <p>
 # <a href="#day19">day19</a> <img src="results/day19.gif" width="340"> &emsp;
-# <a href="#day22">day22</a> <img src="results/day22.png" width="320">
+# <a href="#day22">day22</a> <img src="results/day22b.gif" width="373">
 # </p>
 #
 # <p>
@@ -39,7 +39,7 @@
 # !command -v ffmpeg >/dev/null || (apt-get -qq update && apt-get -qq -y install ffmpeg) >/dev/null  # For mediapy.
 
 # %%
-# !pip install -q advent-of-code-hhoppe hhoppe-tools matplotlib mediapy more-itertools numba numpy
+# !pip install -q advent-of-code-hhoppe hhoppe-tools matplotlib mediapy more-itertools numba numpy resampler
 
 # %%
 import collections
@@ -62,6 +62,7 @@ import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/_
 import more_itertools
 import numba
 import numpy as np
+import resampler
 
 # %%
 if not media.video_is_available():
@@ -78,6 +79,7 @@ hh.start_timing_notebook_cells()
 YEAR = 2017
 PROFILE = 'google.Hugues_Hoppe.965276'
 # PROFILE = 'github.hhoppe.1452460'
+SHOW_BIG_MEDIA = hh.get_env_bool('SHOW_BIG_MEDIA')
 # # echo 53616... >~/.config/aocd/token  # session cookie from "adventofcode.com" (valid 1 month).
 
 # %%
@@ -1718,6 +1720,84 @@ check_eq(day22a_part2(s1, num_iterations=100), 26)
 
 # %%
 _ = day22a_part2(puzzle.input, visualize=True)
+
+
+# %%
+# @numba.njit
+def day22b_compute(
+    grid: np.ndarray, num_iterations: int, update: tuple[int, ...], yx_dyx_bounds: np.ndarray
+):
+  y, x, dy, dx, miny, maxy, minx, maxx = yx_dyx_bounds
+
+  for _ in range(num_iterations):
+    state = grid[y, x]
+    match state:
+      case 0:
+        dy, dx = -dx, dy  # Turn left.
+      case 1:
+        dy, dx = dx, -dy  # Turn right.
+      case 3:
+        dy, dx = -dy, -dx  # Make U-turn.
+    grid[y, x] = update[state]
+    y, x = y + dy, x + dx
+    miny, maxy, minx, maxx = min(miny, y), max(maxy, y), min(minx, x), max(maxx, x)
+
+  yx_dyx_bounds[:] = y, x, dy, dx, miny, maxy, minx, maxx
+
+
+def day22b(s, *, num_iterations=10_000, part2=False, pad=5, fps=50):
+  grid0 = hh.grid_from_string(s, {'.': 0, '#': 1})  # Later also: {'W': 2, 'F': 3}.
+  p0 = 500 if part2 else 200
+  grid = np.pad(grid0, p0)
+  UPDATE = (2, 3, 1, 0) if part2 else (1, 0)
+  CMAP = np.array([(235, 235, 235), (255, 0, 0), (50, 50, 200), (0, 150, 0)], np.uint8)
+  y, x = grid.shape[0] // 2, grid.shape[1] // 2
+  dy, dx = -1, 0  # Up direction.
+  yx_dyx_bounds = np.array([y, x, dy, dx, p0, p0 + grid0.shape[0], p0, p0 + grid0.shape[1]])
+
+  final = yx_dyx_bounds.copy()
+  day22b_compute(grid.copy(), num_iterations, UPDATE, final)
+  final_view = final[4] - pad, final[5] + pad + 1, final[6] - pad, final[7] + pad + 1
+
+  images = []
+  # See also 2024 day6_visualize().
+  time_sim, time_current, time_interval, interval_factor = 0, 0.0, 0.1, 1.02
+  view = 0, 0, 0, 0
+
+  while time_sim < num_iterations:
+    time_current = min(time_current + time_interval, num_iterations)
+    time_interval *= interval_factor
+    num_steps = int(time_current - time_sim)
+    day22b_compute(grid, num_steps, UPDATE, yx_dyx_bounds)
+    time_sim += num_steps
+    miny, maxy, minx, maxx = yx_dyx_bounds[4:]
+    if miny < view[0] or maxy >= view[1] or minx < view[2] or maxx >= view[3]:  # Re-frame the view.
+      p1 = max(maxy - miny, maxx - minx) // 2
+      view = (
+          max(miny - p1, final_view[0]),
+          min(maxy + p1 + 1, final_view[1]),
+          max(minx - p1, final_view[2]),
+          min(maxx + p1 + 1, final_view[3]),
+      )
+    subgrid = grid[view[0] : view[1], view[2] : view[3]]
+    image = CMAP[subgrid]
+    shape = final_view[1] - final_view[0], final_view[3] - final_view[2]  # Or: 500, 500.
+    image = resampler.uniform_resize(image, shape, filter='trapezoid', cval=CMAP[0])
+    images.append(image)
+
+  images = [images[0]] * (fps // 2) + images + [images[-1]] * (fps * 2)
+  media.show_video(images, codec='gif', fps=fps, title='day22b')
+
+
+# %%
+if SHOW_BIG_MEDIA:
+  day22b_part2 = functools.partial(day22b, num_iterations=10**7, part2=True)
+  day22b_part2(puzzle.input)  # ~20 s; ~8 MB gif.
+
+
+# %% [markdown]
+# Cached result:<br/>
+# <img src="results/day22b.gif"/>
 
 
 # %%
