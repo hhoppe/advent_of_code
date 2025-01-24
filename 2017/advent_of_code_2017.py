@@ -308,13 +308,13 @@ puzzle.verify(2, day3_part2)
 puzzle = advent.puzzle(day=4)
 
 # %%
+# spellcheck=off
 s1 = """\
 aa bb cc dd ee
 aa bb cc dd aa
 aa bb cc dd aaa
 """
 
-# %%
 s2 = """\
 abcde fghij
 abcde xyz ecdab
@@ -322,6 +322,7 @@ a ab abc abd abf abj
 iiii oiii ooii oooi oooo
 oiii ioii iioi iiio
 """
+# spellcheck=on
 
 
 # %%
