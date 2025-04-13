@@ -1394,7 +1394,7 @@ check_eq(day9a_part2(s1), 2858)
 def day9_part2(s):  # Fast.  (numpy is slower)
   values = list(map(int, s.strip() + '0'))
   nums, skips = values[::2], values[1::2]
-  positions = np.cumsum([0, 0] + values)[1::2]
+  positions = np.cumsum([0, 0] + values, dtype=np.int64)[1::2]
   empty_index = [0] * 10  # First possible empty space of each size.
 
   checksum = 0
@@ -1422,7 +1422,7 @@ puzzle.verify(2, day9_part2)
 def day9_part2_visualization(s, rep=1):
   values = list(map(int, s.strip() + '0'))
   nums, skips = values[::2], values[1::2]
-  positions = np.cumsum([0, 0] + values)[1::2]
+  positions = np.cumsum([0, 0] + values, dtype=np.int64)[1::2]
   empty_index = [0] * 10  # First possible empty space of each size.
   back_color = (245,) * 3
   image_size = math.ceil(math.sqrt(positions[-1]))
@@ -2115,7 +2115,7 @@ Prize: X=18641, Y=10279
 def day13a(s, *, part2=False):  # Using sympy.
   total = 0
   for s2 in s.split('\n\n'):
-    values = np.array([re.findall(r'\d+', line) for line in s2.splitlines()], int)
+    values = np.array([re.findall(r'\d+', line) for line in s2.splitlines()], np.int64)
     if part2:
       values[2] += 10**13
     x = sympy.Matrix(values[:2].T).LUsolve(sympy.Matrix(values[2]))
@@ -2136,11 +2136,11 @@ puzzle.verify(2, day13a_part2)
 def day13b(s, *, part2=False):  # Using numpy.
   total = 0
   for s2 in s.split('\n\n'):
-    values = np.array([re.findall(r'\d+', line) for line in s2.splitlines()], int)
+    values = np.array([re.findall(r'\d+', line) for line in s2.splitlines()], np.int64)
     b = values[2] + (10**13 if part2 else 0)
     matrix = values[:2].T
     x = np.linalg.solve(matrix, b)
-    rounded = (x + 0.5).astype(int)
+    rounded = (x + 0.5).astype(np.int64)
     if all(matrix @ rounded == b):
       total += rounded[0] * 3 + rounded[1]
 
@@ -2157,12 +2157,12 @@ puzzle.verify(2, day13b_part2)
 # %%
 def day13(s, *, part2=False):  # Using numpy, fully vectorized.
   values = np.array(
-      [[re.findall(r'\d+', line) for line in s2.splitlines()] for s2 in s.split('\n\n')], int
+      [[re.findall(r'\d+', line) for line in s2.splitlines()] for s2 in s.split('\n\n')], np.int64
   )
   b = values[:, 2][..., None] + (10**13 if part2 else 0)
   matrix = np.moveaxis(values[:, :2], 1, 2)
   x = np.linalg.solve(matrix, b)
-  rounded = (x + 0.5).astype(int)
+  rounded = (x + 0.5).astype(np.int64)
   solved = (matrix @ rounded == b).all(1)[:, 0]
   return np.sum(rounded[solved][..., 0] @ [3, 1])
 
@@ -2204,12 +2204,12 @@ p=9,5 v=-3,-3
 
 # %%
 def day14a(s, *, part2=False, shape=(103, 101), steps=100, visualize=False, rep=2, fps=50):
-  values = np.array([re.findall(r'-?\d+', line) for line in s.splitlines()], int)
+  values = np.array([re.findall(r'-?\d+', line) for line in s.splitlines()], np.int64)
   yxs0, dyxs = values[:, 1::-1], values[:, 3:1:-1]
 
   if not part2:
     yxs = (yxs0 + steps * dyxs) % shape
-    count = np.zeros(shape, int)
+    count = np.zeros(shape, np.int64)
     np.add.at(count, tuple(yxs.T), 1)
     ym, xm = shape[0] // 2, shape[1] // 2
     quadrants = [[g[:, :xm], g[:, xm + 1 :]] for g in [count[:ym], count[ym + 1 :]]]
@@ -2292,7 +2292,7 @@ def day14(
       yxs = (yxs0 + t * dyxs) % shape
       rep2 = rep * (supersample if dt < 0.05 else 1)
       mask = np.full(shape, False).repeat(rep2, 0).repeat(rep2, 1)
-      for y, x in (yxs * rep2 + 0.5).astype(int):
+      for y, x in (yxs * rep2 + 0.5).astype(np.int64):
         mask[y : y + rep2, x : x + rep2] = True
       image = hh.to_image(mask, 250, 0)
       image = resampler.resize(image, np.array(image.shape[:2]) // (rep2 // rep), filter='box')
@@ -4048,7 +4048,7 @@ s1 = """\
 def day22a(s, *, part2=False):  # Concise.
   total = 0
   scores: Any = collections.defaultdict(int)
-  secrets = np.empty(2001, int)
+  secrets = np.empty(2001, np.int64)
 
   for v in map(int, s.splitlines()):
     for i in range(2001):
@@ -4137,7 +4137,7 @@ def day22c(s, *, part2=False):
     return secret
 
   count = len(INITIAL)
-  secret = np.empty((count, 2001), int)
+  secret = np.empty((count, 2001), np.int64)
   secret[:, 0] = INITIAL
   for i in range(2000):
     secret[:, i + 1] = get_next_secret(secret[:, i])
@@ -4151,7 +4151,7 @@ def day22c(s, *, part2=False):
 
   base = 9 * 2 + 1
   num_combos = base**4
-  combos = np.zeros(num_combos, int)
+  combos = np.zeros(num_combos, np.int64)
   coeff = base ** np.arange(4)
 
   first = np.full((count, num_combos), True)
@@ -4174,10 +4174,10 @@ puzzle.verify(2, day22c_part2)
 
 # %%
 def day22d(s, *, part2=False, window_size=4, base=19):  # Fully vectorized numpy.
-  vec = np.array(s.splitlines(), int)
+  vec = np.array(s.splitlines(), np.int64)
   n_inputs = len(vec)
 
-  secret = np.empty((n_inputs, 2001), int)
+  secret = np.empty((n_inputs, 2001), np.int64)
   for i in range(2001):
     secret[:, i] = vec
     vec = ((vec << 6) ^ vec) & 0xFFFFFF
@@ -4209,7 +4209,7 @@ def day22d(s, *, part2=False, window_size=4, base=19):  # Fully vectorized numpy
   flat_indices = windows_flat[rows, cols]
   values = score[rows, cols]
 
-  totals = np.zeros(base**4, int)
+  totals = np.zeros(base**4, np.int64)
   np.add.at(totals, flat_indices, values)
   return totals.max()
 
