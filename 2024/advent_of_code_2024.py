@@ -4738,7 +4738,7 @@ def day24_part2_examine(s, *, correct_to=1000, truncated=False):
   n_y = sum(1 for k in vals if k[0] == 'y')
   n_z = sum(1 for dst in expressions if dst[0] == 'z')
   hh.display_html(f'{n_x=} {n_y=} {n_z=}')
-  hh.display_html(f'{len(expressions)=}, compared to {2 + (n_z - 2) * 5 + 0 = }')
+  hh.display_html(f'{len(expressions)=}, compared to {(2 + (n_z - 2) * 5 + 0)=}')
 
   def orient(expr):  # Heuristically assign a canonical order for two expression operands.
     expr2 = expressions.get(expr.srcs[1], None)
