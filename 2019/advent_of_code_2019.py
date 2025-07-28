@@ -2759,7 +2759,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
             distance[yx2] = distance[yx] + 1
             parent[yx2] = yx
             if yx2 in self.portal_at_yx:
-              yx3 = yx2
+              yx3: tuple[int, int] | None = yx2
               path = []
               while yx3:
                 path.append(yx3)
