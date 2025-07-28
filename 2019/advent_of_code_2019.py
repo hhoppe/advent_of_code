@@ -2748,7 +2748,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
     def compute_portal_paths(self, src_yx):
       to_visit = collections.deque([src_yx])
       distance = {src_yx: 0}  # for Dijkstra
-      parent = {}
+      parent: dict[tuple[int, int], tuple[int, int]] = {}
       portal_paths: dict[tuple[int, int], list[tuple[int, int]]] = {}  # [yx] -> path
 
       while to_visit:
@@ -2760,7 +2760,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
             parent[yx2] = yx
             if yx2 in self.portal_at_yx:
               yx3: tuple[int, int] | None = yx2
-              path = []
+              path: list[tuple[int, int]] = []
               while yx3:
                 path.append(yx3)
                 yx3 = parent.get(yx3, None)
