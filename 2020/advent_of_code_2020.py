@@ -474,8 +474,8 @@ def day5_visualize_transposed_seat_grid(s, repeat=4):
   image = np.full((128, 8, 3), 0, np.uint8)
   yx = np.array([divmod(day5_seat_id(line), 8) for line in s.split()])
   image[tuple(yx.T)] = 230
-  image = np.rot90(image.repeat(repeat, axis=0).repeat(repeat, axis=1))
-  media.show_image(image, title='day5')
+  image2 = np.rot90(image.repeat(repeat, axis=0).repeat(repeat, axis=1))
+  media.show_image(image2, title='day5')
 
 
 day5_visualize_transposed_seat_grid(puzzle.input)

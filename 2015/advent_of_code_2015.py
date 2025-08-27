@@ -1808,8 +1808,8 @@ def day19e_part2(s, visualize=False):
       for row, string in enumerate(sequence):
         for col, ch in enumerate(string):
           image[row, col] = colors[ord(ch)]
-      image = image.repeat(2, axis=0).repeat(2, axis=1)
-      media.show_image(image, title='day19')
+      image2 = image.repeat(2, axis=0).repeat(2, axis=1)
+      media.show_image(image2, title='day19')
     else:
       hh.display_html(f'Solution found on random seed {seed}.')
 

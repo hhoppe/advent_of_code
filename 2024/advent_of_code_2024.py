@@ -1433,8 +1433,7 @@ def day9_part2_visualization(s, rep=1):
     image[position : position + num] = colors[index % len(colors)]
 
   def add_image():
-    image2 = image.reshape(image_size, image_size, 3)
-    image2 = image2.repeat(rep, 0).repeat(rep, 1)
+    image2 = image.reshape(image_size, image_size, 3).repeat(rep, 0).repeat(rep, 1)
     images.append(image2)
 
   add_image()

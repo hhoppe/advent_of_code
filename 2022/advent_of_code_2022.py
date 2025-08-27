@@ -456,9 +456,7 @@ puzzle.verify(2, day4b_part2)
 
 # %%
 def _run_in_shell(command: list[str], s: str) -> str:
-  return subprocess.run(
-      command, shell=False, check=True, encoding='utf-8', input=s, capture_output=True
-  ).stdout
+  return subprocess.check_output(command, text=True, input=s)
 
 
 # %%
@@ -1651,7 +1649,7 @@ def day11(s, *, part2=False):
     itemss1[i, : len(items)] = items
   mod = math.prod(divisible_bys)
   day11_process(itemss1, ops, args, divisible_bys, throwss, activities, part2, mod)
-  return math.prod(sorted(activities)[-2:])
+  return math.prod(sorted(activities.astype(int))[-2:])
 
 
 check_eq(day11(s1), 10605)
