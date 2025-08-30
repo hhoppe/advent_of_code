@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
-part1 = """\
+import sys
+
+PART1 = """\
 # %% [markdown]
 # <a name="day{DAY}"></a>
 # ## Day {DAY}: x
@@ -27,7 +29,7 @@ check_eq(day{DAY}(s1), 1)
 # puzzle.verify(1, day{DAY})
 """
 
-part2 = """\
+PART2 = """\
 
 
 # %%
@@ -44,13 +46,24 @@ check_eq(day{DAY}_part2(s1), 1)
 # puzzle.verify(2, day{DAY}_part2)
 """
 
-part2_day25 = """\
+PART2_DAY25 = """\
 
 # %%
 puzzle.verify(2, lambda s: '')  # (No "Part 2" on last day.)
 """
 
-for day in range(1, 26):
-  s = part1 + (part2_day25 if day == 25 else part2)
-  s2 = s.replace('{DAY}', str(day))
-  print(s2)
+
+def main():
+  if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(newline='\n')
+  if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(newline='\n')
+
+  for day in range(1, 26):
+    s = PART1 + (PART2_DAY25 if day == 25 else PART2)
+    s2 = s.replace('{DAY}', str(day))
+    print(s2)
+
+
+if __name__ == '__main__':
+  main()
