@@ -835,7 +835,7 @@ def day6_part1_visualize(s, fps=20, delay_start=20, delay_end=40):
         ax.plot([], [], '-', color='grey', linewidth=2)[0],
         ax.plot([], [], 'o', markersize=5)[0],
     )
-  plt.close()
+  plt.close(fig)
 
   def animate(t):
     t = min(max(t - delay_start, 0), t1)
@@ -1128,8 +1128,8 @@ def day8_visualize(s):
   networkx.draw(graph, pos, node_size=15, node_color=node_color, width=0.5, arrowsize=2)
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
-  media.show_image(image, border=True, title='day07')
   plt.close(fig)
+  media.show_image(image, border=True, title='day07')
 
 
 hh.no_vertical_scroll()
@@ -3340,7 +3340,7 @@ def day18_part2_visualize(s):
   ax.locator_params(nbins=6)  # Reduce the number of ticks and ticklabels.
   fig.tight_layout()
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
-  plt.close()
+  plt.close(fig)
   media.show_image(image, title='day18b')
 
 
@@ -3549,8 +3549,8 @@ def day19_visualize(s):
 
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
-  media.show_image(image, border=True, title='day19')
   plt.close(fig)
+  media.show_image(image, border=True, title='day19')
 
 
 if SHOW_BIG_MEDIA:
@@ -3637,8 +3637,8 @@ def day20_visualize(s):
   networkx.draw(graph, pos, node_size=200, node_color=node_color, with_labels=True, font_size=8)
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
-  media.show_image(image, border=True, title='day20')
   plt.close(fig)
+  media.show_image(image, border=True, title='day20')
 
 
 day20_visualize(puzzle.input)
@@ -4189,8 +4189,8 @@ def day22b(s, *, part2=False, visualize=False):  # First scheme, with unnecessar
     networkx.draw(graph, pos, node_color=node_color, node_size=15, width=0.5, arrowsize=4)
     fig.tight_layout(pad=0)
     image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
-    media.show_image(image, border=True, title='day22a')
     plt.close(fig)
+    media.show_image(image, border=True, title='day22a')
     return
 
   if not part2:
@@ -4682,9 +4682,9 @@ def day23_visualize_graph(s, *, part2=False, optimize=True, node_size=700):
 
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
+  plt.close(fig)
   title = 'day23d' if part2 else 'day23c'
   media.show_image(image, border=True, title=title)
-  plt.close(fig)
 
 
 if SHOW_BIG_MEDIA:
@@ -5292,7 +5292,7 @@ def day24_part2_visualize(s, nframes=120, fps=30):
   # bbox2 = np.array([ax.get_xlim(), ax.get_ylim(), ax.get_zlim()]).T
   ax.view_init(elev=30, azim=75)  # Default ax.elev=30, ax.azim=-60.
   fig.tight_layout(pad=0)
-  plt.close()
+  plt.close(fig)
 
   def animate(n):
     frac = n / nframes * 1.5 - 0.25
@@ -5441,8 +5441,8 @@ def day25_visualize(s):
 
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
-  media.show_image(image, border=True, title='day25')
   plt.close(fig)
+  media.show_image(image, border=True, title='day25')
 
 
 if SHOW_BIG_MEDIA:

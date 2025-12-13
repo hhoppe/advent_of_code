@@ -4813,8 +4813,8 @@ def day24_visualize(s, *, correct_to=1000, truncated=True):
   networkx.draw(graph, pos, node_color=node_color, node_size=node_size, **args)
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
-  media.show_image(image, title='day24')
   plt.close(fig)
+  media.show_image(image, title='day24')
 
 
 day24_visualize(puzzle.input)

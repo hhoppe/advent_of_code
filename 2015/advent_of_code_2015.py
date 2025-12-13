@@ -719,8 +719,8 @@ def day7_visualize(s):
   networkx.draw(graph, pos, node_size=150, node_color=node_color, width=0.7)
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
-  media.show_image(image, border=True, title='day7')
   plt.close(fig)
+  media.show_image(image, border=True, title='day7')
 
 
 day7_visualize(puzzle.input)
@@ -738,14 +738,12 @@ day7_visualize(puzzle.input)
 puzzle = advent.puzzle(day=8)
 
 # %%
-s1 = r"""
+s1 = r"""\
 ""
 "abc"
 "aaa\"aaa"
 "\x27"
-"""[
-    1:
-]
+"""
 
 
 # %%

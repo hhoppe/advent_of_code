@@ -2795,8 +2795,8 @@ def day24(s, *, part2=False, num_days=100, visualize=False, radius=57):
         ax.add_patch(hexagon)
       fig.tight_layout(pad=0)
       image = hh.image_from_plt(fig)
-      media.show_image(image, border=True, title='day24b')
       plt.close(fig)
+      media.show_image(image, border=True, title='day24b')
 
     if SHOW_BIG_MEDIA:  # ~75 s and 1.3 MB.
       images = []

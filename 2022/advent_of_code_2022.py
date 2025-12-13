@@ -865,8 +865,8 @@ def day7v(s):  # Visualization
   networkx.draw(graph, pos, node_size=150, node_color=node_color, width=0.7)
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
-  media.show_image(image, border=True, title='day07')
   plt.close(fig)
+  media.show_image(image, border=True, title='day07')
 
 
 day7v(puzzle.input)

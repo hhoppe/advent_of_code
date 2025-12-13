@@ -6,7 +6,7 @@ Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2017/adven
 with Python solutions to the
 [2017 Advent of Code puzzles](https://adventofcode.com/2017),
 completed in November 2022,
-by [Hugues Hoppe](http://hhoppe.com/).
+by [Hugues Hoppe](https://hhoppe.com/).
 
 The notebook presents both "compact" and "fast" code versions, along with data visualizations.
 

@@ -744,8 +744,8 @@ def day11(s, *, part2=False, visualize=False):
       axis.set_major_locator(matplotlib.ticker.MultipleLocator(tick_spacing))
     fig.tight_layout(pad=0)
     image = hh.bounding_crop(hh.image_from_plt(fig), 255)
-    media.show_image(image, title='day11')
     plt.close(fig)
+    media.show_image(image, title='day11')
 
   return max(radii) if part2 else radii[-1]
 

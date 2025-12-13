@@ -7,7 +7,7 @@ Jupyter [notebook](https://github.com/hhoppe/advent_of_code/blob/main/2020/adven
 with Python solutions to the
 [2020 Advent of Code puzzles](https://adventofcode.com/2020),
 completed in December 2020,
-by [Hugues Hoppe](http://hhoppe.com/).
+by [Hugues Hoppe](https://hhoppe.com/).
 
 I participated in the 25-day [Advent of Code](https://adventofcode.com/) for the first time this year, thanks to encouragement from colleagues, especially [Sascha Häberling](https://github.com/shaeberling).  It was great fun and provided a nice opportunity to learn more advanced Python.
 

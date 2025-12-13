@@ -2,6 +2,9 @@
 
 import sys
 
+NUM_DAYS = 25
+NUM_DAYS = 12
+
 PART1 = """\
 # %% [markdown]
 # <a name="day{DAY}"></a>
@@ -46,7 +49,7 @@ check_eq(day{DAY}_part2(s1), 1)
 # puzzle.verify(2, day{DAY}_part2)
 """
 
-PART2_DAY25 = """\
+PART2_LAST_DAY = """\
 
 # %%
 puzzle.verify(2, lambda s: '')  # (No "Part 2" on last day.)
@@ -59,8 +62,8 @@ def main():
   if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(newline='\n')
 
-  for day in range(1, 26):
-    s = PART1 + (PART2_DAY25 if day == 25 else PART2)
+  for day in range(1, NUM_DAYS + 1):
+    s = PART1 + (PART2_LAST_DAY if day == NUM_DAYS else PART2)
     s2 = s.replace('{DAY}', str(day))
     print(s2)
 

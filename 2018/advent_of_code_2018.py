@@ -1255,20 +1255,18 @@ _ = day12_part2(puzzle.input, visualize=True)
 puzzle = advent.puzzle(day=13)
 
 # %%
-s1 = r"""
+s1 = r"""\
 /->-\        EOL
 |   |  /----\EOL
 | /-+--+-\  |EOL
 | | |  | v  |EOL
 \-+-/  \-+--/EOL
   \------/   EOL
-"""[
-    1:
-].replace(
+""".replace(
     'EOL', ''
 )
 
-s2 = r"""
+s2 = r"""\
 />-<\  EOL
 |   |  EOL
 | /<+-\EOL
@@ -1276,9 +1274,7 @@ s2 = r"""
 \>+</ |EOL
   |   ^EOL
   \<->/EOL
-"""[
-    1:
-].replace(
+""".replace(
     'EOL', ''
 )
 
