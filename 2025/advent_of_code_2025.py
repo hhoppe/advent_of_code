@@ -90,7 +90,7 @@ PROFILE = 'google.Hugues_Hoppe.965276'
 
 # %%
 TAR_URL = f'https://github.com/hhoppe/advent_of_code/raw/main/{YEAR}/data/{PROFILE}.tar.gz'
-TAR_URL = ''
+# TAR_URL = ''
 advent = advent_of_code_hhoppe.Advent(year=YEAR, tar_url=TAR_URL)
 
 # %%
@@ -1430,7 +1430,7 @@ def day12(s):
 puzzle.verify(1, day12)
 
 # %%
-# puzzle.verify(2, lambda s: '')  # (No "Part 2" on last day.)
+puzzle.verify(2, lambda s: '')  # (No "Part 2" on last day.)
 
 # %% [markdown]
 # <a name="timings"></a>
