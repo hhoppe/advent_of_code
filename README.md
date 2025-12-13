@@ -6,6 +6,7 @@ Jupyter notebooks by [Hugues Hoppe](http://hhoppe.com/) with Python solutions to
 We explore both "compact" and "fast" code versions, along with data visualizations.
 
 Open each notebook in Colab:
+[[**2025**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2025/advent_of_code_2025.ipynb)
 [[**2024**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2024/advent_of_code_2024.ipynb)
 [[**2023**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2023/advent_of_code_2023.ipynb)
 [[**2022**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb)
@@ -18,6 +19,7 @@ Open each notebook in Colab:
 [[**2015**]](https://colab.research.google.com/github/hhoppe/advent_of_code/blob/main/2015/advent_of_code_2015.ipynb)
 
 Open each notebook in GitHub:
+[[**2025**]](https://github.com/hhoppe/advent_of_code/blob/main/2025/advent_of_code_2025.ipynb)
 [[**2024**]](https://github.com/hhoppe/advent_of_code/blob/main/2024/advent_of_code_2024.ipynb)
 [[**2023**]](https://github.com/hhoppe/advent_of_code/blob/main/2023/advent_of_code_2023.ipynb)
 [[**2022**]](https://github.com/hhoppe/advent_of_code/blob/main/2022/advent_of_code_2022.ipynb)
