@@ -4265,7 +4265,8 @@ def day21v(
   root_node = create_node('root')
   pos = hh.graph_layout(graph, prog=prog)
   if rot is not None:
-    pos = hh.rotate_layout_so_node_is_on_left(pos, root_node, rot)
+    pos = hh.rotate_layout_so_node_is_on_left(pos, root_node)
+    pos = hh.rotate_layout_by_angle(pos, rot)
 
   dpi = 50  # Graph node labels are small yet readable at this resolution.
   fig, ax = plt.subplots(figsize=figsize, dpi=dpi)

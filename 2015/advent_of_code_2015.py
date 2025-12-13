@@ -712,7 +712,8 @@ def day7_visualize(s):
         graph.add_edge(src, dst)
 
   pos = hh.graph_layout(graph, prog='neato')
-  pos = hh.rotate_layout_so_node_is_on_left(pos, 'a', math.tau / 8)
+  pos = hh.rotate_layout_so_node_is_on_left(pos, 'a')
+  pos = hh.rotate_layout_by_angle(pos, math.tau / 8)
   fig, ax = plt.subplots(figsize=(12, 12), dpi=60)
   ax.set_aspect('equal')
   node_color = [(attr or 'green') for _, attr in graph.nodes(data='node_color')]

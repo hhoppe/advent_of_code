@@ -47,7 +47,7 @@
 
 # %%
 # !pip install -q advent-of-code-hhoppe hhoppe-tools matplotlib mediapy \
-#   networkx numba numpy pygraphviz scipy
+#   networkx numba numpy pygraphviz scipy z3-solver
 
 # %%
 import bisect
@@ -1290,7 +1290,7 @@ def day11_visualize(s):
       graph.add_edge(node1, node2)
 
   pos = hh.graph_layout(graph, prog='dot')  # Or prog='neato'.
-  pos = hh.rotate_layout_so_node_is_on_left(pos, 'out', math.tau / 2)
+  pos = hh.rotate_layout_by_angle(pos, math.tau / 4)
   fig, ax = plt.subplots(figsize=(7, 14), dpi=200)
   ax.set_aspect('equal')
   gray = (0.85,) * 3

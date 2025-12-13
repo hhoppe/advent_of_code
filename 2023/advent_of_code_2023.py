@@ -4652,7 +4652,8 @@ def day23_visualize_graph(s, *, part2=False, optimize=True, node_size=700):
       graph[yx2][yx1]['color'] = 'black'
 
   pos = hh.graph_layout(graph, prog='neato')
-  pos = hh.rotate_layout_so_node_is_on_left(pos, start_yx, math.tau / 8)
+  pos = hh.rotate_layout_so_node_is_on_left(pos, start_yx)
+  pos = hh.rotate_layout_by_angle(pos, math.tau / 8)
   pos = {yx: (np.round(p[0]), np.round(p[1])) for yx, p in pos.items()}  # Stable across runs.
   most_upper_right_yx = max(graph_yx, key=lambda yx: yx[1] - yx[0])
   if pos[most_upper_right_yx][0] < np.mean(list(pos.values()), 0)[0]:
