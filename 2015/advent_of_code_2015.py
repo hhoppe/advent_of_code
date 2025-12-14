@@ -739,12 +739,13 @@ day7_visualize(puzzle.input)
 puzzle = advent.puzzle(day=8)
 
 # %%
-s1 = r"""\
+s1 = r"""
 ""
 "abc"
 "aaa\"aaa"
 "\x27"
 """
+s1 = s1[1:]  # (Cannot start the string with """\ because it is an r-string.)
 
 
 # %%
