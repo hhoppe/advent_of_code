@@ -1045,9 +1045,9 @@ s1 = """\
 def day10_part1(s):  # Using breadth-first search.
   total = 0
   for line in s.splitlines():
-    s_parts = line.split()
-    desired = frozenset(i for i, ch in enumerate(s_parts[0][1:-1]) if ch == '#')
-    changes = [set(map(int, re.findall(r'\d+', part))) for part in s_parts[1:-1]]
+    s_goal, *s_changes, _ = line.split()
+    goal = frozenset(i for i, ch in enumerate(s_goal[1:-1]) if ch == '#')
+    changes = [set(map(int, re.findall(r'\d+', s_change))) for s_change in s_changes]
 
     def min_step_count_using_bfs():
       state = frozenset[int]()
@@ -1060,7 +1060,7 @@ def day10_part1(s):  # Using breadth-first search.
           for change in changes:
             new_state = frozenset(state ^ change)
             if new_state not in visited:
-              if new_state == desired:
+              if new_state == goal:
                 return step
               visited.add(new_state)
               new_states.append(new_state)
@@ -1104,9 +1104,9 @@ def day10a_part2(s):  # Using the z3 solver.
 
   total = 0
   for line in s.splitlines():
-    s_parts = line.split()
-    changes = [set(map(int, re.findall(r'\d+', part))) for part in s_parts[1:-1]]
-    b = list(map(int, re.findall(r'\d+', s_parts[-1])))
+    _, *s_changes, s_goal = line.split()
+    changes = [set(map(int, re.findall(r'\d+', s_change))) for s_change in s_changes]
+    b = list(map(int, re.findall(r'\d+', s_goal)))
     M = [[int(i in change) for change in changes] for i in range(len(b))]
     x = solve_min_sum_z3(M, b)
     total += sum(x)
@@ -1135,22 +1135,22 @@ def day10b_part2(s):  # Explore some small speedups with the z3 solver approach.
     solver.add(xi >= 0)
 
   for line in lines:
-    s_parts = line.split()
-    changes = [set(map(int, re.findall(r'\d+', part))) for part in s_parts[1:-1]]
-    desired = list(map(int, re.findall(r'\d+', s_parts[-1])))
+    _, *s_changes, s_goal = line.split()
+    changes = [set(map(int, re.findall(r'\d+', s_change))) for s_change in s_changes]
+    goal = list(map(int, re.findall(r'\d+', s_goal)))
     if 0:  # No effect, but reverse=False is slower.
-      coverage = [sum(i in ch for i in range(len(desired))) for ch in changes]
+      coverage = [sum(i in ch for i in range(len(goal))) for ch in changes]
       order = sorted(range(len(changes)), key=lambda j: coverage[j], reverse=True)
       changes = [changes[j] for j in order]
     if 1:  # About 1.05x faster.
-      contribution = [sum(desired[i] for i in range(len(desired)) if i in ch) for ch in changes]
+      contribution = [sum(goal[i] for i in range(len(goal)) if i in ch) for ch in changes]
       order = sorted(range(len(changes)), key=lambda j: contribution[j], reverse=False)
       changes = [changes[j] for j in order]
 
     solver.push()  # Save state.
 
     # Per-line constraints.
-    for i, target in enumerate(desired):
+    for i, target in enumerate(goal):
       solver.add(z3.Sum([x[j] for j, ch in enumerate(changes) if i in ch]) == target)
 
     solver.minimize(z3.Sum(x[: len(changes)]))
@@ -1167,23 +1167,79 @@ puzzle.verify(2, day10b_part2)
 
 
 # %%
+# Using bifurcate method from
+# https://www.reddit.com/r/adventofcode/comments/1pk87hl/2025_day_10_part_2_bifurcate_your_way_to_victory/
+def day10c_part2(s):
+  total = 0
+
+  for line in s.splitlines():
+    _, *s_changes, s_goal = line.split()
+    goal = tuple(map(int, re.findall(r'\d+', s_goal)))
+
+    def compute_pattern_costs(
+        num_variables: int, s_changes: list[str]
+    ) -> dict[tuple[int, ...], dict[tuple[int, ...], int]]:
+      changes = [[int(i) for i in s_change[1:-1].split(',')] for s_change in s_changes]
+      coeffs = [tuple(int(i in change) for i in range(num_variables)) for change in changes]
+      num_buttons = len(coeffs)
+      all_pattern_parities = itertools.product(range(2), repeat=num_variables)
+      pattern_costs: dict[tuple[int, ...], dict[tuple[int, ...], int]] = {
+          pattern_parity: {} for pattern_parity in all_pattern_parities
+      }
+
+      for num_pressed_buttons in range(num_buttons + 1):
+        for buttons in itertools.combinations(range(num_buttons), num_pressed_buttons):
+          pattern = tuple(map(sum, zip((0,) * num_variables, *(coeffs[i] for i in buttons))))
+          pattern_parity = tuple(i % 2 for i in pattern)
+          if pattern not in pattern_costs[pattern_parity]:
+            pattern_costs[pattern_parity][pattern] = num_pressed_buttons
+
+      return pattern_costs
+
+    pattern_costs = compute_pattern_costs(len(goal), s_changes)
+
+    @functools.cache
+    def get_cost_for_goal(goal: tuple[int, ...]) -> int:
+      if all(i == 0 for i in goal):
+        return 0
+      min_cost = 10**9
+      parity = tuple(i % 2 for i in goal)
+
+      for pattern, pattern_cost in pattern_costs[parity].items():
+        if all(i <= j for i, j in zip(pattern, goal)):
+          new_goal = tuple((j - i) // 2 for i, j in zip(pattern, goal))
+          candidate_cost = pattern_cost + 2 * get_cost_for_goal(new_goal)
+          min_cost = min(min_cost, candidate_cost)
+
+      return min_cost
+
+    total += get_cost_for_goal(goal)
+
+  return total
+
+
+check_eq(day10c_part2(s1), 33)
+puzzle.verify(2, day10c_part2)
+
+
+# %%
 def day10_part2(s):  # Using scipy.optimize.milp().
   # I tried multiprocessing but it misbehaved due to the multithreading already in scipy.optimize.
   total = 0
 
   for line in s.splitlines():
-    s_parts = line.split()
-    changes = s_parts[1:-1]
-    desired = np.array(list(map(int, re.findall(r'\d+', s_parts[-1]))), dtype=float)
+    _, *s_changes, s_goal = line.split()
+    changes = [[int(i) for i in s_change[1:-1].split(',')] for s_change in s_changes]
+    goal = np.array(list(map(int, re.findall(r'\d+', s_goal))), dtype=float)
 
-    n_rows, n_cols = len(desired), len(changes)
+    n_rows, n_cols = len(goal), len(s_changes)
     A = np.zeros((n_rows, n_cols))
     for j, change in enumerate(changes):
-      for i in map(int, re.findall(r'\d+', change)):
+      for i in change:
         A[i, j] = 1.0
 
-    # Equality constraints A x = desired.
-    lc = scipy.optimize.LinearConstraint(A, desired, desired)
+    # Equality constraints A x = goal.
+    lc = scipy.optimize.LinearConstraint(A, goal, goal)
 
     # Objective: minimize sum(x).
     c = np.ones(n_cols)
