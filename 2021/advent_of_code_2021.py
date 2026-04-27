@@ -1270,7 +1270,7 @@ def day11a(s, *, part2=False):  # Compact.
 
   for step in itertools.count(1):
     grid += 1
-    stack = list(np.argwhere(grid == 10))
+    stack: list = list(np.argwhere(grid == 10))
     while stack:
       yx = stack.pop()
       for dyx in set(itertools.product((-1, 0, 1), repeat=2)) - {(0, 0)}:
@@ -1320,7 +1320,7 @@ def day11b(s, *, part2=False):  # Faster, using ndenumerate and bool array.
 
     grid[flashed] = 0
     if not part2:
-      total += np.count_nonzero(flashed)
+      total += int(np.count_nonzero(flashed))
       if step == 100:
         return total
     elif flashed.all():
@@ -1376,7 +1376,7 @@ def day11(s, *, part2=False, visualize=False):  # Fastest, using flat array.
       images.append(image.repeat(10, axis=0).repeat(10, axis=1))
 
     if not part2:
-      total += np.count_nonzero(flashed)
+      total += int(np.count_nonzero(flashed))
       if step == 100:
         return total
     elif flashed.all():

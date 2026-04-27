@@ -966,7 +966,7 @@ s2 = """\
 # %%
 def day10_part1(s):
   l = sorted(map(int, s.split()))
-  counter = collections.Counter(np.diff([0] + l + [l[-1] + 3]))
+  counter = collections.Counter(np.diff([0] + l + [l[-1] + 3]).tolist())
   return counter[1] * counter[3]
 
 

@@ -3671,7 +3671,7 @@ def day20f(s, *, part2=False, min_savings=100):
       both_open = (a1 < INF) & (a2 < INF)
       saved = np.abs(a1 - a2) - manhattan
       saved[~both_open] = 0
-      total += np.count_nonzero(saved >= min_savings)
+      total += int(np.count_nonzero(saved >= min_savings))
 
   return total
 

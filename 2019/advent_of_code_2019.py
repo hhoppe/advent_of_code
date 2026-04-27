@@ -56,7 +56,7 @@
 # %%
 import abc
 import collections
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 import dataclasses
 import functools
 import graphlib
@@ -121,7 +121,7 @@ _ORIGINAL_GLOBALS = list(globals())
 class _Machine(abc.ABC):
 
   def __init__(self):
-    self.mem: Sequence[int] = ()
+    self.mem: Iterable[int] = ()
     self.terminated = False
     self._pc = 0
     self._relative_base = 0
@@ -2283,7 +2283,7 @@ def day18a(s):  # Most compact, for part 1 only
     result = []
     while to_visit:
       distance, yx, needed = to_visit.popleft()
-      ch = grid[yx]
+      ch = grid[yx].item()
       if is_key(ch) and ch != current_key:
         result.append((ch, distance, frozenset(needed)))
         needed = needed + [ch]
