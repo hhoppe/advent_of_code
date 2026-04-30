@@ -607,7 +607,7 @@ def day6a(s, *, part2=False):  # Initial solution, using Counter.
       else:
         counter2[e - 1] += count
     counter = counter2
-  return sum(counter.values())  # (counter.total() in Python 3.10)
+  return counter.total()
 
 
 puzzle.verify(1, day6a)

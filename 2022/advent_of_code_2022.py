@@ -65,6 +65,7 @@ import collections
 from collections.abc import Callable
 import dataclasses
 import functools
+import graphlib
 import heapq
 import importlib
 import itertools
@@ -4095,8 +4096,6 @@ def day21b(s, *, part2=False, mode='graphlib'):  # Topo-sort or top-down, for si
   # In a single pass, assign nodes whose children are assigned.
   match mode:
     case 'graphlib':  # Using topological sort ordering.
-      import graphlib  # pylint: disable=import-error # Python 3.9.
-
       for dst in graphlib.TopologicalSorter(dependencies).static_order():
         if dst in dependencies:
           consider_node(dst)
