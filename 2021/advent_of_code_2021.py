@@ -4235,13 +4235,13 @@ def day22_func(states, cuboids):
 
   def replace(tuple_, index, value):
     # return tuple_[:index] + (value,) + tuple_[index + 1 :]
-    setitem = numba.cpython.unsafe.tuple.tuple_setitem
+    setitem = numba.cpython.unsafe.tuple.tuple_setitem  # type: ignore[attr-defined]
     return setitem(tuple_, index, value)  # pylint: disable=no-value-for-parameter
 
   def to_tuple(array):
     # return tuple(array[0]), tuple(array[1]), tuple(array[2])
     to_fixed = numba.np.unsafe.ndarray.to_fixed_tuple  # pylint: disable=no-member
-    return to_fixed(array[0], 2), to_fixed(array[1], 2), to_fixed(array[2], 2)
+    return to_fixed(array[0], 2), to_fixed(array[1], 2), to_fixed(array[2], 2)  # type: ignore
 
   def subdivide_a_subtracting_b(a, b):  # Faster; smaller number of subcells.
     boxes = [a]
@@ -4700,7 +4700,7 @@ def day23_func(nrows, start_state, end_state, state_size):
       # https://numba.discourse.group/t/how-to-use-a-sequence-as-dict-key/431/11
       # https://github.com/numba/numba/blob/master/numba/tests/test_unsafe_intrinsics.py
       if 1:  # Fast.
-        setitem = numba.cpython.unsafe.tuple.tuple_setitem
+        setitem = numba.cpython.unsafe.tuple.tuple_setitem  # type: ignore[attr-defined]
         return setitem(setitem(state, i0, -1), i1, id)  # pylint: disable=no-value-for-parameter
       # Slower.
       state2 = np.array(state)
