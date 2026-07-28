@@ -56,7 +56,6 @@
 # %%
 import abc
 import collections
-from collections.abc import Iterable
 import dataclasses
 import functools
 import graphlib
@@ -66,6 +65,8 @@ import math
 import pathlib
 import random
 import re
+import typing
+from collections.abc import Iterable
 from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -121,7 +122,7 @@ _ORIGINAL_GLOBALS = list(globals())
 class _Machine(abc.ABC):
 
   def __init__(self):
-    self.mem: Iterable[int] = ()
+    self.mem: Any = ()  # Either list[int] or np.ndarray[Any, np.integer].
     self.terminated = False
     self._pc = 0
     self._relative_base = 0
@@ -147,7 +148,7 @@ class _PyMachine(_Machine):
   def __init__(self, s, *, mem_extend=0):
     assert not mem_extend
     super().__init__()
-    self.mem: list[int] = list(map(int, s.split(',')))
+    self.mem = list(map(int, s.split(',')))
     self._input = []
     self._output = []
 
@@ -698,10 +699,10 @@ def day4a(s):  # Slow brute-force.
   lb, ub = map(int, s.split('-'))
 
   def two_adjacent_are_same(s):
-    return any(a == b for a, b in zip(s, s[1:]))
+    return any(a == b for a, b in itertools.pairwise(s))
 
   def digits_never_decrease(s):
-    return all(a <= b for a, b in zip(s, s[1:]))
+    return all(a <= b for a, b in itertools.pairwise(s))
 
   count = 0
   for i in range(lb, ub + 1):
@@ -718,7 +719,7 @@ def day4(s, *, part2=False):  # Recursive search with pruning.
   lower, upper = (tuple(map(int, list(b))) for b in s.strip().split('-'))
 
   def two_adjacent_are_same(t):
-    return any(a == b for a, b in zip(t, t[1:]))
+    return any(a == b for a, b in itertools.pairwise(t))
 
   def have_exactly_two_adjacent(t):
     e = (-1, *t, -1)
@@ -905,7 +906,8 @@ def day7_part2(s, *, return_all=False):
     check_eq(sorted(phases), list(range(5, 10)))
     machines = [_Machine.make(s) for _ in range(5)]
     value = 0
-    for step in itertools.count():
+    step = 0
+    while True:
       for i in range(5):
         machine = machines[i]
         input = ([phases[i]] if step == 0 else []) + [value]
@@ -914,6 +916,7 @@ def day7_part2(s, *, return_all=False):
       if any(terminated):
         assert all(terminated)
         return value
+      step += 1
 
   all_phases = itertools.permutations(range(5, 10))
   best_phases = max(all_phases, key=get_thrust2)
@@ -1648,7 +1651,7 @@ class Day15ExploreMaze:
   NEIGHBORS = (0, 1), (1, 0), (0, -1), (-1, 0)
 
   # north (1), south (2), west (3), and east (4)
-  COMMAND_FOR_MOVEMENT = {(0, 1): 4, (1, 0): 2, (0, -1): 3, (-1, 0): 1}
+  COMMAND_FOR_MOVEMENT: typing.ClassVar[dict] = {(0, 1): 4, (1, 0): 2, (0, -1): 3, (-1, 0): 1}
 
   def __init__(self, machine_s):
     self.machine = _Machine.make(machine_s)
@@ -1742,7 +1745,7 @@ class Day15ExploreMaze:
   def farthest_distance_from_destination(self, visualize=False):
     self.compute()
     assert self.destination
-    src_yx = self.destination
+    src_yx = yx = self.destination
     seen = {src_yx}
     to_visit = collections.deque([src_yx])
     previous = {}  # {yx: node_yx_which_saw_it}
@@ -1828,7 +1831,7 @@ def day16_part1(s, *, num_phases=100, debug=False):
 
   if debug:
     print_fft_patterns(20)
-    return
+    return None
 
   l = np.array(list(map(int, s.strip())))
   patterns = np.array([get_fft_pattern(len(l), i) for i in range(len(l))])
@@ -2344,7 +2347,7 @@ def day18(s, *, part2=False, visualize=False, fps=50, size=4, speed=1, tail=1):
   current_keys = tuple(str(i) for i in range(np.sum(grid == '@')))
   grid[grid == '@'] = current_keys
   yx_of_key: dict[str, tuple[int, int]] = {
-      ch: yx for yx, ch in np.ndenumerate(grid) if is_key(ch)  # type: ignore[misc]
+      ch: (y, x) for (y, x), ch in np.ndenumerate(grid) if is_key(ch)
   }
 
   @functools.cache
@@ -2390,7 +2393,7 @@ def day18(s, *, part2=False, visualize=False, fps=50, size=4, speed=1, tail=1):
   @functools.cache
   def explore(current_keys, keys):  # Returns (distance, index_key, next_key).
     if len(keys) == len(yx_of_key):
-      return 0, '', ''
+      return 0, -1, ''
     best = 10**8, -1, ''
     for index_key, current_key in enumerate(current_keys):
       for path_distance, key in eligible_paths(current_key, keys):
@@ -2741,8 +2744,8 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
       self.portal_portal_path: dict[
           tuple[int, int], dict[tuple[int, int], list[tuple[int, int]]]
       ] = {}  # [yx][yx2] -> path
-      for unused_inner, d in self.yx_of_portal.items():
-        for unused_name, src_yx in d.items():
+      for d in self.yx_of_portal.values():
+        for src_yx in d.values():
           self.portal_portal_path[src_yx] = self.compute_portal_paths(src_yx)
 
     def compute_portal_paths(self, src_yx):
@@ -2763,7 +2766,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
               path: list[tuple[int, int]] = []
               while yx3:
                 path.append(yx3)
-                yx3 = parent.get(yx3, None)
+                yx3 = parent.get(yx3)
               portal_paths[yx2] = path[-2::-1]  # Omit src_yx.
             else:
               to_visit.append(yx2)
@@ -2810,6 +2813,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
             distance[lyx2] = candidate_d
             parent[lyx2] = lyx
             to_visit.append(lyx2)
+
       return None  # Could not find path reaching exit.
 
     # Fast version that jumps across precomputed intra-level shortest paths:
@@ -2865,7 +2869,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
     def visualize(self, max_level):
       images = []
       src_lyx = (0, *self.yx_of_portal[0]['AA'])
-      path = [src_lyx] + self.shortest_path(max_level)
+      path = [src_lyx] + hh.assert_not_none(self.shortest_path(max_level))
       image0 = hh.to_image(self.grid == '#', 255, 30)  # default is '.'
       image0[self.grid == ' '] = 235
       image0[('A' <= self.grid) & (self.grid <= 'Z')] = 40, 40, 255
@@ -2889,7 +2893,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
           image[lyx[1:]] = color
           if abs(lyx[1] - last_lyx[1]) + abs(lyx[2] - last_lyx[2]) > 1:
             count = 0  # Jump across portal without level change.
-            lyx2 = self.opposite_portal(last_lyx, max_level)
+            lyx2 = hh.assert_not_none(self.opposite_portal(last_lyx, max_level))
             image[lyx2[1:]] = color
           if count % speed == 0:
             record_image(image, step, level)
@@ -2900,7 +2904,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
           image = image0.copy()
           count = 0
           color = (255, 40, 40) if self.is_inner_portal(last_lyx[1:]) else (0, 180, 60)
-          lyx2 = self.opposite_portal(last_lyx, max_level)
+          lyx2 = hh.assert_not_none(self.opposite_portal(last_lyx, max_level))
           image[lyx2[1:]] = color
           yx2 = next(iter(self.portal_portal_path[lyx2[1:]].values()))[0]
           image[yx2] = color
@@ -2915,7 +2919,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
   if visualize:
     return Maze(s).visualize(max_level)
   path = Maze(s).shortest_path(max_level)
-  return len(path) if path else None
+  return len(path) if path is not None else None
 
 
 check_eq(day20(s1), 23)
@@ -3158,7 +3162,7 @@ Result: 9 2 5 8 1 4 7 0 3 6
 class _DeckOld:
 
   def __init__(self, arg):
-    self.deck = list(range(int(arg))) if isinstance(arg, int) else list(arg)
+    self.deck = list(range(arg)) if isinstance(arg, int) else list(arg)
 
   def cards(self):
     return self.deck

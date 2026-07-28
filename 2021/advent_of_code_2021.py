@@ -55,7 +55,6 @@
 # %%
 import ast
 import collections
-from collections.abc import Callable, Iterable, Iterator
 import copy
 import dataclasses
 import functools
@@ -65,6 +64,7 @@ import math
 import pathlib
 import re
 import typing
+from collections.abc import Callable, Iterable, Iterator
 from typing import Any, Generic, TypeVar
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -301,6 +301,7 @@ def day3(s, *, part2=False):
       lines2 = [line for line in lines2 if line[i] == s0[i]]
       if len(lines2) == 1:
         return int(lines2[0], base=2)
+    raise RuntimeError('No solution found')
 
   return cull_lines(False) * cull_lines(True)
 
@@ -365,15 +366,17 @@ def day4a(s, *, part2=False):  # Compact.
       [[[int(n) for n in line.split()] for line in t.splitlines()] for t in sections[1:]]
   )
   matches = boards < 0
-  scores = []
+  scores: list[int] = []
   previously_finished = np.full(len(boards), False)
   for number in map(int, sections[0].split(',')):
     matches[boards == number] = True
     finished = (matches.sum(1).max(1) == boards.shape[1]) | (
         matches.sum(2).max(1) == boards.shape[2]
     )
-    for winner in np.argwhere(finished & ~previously_finished):
-      scores.append(boards[winner][~matches[winner]].sum() * number)
+    scores.extend(
+        boards[winner][~matches[winner]].sum() * number
+        for winner in np.argwhere(finished & ~previously_finished)
+    )
     previously_finished = finished
 
   return scores[-int(part2)]
@@ -395,15 +398,17 @@ def day4(s, *, part2=False):  # More readable.
       [[[int(n) for n in line.split()] for line in t.splitlines()] for t in sections[1:]]
   )
   matches = np.full(boards.shape, False)
-  scores = []
+  scores: list[int] = []
   previously_finished = np.full(len(boards), False)
   for number in numbers:
     matches[boards == number] = True
     finished = (matches.sum(axis=1).max(axis=1) == boards.shape[1]) | (
         matches.sum(axis=2).max(axis=1) == boards.shape[2]
     )
-    for winner in np.argwhere(finished & ~previously_finished):
-      scores.append(boards[winner][~matches[winner]].sum() * number)
+    scores.extend(
+        boards[winner][~matches[winner]].sum() * number
+        for winner in np.argwhere(finished & ~previously_finished)
+    )
     previously_finished = finished
 
   return scores[-1 if part2 else 0]
@@ -819,10 +824,10 @@ def day8a_part2(s):  # Brute-force; most compact.
       translation = str.maketrans('abcdefg', ''.join(permutation))
 
       def get_digit(segs):
-        return lookup.get(''.join(sorted(segs.translate(translation))), None)
+        return lookup.get(''.join(sorted(segs.translate(translation))))
 
       if all(get_digit(input) for input in inputs):
-        total += int(''.join(get_digit(output) for output in outputs))
+        total += int(''.join(hh.assert_not_none(get_digit(output)) for output in outputs))
         break
     else:
       raise ValueError(f'Line "{line}" has no consistent mapping.')
@@ -836,13 +841,13 @@ puzzle.verify(2, day8a_part2)
 
 # %%
 def day8b_part2(s):  # Faster; cache a translation table for each permutation.
-  lookup = {frozenset(k): str(v) for k, v in day8_lookup().items()}
+  lookup = {frozenset(k): v for k, v in day8_lookup().items()}
   total = 0
 
   @functools.cache
   def digit_mapper(permutation):
     translation = str.maketrans('abcdefg', ''.join(permutation))
-    return lambda segs: lookup.get(frozenset(segs.translate(translation)), None)
+    return lambda segs: lookup.get(frozenset(segs.translate(translation)))
 
   for line in s.splitlines():
     inputs, outputs = map(str.split, line.split(' | '))
@@ -850,7 +855,7 @@ def day8b_part2(s):  # Faster; cache a translation table for each permutation.
     for permutation in itertools.permutations('abcdefg'):
       get_digit = digit_mapper(permutation)
       if all(get_digit(input) for input in inputs):
-        total += int(''.join(get_digit(output) for output in outputs))
+        total += int(''.join(hh.assert_not_none(get_digit(output)) for output in outputs))
         break
     else:
       raise ValueError(f'Line "{line}" has no consistent mapping.')
@@ -876,7 +881,7 @@ def day8c_part2(s):  # Faster; loop over permutations first, then lines.
     decode = {frozenset(k.translate(translation)): v for k, v in lookup.items()}
     for i in reversed(range(len(ins))):
       if all(input in decode for input in ins[i]):
-        total += int(''.join(str(decode[frozenset(output)]) for output in outs[i]))
+        total += int(''.join(decode[frozenset(output)] for output in outs[i]))
         _ = ins.pop(i), outs.pop(i)
 
   assert not ins
@@ -891,9 +896,9 @@ puzzle.verify(2, day8c_part2)
 def day8d_part2(s):  # Faster; precompute seg sets for each permutation.
   lookup = day8_lookup()
   valids = {
-      ''.join(permutation): set(
+      ''.join(permutation): {
           frozenset(k.translate(str.maketrans('abcdefg', ''.join(permutation)))) for k in lookup
-      )
+      }
       for permutation in itertools.permutations('abcdefg')
   }
   total = 0
@@ -904,7 +909,7 @@ def day8d_part2(s):  # Faster; precompute seg sets for each permutation.
     for permutation, valid in valids.items():
       if inputs == valid:
         translation = str.maketrans('abcdefg', permutation)
-        decode = {frozenset(k.translate(translation)): str(v) for k, v in lookup.items()}
+        decode = {frozenset(k.translate(translation)): v for k, v in lookup.items()}
         total += int(''.join(decode[frozenset(output)] for output in outputs))
         break
     else:
@@ -935,7 +940,7 @@ def day8e_part2(s):  # Faster; loop over permutations first, and use sets of lin
     for line in lines:
       inputs, outputs = line
       if inputs == valid:
-        total += int(''.join(str(decode[output]) for output in outputs))
+        total += int(''.join(decode[output] for output in outputs))
         processed_lines.add(line)
     lines -= processed_lines
 
@@ -967,7 +972,7 @@ def day8_part2(s):  # Fastest; custom solution for the 7-segment LED.
 
   for line in s.splitlines():
     inputs0, outputs = map(str.split, line.split(' | '))
-    inputs = set(frozenset(input) for input in inputs0)
+    inputs = {frozenset(input) for input in inputs0}
     segs_from_digit.clear()
     for digit, length, predicate in rules:
       (segs,) = (e for e in inputs if len(e) == length and predicate(e))
@@ -1320,7 +1325,8 @@ def day11b(s, *, part2=False):  # Faster, using ndenumerate and bool array.
 
     grid[flashed] = 0
     if not part2:
-      total += int(np.count_nonzero(flashed))
+      total += np.count_nonzero(flashed)  # type: ignore[assignment]
+
       if step == 100:
         return total
     elif flashed.all():
@@ -1376,7 +1382,7 @@ def day11(s, *, part2=False, visualize=False):  # Fastest, using flat array.
       images.append(image.repeat(10, axis=0).repeat(10, axis=1))
 
     if not part2:
-      total += int(np.count_nonzero(flashed))
+      total += np.count_nonzero(flashed)  # type: ignore[assignment]
       if step == 100:
         return total
     elif flashed.all():
@@ -1598,8 +1604,7 @@ puzzle.verify(2, day13a_part2)
 def day13b(s, *, part2=False, visualize=False):  # More readable; a bit faster.
   chunk1, chunk2 = s.split('\n\n')
   dots = {tuple(map(int, line.split(',')))[::-1] for line in chunk1.splitlines()}
-  if visualize:
-    all_dots = {(0, *dot) for dot in dots}
+  all_dots = {(0, *dot) for dot in dots}
 
   for t, line in enumerate(chunk2.splitlines()):
     axis, value = {'y': 0, 'x': 1}[line[11:12]], int(line[13:])
@@ -2029,6 +2034,7 @@ def day15(s, *, part2=False, visualize=False):
   grid = np.pad(grid, 1, constant_values=10**8)  # To avoid boundary checks.
   distance, path_image = day15_func(grid, visualize)
   if visualize:
+    assert path_image is not None
     # media.show_image(~path_image, border=True)
     frame0 = media.to_rgb(grid[1:-1, 1:-1] * 1.0, cmap='bwr')
     frame1 = np.where(path_image[1:-1, 1:-1, None], 0, frame0)
@@ -2104,8 +2110,7 @@ def day16a(s, *, part2=False):  # Directly evaluate.
         operands.append(parse_s())
     else:
       num_packets = read_bits(11)
-      for _ in range(num_packets):
-        operands.append(parse_s())
+      operands.extend(parse_s() for _ in range(num_packets))
     return operation_for_id[packet_id](*operands)
 
   result = parse_s()
@@ -2169,8 +2174,7 @@ def day16(s, *, part2=False, visualize=0):  # Construct tree first.
         operands.append(parse_s())
     else:
       max_packets = read_bits(11)
-      for _ in range(max_packets):
-        operands.append(parse_s())
+      operands.extend(parse_s() for _ in range(max_packets))
     return version, packet_id, operands
 
   tree = parse_s()
@@ -2183,7 +2187,7 @@ def day16(s, *, part2=False, visualize=0):  # Construct tree first.
     packet_id = node[1]
     if packet_id == 4:
       return node[2]
-    operands = list(map(lambda x: evaluate(x, depth + 1), node[2]))
+    operands = [evaluate(x, depth + 1) for x in node[2]]
     result = operation_for_id[packet_id](*operands)
     if depth < visualize:
       print(f'>{"  " * depth}{result} = {name_for_id[packet_id]}{operands}')
@@ -2306,12 +2310,14 @@ def day17_simulations(x1, x2, y1, y2):
 
 
 def day17(s, *, part2=False, visualize=False):
-  x1, x2, y1, y2 = parse.parse('target area: x={:d}..{:d}, y={:d}..{:d}', s.strip()).fixed
+  x1, x2, y1, y2 = hh.assert_not_none(
+      parse.parse('target area: x={:d}..{:d}, y={:d}..{:d}', s.strip())
+  ).fixed
   winners, highest = day17_simulations(x1, x2, y1, y2)
   if visualize:
     yx_map = (
         {(0, 0): (0, 200, 0)}
-        | {yx: (255, 100, 100) for yx in winners}
+        | {yx: (255, 100, 100) for yx in winners}  # noqa: C420
         | {(y, x): (100, 100, 255) for y in range(y1, y2 + 1) for x in range(x1, x2 + 1)}
     )
     image = hh.grid_from_indices(yx_map, background=(250,) * 3, pad=1, dtype=np.uint8)[::-1]
@@ -3062,7 +3068,7 @@ check_eq(day19c_part2(s1), 3621)
 # %%
 def day19(s, *, part2=False):  # Fast.
   scanners = []  # 33 scanners, each seeing 25-27 points.
-  for i, s2 in enumerate(s.split('\n\n')):
+  for s2 in s.split('\n\n'):
     lines = s2.splitlines()
     array = np.array([list(map(int, line.split(','))) for line in lines[1:]])
     scanners.append(array)
@@ -3095,6 +3101,7 @@ def day19(s, *, part2=False):  # Fast.
       (len(all_signature_sets[i] & all_signature_sets[j]), i, j)
       for i, j in itertools.combinations(range(len(scanners)), 2)
   ]
+  last_merged = None
 
   for _, i, j in sorted(intersection_counts, reverse=True):
     ir, jr = scanner_rep[i], scanner_rep[j]
@@ -3153,6 +3160,7 @@ def day19(s, *, part2=False):  # Fast.
     scanner_rep[jr] = ir
     last_merged = ir
 
+  assert last_merged is not None
   if not part2:
     return len(scanners[last_merged])
 
@@ -3728,7 +3736,9 @@ def day22a_part1(s):  # Initial specialized solution for part 1.
   shape = 101, 101, 101
   grid = np.full(shape, 0, int)
   for line in lines:
-    state, x1, x2, y1, y2, z1, z2 = parse.parse('{} x={:d}..{:d},y={:d}..{:d},z={:d}..{:d}', line)
+    state, x1, x2, y1, y2, z1, z2 = hh.assert_not_none(
+        parse.parse('{} x={:d}..{:d},y={:d}..{:d},z={:d}..{:d}', line)
+    )
     if not all(-50 <= c <= 50 for c in [x1, x2, y1, y2, z1, z2]):
       continue
     x1 += 50
@@ -4030,10 +4040,7 @@ class _Kdtree(Generic[_T]):
       want_h = bb1[axis] >= value
       if want_l and want_h:
         break
-      if want_l:
-        node_index = node.l
-      else:
-        node_index = node.h
+      node_index = node.l if want_l else node.h
 
     node = self.nodes[node_index]
     if entry_index is None:
@@ -4064,7 +4071,8 @@ class _Kdtree(Generic[_T]):
             if e0 > b1 or e1 < b0:
               break
           else:
-            yield entry.bb0, entry.bb1, typing.cast(Any, entry.data)  # typing.cast(_T, ...)
+            data = typing.cast(Any, entry.data)  # _T | None -> _T.
+            yield entry.bb0, entry.bb1, data
         axis = node.axis
         value = node.value
         want_l = node.l >= 0 and bb0[axis] <= value
@@ -4406,7 +4414,7 @@ def day23a(s, *, part2=False):  # Compact.
         for i1 in range(2 + j, 7):  # Move right in hallway.
           if all(state[k] == '.' for k in range(2 + j, i1 + 1)):
             yield i0, i1, ((i1 - j - 1) * 2 - (i1 == 6) + row) * cost_for_id[id]
-        for i1 in range(0, 2 + j):  # Move left in hallway
+        for i1 in range(2 + j):  # Move left in hallway
           if all(state[k] == '.' for k in range(i1, 2 + j)):
             yield i0, i1, ((j - i1 + 2) * 2 - (i1 == 0) + row) * cost_for_id[id]
 
@@ -4489,7 +4497,7 @@ def day23b(s, *, part2=False, visualize=False):  # With visualization.
       for i1 in range(2 + j, 7):  # Move right in hallway.
         if all(state[k] == '.' for k in range(2 + j, i1 + 1)):
           yield i0, i1, ((i1 - j - 1) * 2 - (i1 == 6) + row) * cost_for_id[id]
-      for i1 in range(0, 2 + j):  # Move left in hallway
+      for i1 in range(2 + j):  # Move left in hallway
         if all(state[k] == '.' for k in range(i1, 2 + j)):
           yield i0, i1, ((j - i1 + 2) * 2 - (i1 == 0) + row) * cost_for_id[id]
 
@@ -4621,7 +4629,7 @@ def day23c(s, *, part2=False):  # Dijkstra or A* search.
       for i1 in range(2 + j, 7):  # Move right in hallway.
         if all(state[k] == '.' for k in range(2 + j, i1 + 1)):
           yield i0, i1, ((i1 - j - 1) * 2 - (i1 == 6) + row) * cost_for_id[id]
-      for i1 in range(0, 2 + j):  # Move left in hallway
+      for i1 in range(2 + j):  # Move left in hallway
         if all(state[k] == '.' for k in range(i1, 2 + j)):
           yield i0, i1, ((j - i1 + 2) * 2 - (i1 == 0) + row) * cost_for_id[id]
 
@@ -4726,9 +4734,8 @@ def day23_func(nrows, start_state, end_state, state_size):
       for j in range(4):
         i0 = 7 + row * 4 + j
         id = state[i0]
-        if id >= 0:
-          if id != j:
-            cost += (row + 2 + abs(j - id) * 2) * cost_for_id[id]
+        if id >= 0 and id != j:
+          cost += (row + 2 + abs(j - id) * 2) * cost_for_id[id]
     return cost
 
   assert lower_bound_cost(end_state) == 0
@@ -4805,7 +4812,7 @@ def day23_func(nrows, start_state, end_state, state_size):
         else:
           move_cost = ((i1 - j - 1) * 2 - (i1 == 6) + row) * cost_for_id[id]
           consider(i0, i1, move_cost)
-      for i1 in range(0, 2 + j):  # Move left in hallway
+      for i1 in range(2 + j):  # Move left in hallway
         for k in range(i1, 2 + j):
           if state[k] >= 0:
             break
@@ -4897,7 +4904,7 @@ def day24a(s, *, part2=False, verbose=0):  # Careful, with emulator verification
     for line in lines:
       if verbose >= 2:
         highlight = '  ****' if 'inp' in line else ''
-        print(f'{str(registers):34} {line}{highlight}')
+        print(f'{registers!s:34} {line}{highlight}')
       match line.split():
         case 'inp', dst:
           registers[dst] = int(input[0])
@@ -4910,7 +4917,7 @@ def day24a(s, *, part2=False, verbose=0):  # Careful, with emulator verification
         case 'div', dst, src:
           value = get(src)
           assert value != 0
-          registers[dst] = int(float(registers[dst] / value))  # Round towards zero.
+          registers[dst] = int(registers[dst] / value)  # Round towards zero.
         case 'mod', dst, src:
           value = get(src)
           assert registers[dst] >= 0 and value > 0
@@ -4922,7 +4929,7 @@ def day24a(s, *, part2=False, verbose=0):  # Careful, with emulator verification
 
     valid = registers['z'] == 0
     if verbose >= 1:
-      print(f'{str(registers):34} {valid=}')
+      print(f'{registers!s:34} {valid=}')
     return valid
 
   assert len(lines) == 14 * 18 == 252
@@ -4994,7 +5001,7 @@ def day24_test1():  # Notice the repeated 18-line blocks; find the block differe
   lines = puzzle.input.splitlines()
   for m in range(18):
     print(f'{m} mod 18:')
-    set_ = set(line for i, line in enumerate(lines) if i % 18 == m)
+    set_ = {line for i, line in enumerate(lines) if i % 18 == m}
     print('   ' + '\n   '.join(sorted(set_)))
 
 
@@ -5154,7 +5161,7 @@ if 0:
 #
 # ---
 #
-# See the related work on the [Biham–Middleton–Levine traffic model](https://en.wikipedia.org/wiki/Biham%E2%80%93Middleton%E2%80%93Levine_traffic_model).
+# See the related work on the [Biham-Middleton-Levine traffic model](https://en.wikipedia.org/wiki/Biham%E2%80%93Middleton%E2%80%93Levine_traffic_model).
 # It's amazing that there is a whole area of research on this topic.
 #
 # I explored two approaches:

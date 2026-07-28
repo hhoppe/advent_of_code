@@ -66,13 +66,13 @@
 # %%
 import bisect
 import collections
-from collections.abc import Iterable
 import functools
 import itertools
 import math
 import operator
 import pathlib
 import re
+from collections.abc import Iterable
 from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -413,10 +413,11 @@ def day4(s, *, part2=False):
 
   num_valid = 0
   for passport in passports:
-    fields = dict[str, str](
-        hh.re_groups(r'^(\w\w\w):(\S+)$', s_field)  # type: ignore[misc]
-        for s_field in passport.split()
-    )
+    fields = {
+        key: value
+        for field in passport.split()
+        for key, value in (hh.re_groups(r'^(\w\w\w):(\S+)$', field),)
+    }
     num_valid += part2_valid(fields) if part2 else part1_valid(fields)
 
   return num_valid
@@ -879,13 +880,13 @@ def day9(s, *, last_n=25, part2=False):
   # do (binary) bisection search to try to locate l[i] + invalid_number.
 
   def find_subsequence_summing_to(total):
-    accum = list(itertools.accumulate(l, operator.add))  # accum[i] = sum(l[:i])
+    accum = list(itertools.accumulate(l))  # accum[i] = sum(l[:i])
     for i, value in enumerate(accum):
       end_value = value + total
       j = bisect.bisect_left(accum, end_value)
       if j != len(accum) and accum[j] == end_value:
         return l[i + 1 : j + 1]
-    return None
+    raise RuntimeError('No solution exists')
 
   sequence = find_subsequence_summing_to(invalid_number)
   assert sum(sequence) == invalid_number
@@ -1452,26 +1453,35 @@ def day14(s, *, part2=False):
   extract_0 = str.maketrans('01X', '100')
   extract_1 = str.maketrans('01X', '010')
   extract_x = str.maketrans('01X', '001')
-  for line in s.splitlines():
-    if line.startswith('mask'):
-      mask = line.split(' = ')[1]
-      if not part2:
+
+  if not part2:
+    mask_force_0 = mask_force_1 = 0
+    for line in s.splitlines():
+      if line.startswith('mask'):
+        mask = line.split(' = ')[1]
         mask_force_0 = int(mask.translate(extract_0), base=2)
         mask_force_1 = int(mask.translate(extract_1), base=2)
       else:
+        address, value = map(int, hh.re_groups(r'^mem\[(\d+)\] = (\d+)$', line))
+        mem[address] = (value | mask_force_1) & ~mask_force_0
+
+  else:
+    mask_force_1 = mask_not_x = 0
+    offsets = [0]
+    for line in s.splitlines():
+      if line.startswith('mask'):
+        mask = line.split(' = ')[1]
         mask_force_1 = int(mask.translate(extract_1), base=2)
         mask_not_x = ~int(mask.translate(extract_x), base=2)
         offsets = [0]
         for wildcard in (1 << i for i in range(36) if mask[35 - i] == 'X'):
           offsets += [offset + wildcard for offset in offsets]
-    else:
-      address, value = map(int, hh.re_groups(r'^mem\[(\d+)\] = (\d+)$', line))
-      if not part2:
-        mem[address] = (value | mask_force_1) & ~mask_force_0
       else:
+        address, value = map(int, hh.re_groups(r'^mem\[(\d+)\] = (\d+)$', line))
         address = (address & mask_not_x) | mask_force_1
         for offset in offsets:
           mem[address + offset] = value
+
   return sum(mem.values())
 
 
@@ -1542,16 +1552,19 @@ day15a_part2 = functools.partial(day15a, num_turns=30_000_000)
 def day15b(s, *, num_turns=2020):  # Faster, using List.
   def func(initial_sequence, num_turns):
     last_turn = [-1] * num_turns
+    prev_turn = number = None
     for turn in range(min(num_turns, len(initial_sequence))):
       number = initial_sequence[turn]
       prev_turn = last_turn[number]
       last_turn[number] = turn
 
+    assert prev_turn is not None
     for turn in range(len(initial_sequence), num_turns):
       number = 0 if prev_turn < 0 else turn - 1 - prev_turn
       prev_turn = last_turn[number]
       last_turn[number] = turn
 
+    assert number is not None
     return number
 
   initial_sequence = np.array(tuple(map(int, s.split(','))), np.int32)
@@ -1572,6 +1585,7 @@ if 0:  # Non-numba solutions.
 @numba.njit
 def day15_func(initial_sequence, num_turns):
   last_turn = np.full(num_turns, -1, np.int32)
+  prev_turn = number = -(10**8)
   for turn in range(min(num_turns, len(initial_sequence))):
     number = initial_sequence[turn]
     prev_turn = last_turn[number]
@@ -2753,7 +2767,7 @@ def day24(s, *, part2=False, num_days=100, visualize=False, radius=57):
     indices ^= {(y, x)}
   all_indices: list[set[tuple[int, int]]] = []
 
-  for day in range(num_days):
+  for _ in range(num_days):
     if visualize:
       all_indices.append(indices)
     neighbor_counts = collections.Counter(
@@ -2902,7 +2916,7 @@ def day25(s, *, base=7, mod=20201227):  # Fast.
   def log_mod(base: int, value: int, mod: int) -> int | None:
     """Returns exponent for 'base**exponent % mod == value'."""
     # Using https://en.wikipedia.org/wiki/Baby-step_giant-step
-    # m = int(math.ceil(mod**0.5))
+    # m = math.ceil(mod**0.5)
     m = math.isqrt(mod - 1) + 1
     table = {}
     e = 1

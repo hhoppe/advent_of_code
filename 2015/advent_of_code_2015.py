@@ -51,7 +51,7 @@
 # %%
 import ast
 import collections
-from collections.abc import Callable, Iterable, Iterator, Sequence
+import contextlib
 import dataclasses
 import enum
 import functools
@@ -67,6 +67,7 @@ import random
 import re
 import subprocess
 import sys
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import Any, TypeVar
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -517,8 +518,8 @@ def day6_part1(s, *, visualize=False):
   images = [get_image()]
 
   for line in lines:
-    groups = hh.re_groups(r'^(.*) (\d+),(\d+) through (\d+),(\d+)$', line)
-    operation, y1, x1, y2, x2 = groups[0], *map(int, groups[1:])
+    g = hh.re_groups(r'^(.*) (\d+),(\d+) through (\d+),(\d+)$', line)
+    operation, y1, x1, y2, x2 = g[0], int(g[1]), int(g[2]), int(g[3]), int(g[4])
     assert y1 <= y2 and x1 <= x2
     window = grid[y1 : y2 + 1, x1 : x2 + 1]
     match operation:
@@ -561,8 +562,8 @@ def day6_part2(s, *, visualize=False):
   images = [get_image()]
 
   for line in lines:
-    groups = hh.re_groups(r'^(.*) (\d+),(\d+) through (\d+),(\d+)$', line)
-    operation, y1, x1, y2, x2 = groups[0], *map(int, groups[1:])
+    g = hh.re_groups(r'^(.*) (\d+),(\d+) through (\d+),(\d+)$', line)
+    operation, y1, x1, y2, x2 = g[0], int(g[1]), int(g[2]), int(g[3]), int(g[4])
     assert y1 <= y2 and x1 <= x2
     window = grid[y1 : y2 + 1, x1 : x2 + 1]
     match operation:
@@ -973,7 +974,7 @@ def day11a(s, *, part2=False):  # Brute-force.
   def legal_password(state: list[int]) -> bool:
     if not any(a + 2 == b + 1 == c for a, b, c in more_itertools.sliding_window(state, 3)):
       return False
-    num_pairs = len(set(a for a, b in itertools.pairwise(state) if a == b))
+    num_pairs = len({a for a, b in itertools.pairwise(state) if a == b})
     if num_pairs < 2:
       return False
     return True
@@ -1025,7 +1026,7 @@ def day11(s, *, part2=False):  # Fast early culling.
     return any(a + 2 == b + 1 == c for a, b, c in more_itertools.sliding_window(state, 3))
 
   def consider(state: list[int], start: list[int]) -> list[int] | None:
-    num_pairs = len(set(a for a, b in itertools.pairwise(state) if a == b))
+    num_pairs = len({a for a, b in itertools.pairwise(state) if a == b})
     if num_pairs == 0 and len(state) == 6:
       return None
     need_pair = (num_pairs == 0 and len(state) == 5) or (num_pairs == 1 and len(state) == 7)
@@ -1633,7 +1634,7 @@ def day19_get_input(
   replacements = [(l, r) for line in s1.splitlines() for l, r in [line.split(' => ')]]
   string = s2.strip()
   nodes = sorted(set(re.findall(r'[A-Z][a-z]*|e', s1)))
-  relabel = dict(zip(nodes, (chr(ord('A') + i) for i in itertools.count())))
+  relabel = dict(zip(nodes, (chr(ord('A') + i) for i in itertools.count()), strict=False))
 
   def translate(s: str) -> str:
     return re.sub(r'[A-Z][a-z]*', lambda m: relabel[m[0]], s)
@@ -1697,7 +1698,7 @@ def day19a_part2(s):  # BFS expansion is completely impractical.
   grammar = collections.defaultdict(list)
   for src, dst in replacements:
     grammar[src].append(dst)
-  strings = set(['e'])
+  strings = {'e'}
   for index_expansion in itertools.count():
     strings2 = set()
     for string in strings:
@@ -1911,19 +1912,19 @@ day19_test_pyparsing2(swap=True)
 
 # %%
 def day19_test_pyparsing3(s):
-  pp = pyparsing
-  pp.ParserElement.enable_left_recursion(force=True)
+  pyparsing.ParserElement.enable_left_recursion(force=True)
   for seed in range(100):
-    try:
+    with contextlib.suppress(pyparsing.ParseException):
       replacements, string, _ = day19_get_input(s)
       random.seed(seed)
       random.shuffle(replacements)
-      symbols = set(src for src, dst in replacements)
-      parse = {symbol: pp.Forward() for symbol in symbols}
-      expression: Any = {symbol: pp.Literal(symbol) for symbol in symbols}
+      symbols = {src for src, dst in replacements}
+      parse = {symbol: pyparsing.Forward() for symbol in symbols}
+      expression: Any = {symbol: pyparsing.Literal(symbol) for symbol in symbols}
       for src, dst in replacements:
-        expr: Any = functools.reduce(operator.add, (parse.get(symbol, symbol) for symbol in dst))
-        expression[src] ^= pp.Group(expr)
+        terms: Any = (parse.get(symbol, symbol) for symbol in dst)
+        expr = functools.reduce(operator.add, terms)
+        expression[src] ^= pyparsing.Group(expr)
       for symbol in symbols:
         parse[symbol] <<= expression[symbol]
       result = parse['e'].parse_string(string, parse_all=True)
@@ -1934,8 +1935,7 @@ def day19_test_pyparsing3(s):
       count = count_lists(result) - 1
       hh.display_html(f'{seed=} {result=!s} {count=}')
       return count
-    except pp.ParseException:
-      pass
+
   hh.display_html('No valid parsing found.')
 
 
@@ -2064,9 +2064,8 @@ def day20d(s, *, part2=False, assume_factors=True):  # Evaluate just multiples o
         i2 = house // i
         if not part2 or i2 <= 50:
           value += i * weight
-        if i2 != i:
-          if not part2 or i <= 50:
-            value += i2 * weight
+        if i2 != i and (not part2 or i <= 50):
+          value += i2 * weight
     return value
 
   min_value = int(s.strip())
@@ -2095,9 +2094,8 @@ def day20_compute_value(house: int, part2: bool) -> int:
       i2 = house // i
       if not part2 or i2 <= 50:
         value += i * weight
-      if i2 != i:
-        if not part2 or i <= 50:
-          value += i2 * weight
+      if i2 != i and (not part2 or i <= 50):
+        value += i2 * weight
   return value
 
 
@@ -2159,7 +2157,7 @@ def day21(s, *, part2=False, debug=False):
   test_simulation()
 
   def sum_attribs(attribs: Iterable[tuple[int, int, int]]) -> tuple[int, int, int]:
-    return tuple(sum(field_values) for field_values in zip(*attribs))  # type: ignore
+    return tuple(sum(field_values) for field_values in zip(*attribs, strict=True))  # type: ignore
 
   # [(cost, damage, armor), ...]
   weapons = [(8, 4, 0), (10, 5, 0), (25, 6, 0), (40, 7, 0), (74, 8, 0)]
@@ -2408,7 +2406,7 @@ puzzle = advent.puzzle(day=25)
 # %%
 # Serial modular exponentiation.
 def day25a(s, *, row=None, column=None, initial_value=20_151_125, base=252_533, mod=33_554_393):
-  if row is None:
+  if row is None or column is None:
     row, column = map(int, re.findall(r'\d+', s))
   # The index of the last (upper-right) entry on the n'th diagonal is (n) * (n + 1) // 2.
   diagonal = row + column - 1
@@ -2429,7 +2427,7 @@ check_eq(day25a(puzzle.input, row=4, column=6), 31527494)
 # %%
 # Memoized recursive modular exponentiation.
 def day25b(s, *, row=None, column=None, initial_value=20_151_125, base=252_533, mod=33_554_393):
-  if row is None:
+  if row is None or column is None:
     row, column = map(int, re.findall(r'\d+', s))
   # The index of the last (upper-right) entry on the n'th diagonal is (n) * (n + 1) // 2.
   diagonal = row + column - 1
@@ -2460,7 +2458,7 @@ puzzle.verify(1, day25b)
 # %%
 # Built-in modular exponentiation.
 def day25(s, *, row=None, column=None, initial_value=20_151_125, base=252_533, mod=33_554_393):
-  if row is None:
+  if row is None or column is None:
     row, column = map(int, re.findall(r'\d+', s))
   diagonal = row + column - 1
   index = diagonal * (diagonal + 1) // 2 - row + 1

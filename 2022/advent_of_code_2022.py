@@ -62,12 +62,11 @@
 # %%
 import ast
 import collections
-from collections.abc import Callable
 import dataclasses
 import functools
 import graphlib
 import heapq
-import importlib
+import importlib.util
 import itertools
 import math
 import operator
@@ -76,6 +75,7 @@ import re
 import string
 import subprocess
 import textwrap
+from collections.abc import Callable
 from typing import Any, NamedTuple
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -800,7 +800,7 @@ puzzle.verify(2, day7a_part2)
 # From https://www.reddit.com/r/adventofcode/comments/zesk40/comment/iz8fww6/
 def day7b(s, *, part2=False):
   dirs = collections.defaultdict[str, int](int)
-  curr: list[str]
+  curr: list[str] = []
   for line in s.splitlines():
     match line.split():
       case '$', 'cd', '/':
@@ -835,6 +835,7 @@ def day7v(s):  # Visualization
   graph = networkx.DiGraph()
   graph.add_node('/', label='/', node_color='red', size=0)
   dirs = collections.defaultdict[str, int](int)
+  curr: list[str] = []
   for line in s.splitlines():
     fields = line.split()
     if line == '$ cd /':
@@ -1065,7 +1066,7 @@ def day8w(s):  # Use plotly to create 3D visualization.
     camera = dict(center=dict(x=0, y=0, z=-20 * a), eye=eye)
     no_axes = dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False))
     scene = dict(aspectratio=aspectratio, camera=camera, **no_axes)
-    fig.layout.update(width=700, height=350, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
+    fig.update_layout(width=700, height=350, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
 
   set_fig_layout(for_tilt=False)
   if SHOW_BIG_MEDIA and hh.in_notebook():
@@ -1744,7 +1745,7 @@ def day12v(s, *, n=3):  # Visualize as GIF image.
   for part in range(2):
     sentinel = -1, -1
     starts: Any = np.argwhere(grid == 0) if part else [start_yx]
-    prev = {(y, x): sentinel for y, x in starts}
+    prev = {(y, x): sentinel for y, x in starts}  # noqa: C420
     queue = collections.deque(prev)
     image = media.to_rgb(grid / 25, vmax=1.3)
     image[tuple(zip(*prev))] = 0.0, 1.0, 0.0
@@ -1783,7 +1784,7 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
   for part in range(2):
     sentinel = -1, -1
     starts: Any = np.argwhere(grid == 0) if part else [start_yx]
-    prev = {(y, x): sentinel for y, x in starts}
+    prev = {(y, x): sentinel for y, x in starts}  # noqa: C420
     queue = collections.deque(prev)
     while (yx := queue.popleft()) != end_yx:
       for dy, dx in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
@@ -1837,7 +1838,7 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
   )
   no_axes = dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False))
   scene = dict(aspectratio=aspectratio, camera=camera, **no_axes)
-  fig.layout.update(
+  fig.update_layout(
       width=700, height=350, margin=dict(l=0, r=0, b=0, t=0), scene=scene, showlegend=False
   )
 
@@ -2295,7 +2296,7 @@ def day15b(s, *, part2=False, y_part1=2_000_000, side_part2=4_000_000):
       radius = beacon_dist[i] - abs(y_part1 - y)
       if radius >= 0:
         grid[x - radius + offset : x + radius + offset + 1] = True
-    num_row_beacons = len(set(x for x, y in beacon if y == y_part1))
+    num_row_beacons = len({x for x, y in beacon if y == y_part1})
     return np.count_nonzero(grid) - num_row_beacons
 
   # Recursive quadtree subdivision of an initial square, discarding any box if it is contained
@@ -2310,9 +2311,8 @@ def day15b(s, *, part2=False, y_part1=2_000_000, side_part2=4_000_000):
       low, high = np.array(child_low_high).T
       # Manhattan distance from [low, high] box to sensor.
       dist = (np.maximum(high - sensor, 0) + np.maximum(sensor - low, 0)).sum(1)
-      if all(dist > beacon_dist):
-        if ret := find(low, high):
-          return ret
+      if all(dist > beacon_dist) and (ret := find(low, high)):
+        return ret
     return None
 
   return find(sensor[0] * 0, sensor[0] * 0 + side_part2)
@@ -2372,7 +2372,7 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
   xys = dict(x0=pp[0] - 0.5, y0=pp[1] - 0.5, x1=pp[0] + 0.5, y1=pp[1] + 0.5)
   fig.add_shape(type='rect', **xys, line_width=0, fillcolor='red')
 
-  fig.layout.update(
+  fig.update_layout(
       width=500,
       height=500,
       margin=dict(l=0, r=0, b=0, t=0),
@@ -2380,9 +2380,9 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
       showlegend=False,
       hovermode=False,
       dragmode='pan',
+      xaxis=dict(visible=False),
+      yaxis=dict(scaleanchor='x', scaleratio=1.0, visible=False),  # Preserve aspect ratio!
   )
-  fig.update_yaxes(scaleanchor='x', scaleratio=1.0)  # Preserve aspect ratio!
-  fig.layout.xaxis.visible = fig.layout.yaxis.visible = False  # For smooth scroll-zooming.
 
   if SHOW_BIG_MEDIA and hh.in_notebook():
     hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
@@ -2400,8 +2400,7 @@ def day15v(s, *, y_part1=2_000_000, side_part2=4_000_000):
   if SHOW_BIG_MEDIA:
     images = []
     while (diam := (vmax - vmin).astype(float)).min() > 6:
-      fig.layout.xaxis.range = [vmin[0], vmax[0]]
-      fig.layout.yaxis.range = [vmin[1], vmax[1]]
+      fig.update_layout(xaxis_range=[vmin[0], vmax[0]], yaxis_range=[vmin[1], vmax[1]])
       images.append(hh.image_from_plotly(fig)[40:-40, 40:-40])
       scale = 0.97 if len(images) < 16 else 0.92 if min(vmax - vmin) > 110_000 else 0.70
       pp_norm = (pp - vmin) / (vmax - vmin)
@@ -2440,7 +2439,7 @@ def day15(s, *, part2=False, y_part1=2_000_000, side_part2=4_000_000):
     radius = beacon_dist - abs(y_part1 - sensor[:, 1])
     sensor2x, radius2 = sensor[:, 0][radius >= 0], radius[radius >= 0]
     xmin, xmax = (sensor2x - radius2).min(), (sensor2x + radius2).max()
-    num_row_beacons = len(set(x for x, y in beacon if y == y_part1))
+    num_row_beacons = len({x for x, y in beacon if y == y_part1})
     return xmax - xmin + 1 - num_row_beacons
 
   # Recursive quadtree subdivision of an initial square, discarding any box if it is contained
@@ -2613,7 +2612,7 @@ check_eq(day16b_part2(s1), 1707)
 
 # %%
 # Adapted for visualization.
-def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'):
+def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA') -> Any:
   rate, dsts = {}, {}
   for line in s.splitlines():
     node, s_rate, *dsts[node] = re.findall(r'([A-Z]{2}|\d+)', line)
@@ -2660,6 +2659,7 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
 
   pos = hh.graph_layout(graph, prog='dot')
 
+  fig = ax = None
   if visualize:
     fig, ax = plt.subplots(figsize=(16, 12), dpi=66)
     ax.set_aspect('equal')  # Preserve aspect ratio.
@@ -2669,7 +2669,7 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
   paths[0], vs = get_path([], time, e=part2)
   if part2:
     paths[1], _ = get_path([], time, vs=vs)
-  current = {worker: start for worker in paths}
+  current = dict.fromkeys(paths, start)
   to_visit: dict[int, list[str]] = {worker: [] for worker in paths}
   enabled_valves = set[str]()
   total_flow = 0
@@ -2691,6 +2691,7 @@ def day16c(s, *, part2=False, visualize=False, only_last_frame=False, start='AA'
 
   for time_index in range(time):
     if visualize and (not only_last_frame or time_index == time - 1):
+      assert fig is not None and ax is not None
       ax.clear()
       labels = networkx.get_node_attributes(graph, 'label')
       node_size = [2400 if rate[node] else 1500 for node in graph]
@@ -2804,7 +2805,7 @@ def day16d(s, *, part2=False):  # Heuristically order edges and add branch-and-b
             else ((dst, nodes[1]), time_left - time, other_working - time)
         )
         consider_benefit(cur_benefit2, time_left2, enabled | {dst}, nodes2, other_working2)
-    if other_working < time_left:
+    if other_working < time_left:  # noqa: SIM102
       if cur_benefit + (time_left - other_working) * 30 > best_benefit_found:  # Branch-and-bound.
         consider_benefit(cur_benefit, time_left - other_working, enabled, nodes[::-1], 99)
 
@@ -2860,7 +2861,7 @@ def day16e(s, *, part2=False):  # Heuristically order edges and add heuristic pr
             else ((dst, nodes[1]), time_left - time, other_working - time)
         )
         consider_benefit(cur_benefit2, time_left2, enabled | {dst}, nodes2, other_working2)
-    if other_working < time_left:
+    if other_working < time_left:  # noqa: SIM102
       if cur_benefit + (time_left - other_working) * 30 > best_benefit_found:  # Branch-and-bound.
         consider_benefit(cur_benefit, time_left - other_working, enabled, nodes[::-1], 99)
 
@@ -3374,7 +3375,7 @@ def day18v(s):  # Visualize Part 1 using plotly 3D rendering.
   camera = dict(center=dict(x=-0.03, y=0, z=-0.03), eye=dict(x=0.47, y=-0.99, z=0.74))
   no_axes = dict(xaxis=dict(visible=False), yaxis=dict(visible=False), zaxis=dict(visible=False))
   scene = dict(aspectratio=dict(x=1, y=1, z=1), camera=camera, **no_axes)
-  fig.layout.update(width=400, height=400, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
+  fig.update_layout(width=400, height=400, margin=dict(l=0, r=0, b=0, t=0), scene=scene)
 
   if SHOW_BIG_MEDIA and hh.in_notebook():
     hh.display_html('Interactively control the viewpoint by dragging or scrolling:')
@@ -3693,7 +3694,7 @@ def day19_process(recipes, part2, prune_size):
       # non-numba version: states = set(sorted(states, key=estimated_goodness)[len(states) // 2:])
       tmp = []
       for state in states:
-        tmp.append((estimated_goodness(state), state))
+        tmp.append((estimated_goodness(state), state))  # noqa: PERF401
       tmp = sorted(tmp)[len(states) // 2 :]
       states.clear()
       for _, state in tmp:
@@ -4014,7 +4015,7 @@ def day21a(s, *, part2=False):  # Brute-force assignments.
 
   # Trace a path from the root down, deriving the value of each unassigned node.
   dst = 'root'
-  value: int
+  value: int = 0  # Dummy initialization.
   while dst != 'humn':
     dep0, op, dep1 = fields[dst]
     if dep0 in assigned:
@@ -4199,7 +4200,7 @@ def day21(s, *, part2=False):
     return operators[op](value1, value2)
 
   sympy_result = round(get_value('root'))
-  return int(sympy_result)
+  return sympy_result
 
 
 if not importlib.util.find_spec('sympy'):
@@ -4491,7 +4492,8 @@ if 0:
 # %%
 def day23a(s, *, part2=False, visualize=False, pad=60, background=250):
   grid = np.array([list(line) for line in s.splitlines()])
-  current = set((y, x) for y, x in np.argwhere(grid == '#'))
+  # pylint: disable-next=unnecessary-comprehension
+  current = {(y, x) for y, x in np.argwhere(grid == '#')}
   offsets8 = set(itertools.product((-1, 0, 1), repeat=2)) - {(0, 0)}
   dirs = [(-1, 0), (1, 0), (0, -1), (0, 1)]
   images: list[np.ndarray] = []
@@ -4680,7 +4682,7 @@ s1 = """\
 
 # %%
 # Single queue; `previous` dict; find shortest path, with heuristic pruning.
-def day24a(s, *, part2=False, visualize=False, repeat=3):
+def day24a(s, *, part2=False, visualize=False, repeat=3) -> Any:
   grid0 = np.array([list(line) for line in s.splitlines()])
   grid = grid0[1:-1, 1:-1]  # Remove walls to simplify modulo addressing.
   shape = grid.shape  # (4, 6) or (35, 100)  (lcm = 700 is not much smaller than solution)
@@ -4713,7 +4715,7 @@ def day24a(s, *, part2=False, visualize=False, repeat=3):
           if time + remaining_dist <= max_time and tyx2 not in previous:  # Heuristic pruning.
             previous[tyx2] = y, x
             queue.append(tyx2)
-    raise ValueError(f'No path found at {time=} {start_yx=}.')
+    raise ValueError(f'No path found at {start_time=} {start_yx=}.')
 
   start, final = (-1, 0), (shape[0], shape[1] - 1)
   path1 = shortest_path_to_dst(0, start, final)
@@ -4846,7 +4848,7 @@ def day24_min_time_at_dst(
     # Non-numba version: pruned_active = sorted(states, key=lower_bound_dist_to_dst)[:prune_size]
     tmp = []
     for yx in active:
-      tmp.append((lower_bound_dist_to_dst(yx), yx))
+      tmp.append((lower_bound_dist_to_dst(yx), yx))  # noqa: PERF401
     tmp = sorted(tmp)[:prune_size]
     for _, (y, x) in tmp:
       for dy, dx in ((1, 0), (0, 1), (0, 0), (-1, 0), (0, -1)):

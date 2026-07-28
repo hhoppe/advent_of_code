@@ -46,6 +46,33 @@ good-names-rgxs = "^[a-z][a-z0-9]?|[A-Z]([A-Z_]*[A-Z])?$"
 indent-string = "  "
 expected-line-ending-format = "LF"
 
+[tool.pyrefly]
+min-severity = "warn"
+project-excludes = ["*.ipynb"]
+replace-imports-with-any = ["numba.*"]
+
+[tool.pyrefly.errors]
+redundant-condition = false
+missing-import = false
+untyped-import = false
+bad-argument-type = false  # Because of untyped `day*()` functions.
+
 [tool.pytype]
 keep_going = true
 exclude = ['**/*_run.py']
+
+[tool.ruff]
+extend-exclude = ["*.ipynb"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W", "F", "B", "C", "UP", "SIM", "RUF", "NPY", "PTH", "PERF",
+    "ISC", "ICN", "PIE", "RET", "TID", "TC", "I",
+]
+extend-ignore = [
+    "E402", "E501", "E721", "E741",
+    "B010", "B028", "C408", "C901",
+    "TC003", "TC006", "SIM300", "ICN001", "RET504", "SIM905", "RUF005", "PTH123",
+    "RET503", "SIM117", "SIM103", "SIM223", "B023", "B905", "E731", "RUF002",
+]
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?)|unused_.*)$"

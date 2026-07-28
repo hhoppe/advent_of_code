@@ -78,7 +78,6 @@
 
 # %%
 import collections
-from collections.abc import Iterator
 import dataclasses
 import functools
 import heapq
@@ -87,6 +86,7 @@ import math
 import operator
 import pathlib
 import re
+from collections.abc import Iterator
 from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -226,7 +226,7 @@ s1 = """\
 def day2a(s, part2=False):  # Using np.diff().
   def safe(values):
     diff = np.diff(values)
-    return ((diff >= 1) & (diff <= 3)).all() or ((diff >= -3) & (diff <= -1)).all()
+    return bool(((diff >= 1) & (diff <= 3)).all() or ((diff >= -3) & (diff <= -1)).all())
 
   def check(values):
     return safe(values) or (
@@ -2553,10 +2553,10 @@ def day16a(s, *, part2=False):  # With backtrack recursion.
       visit_paths(state)
       return (grid == 'O').sum() if part2 else d
 
-    for d, state in neighbors(d, state):
-      if grid[state[:2]] != '#' and d < distance[state]:
-        distance[state] = d
-        heapq.heappush(pq, (d, state))
+    for d2, state2 in neighbors(d, state):
+      if grid[state2[:2]] != '#' and d2 < distance[state2]:
+        distance[state2] = d2
+        heapq.heappush(pq, (d2, state2))
 
 
 check_eq(day16a(s1), 7036)
@@ -2593,15 +2593,15 @@ def day16b(s, *, part2=False):  # Most concise, with backtrack stack.
         state = stack.pop()
         d2 = distance.pop(state)  # Deletion for speedup.
         grid[state[:2]] = 'O'
-        for d2, state in neighbors(d2, state, sign=-1):
-          if d2 == distance[state]:
-            stack.append(state)
+        for d3, state3 in neighbors(d2, state, sign=-1):
+          if d3 == distance[state3]:
+            stack.append(state3)
       return (grid == 'O').sum() if part2 else d
 
-    for d, state in neighbors(d, state):
-      if grid[state[:2]] != '#' and d < distance[state]:
-        distance[state] = d
-        heapq.heappush(pq, (d, state))
+    for d2, state2 in neighbors(d, state):
+      if grid[state2[:2]] != '#' and d2 < distance[state2]:
+        distance[state2] = d2
+        heapq.heappush(pq, (d2, state2))
 
 
 check_eq(day16b(s1), 7036)
@@ -2655,13 +2655,13 @@ def day16c(s, *, part2=False, visualize=False, rep=3, fps=50):
         grid[y, x] = 'O'
         add_image()
         dy, dx = ((0, 1), (-1, 0), (0, -1), (1, 0))[direction]
-        for d, y, x, direction in (
+        for d2, y2, x2, direction2 in (
             (d - 1, y - dy, x - dx, direction),
             (d - 1000, y, x, (direction + 3) % 4),
             (d - 1000, y, x, (direction + 1) % 4),
         ):
-          if d == distance[y, x, direction]:
-            stack.append((y, x, direction))
+          if d2 == distance[y2, x2, direction2]:
+            stack.append((y2, x2, direction2))
       continue
 
     dy, dx = ((0, 1), (-1, 0), (0, -1), (1, 0))[direction]
@@ -2718,13 +2718,13 @@ def day16_jit(grid, ys, xs, ye, xe, part2):  # Fastest.
         distance[y, x, direction] = 10**9  # For speedup.
         grid[y, x] = 'O'
         dy, dx = ((0, 1), (-1, 0), (0, -1), (1, 0))[direction]
-        for d, y, x, direction in (
+        for d2, y2, x2, direction2 in (
             (d - 1, y - dy, x - dx, direction),
             (d - 1000, y, x, (direction + 3) % 4),
             (d - 1000, y, x, (direction + 1) % 4),
         ):
-          if d == distance[y, x, direction]:
-            stack.append((y, x, direction))
+          if d2 == distance[y2, x2, direction2]:
+            stack.append((y2, x2, direction2))
       continue
 
     dy, dx = ((0, 1), (-1, 0), (0, -1), (1, 0))[direction]
@@ -3663,7 +3663,7 @@ def day20f(s, *, part2=False, min_savings=100):
 
   # Find all cheats.
   total = 0
-  for dy in range(0, cheat_distance + 1):
+  for dy in range(cheat_distance + 1):
     for dx in range(-cheat_distance + dy if dy > 0 else 0, cheat_distance + 1 - dy):
       manhattan = abs(dy) + abs(dx)
       a1 = distance[first(dy), first(dx)]
@@ -3671,7 +3671,7 @@ def day20f(s, *, part2=False, min_savings=100):
       both_open = (a1 < INF) & (a2 < INF)
       saved = np.abs(a1 - a2) - manhattan
       saved[~both_open] = 0
-      total += int(np.count_nonzero(saved >= min_savings))
+      total += np.count_nonzero(saved >= min_savings)  # type: ignore[assignment]
 
   return total
 
@@ -3691,7 +3691,8 @@ def day20_jit(distance, ys, xs, ye, xe, part2, min_savings):
   d, y, x = 0, ys, xs
   distance[y, x] = d
   while (y, x) != (ye, xe):
-    for y, x in ((y, x - 1), (y, x + 1), (y - 1, x), (y + 1, x)):
+    neighbors = (y, x - 1), (y, x + 1), (y - 1, x), (y + 1, x)
+    for y, x in neighbors:
       if distance[y, x] == -1:
         break
     distance[y, x] = d = d + 1
@@ -3766,7 +3767,7 @@ def day21_abandonned(s):
       [('7', (0, 0)), ('8', (0, 1)), ('9', (0, 2)), ('4', (1, 0)), ('5', (1, 1)), ('6', (1, 2))]
       + [('1', (2, 0)), ('2', (2, 1)), ('3', (2, 2)), ('0', (3, 1)), ('A', (3, 2))]
   )
-  yx_of_dir = dict([('^', (0, 1)), ('A', (0, 2)), ('<', (1, 0)), ('v', (1, 1)), ('>', (1, 2))])
+  yx_of_dir = {'^': (0, 1), 'A': (0, 2), '<': (1, 0), 'v': (1, 1), '>': (1, 2)}
   ch_digit_of_yx = {yx: ch for ch, yx in yx_of_digit.items()}
   ch_dir_of_yx = {yx: ch for ch, yx in yx_of_dir.items()}
   dyx_of_ch = {'^': (-1, 0), 'v': (1, 0), '<': (0, -1), '>': (0, 1)}
@@ -3901,7 +3902,7 @@ def day21b(s, *, part2=False):  # Slightly more expanded.
       [('7', (0, 0)), ('8', (0, 1)), ('9', (0, 2)), ('4', (1, 0)), ('5', (1, 1)), ('6', (1, 2))]
       + [('1', (2, 0)), ('2', (2, 1)), ('3', (2, 2)), ('0', (3, 1)), ('A', (3, 2))]
   )
-  yx_of_dir = dict([('^', (0, 1)), ('A', (0, 2)), ('<', (1, 0)), ('v', (1, 1)), ('>', (1, 2))])
+  yx_of_dir = {'^': (0, 1), 'A': (0, 2), '<': (1, 0), 'v': (1, 1), '>': (1, 2)}
 
   # Minimum length of the final code sequence to move from (y, x) to (y2, x2) on the digit keypad
   # given that the previous direction code (from the last directional keypad) was `last_dir_ch`.
@@ -3971,7 +3972,7 @@ def day21(s, *, part2=False):  # Concise
       [('7', (0, 0)), ('8', (0, 1)), ('9', (0, 2)), ('4', (1, 0)), ('5', (1, 1)), ('6', (1, 2))]
       + [('1', (2, 0)), ('2', (2, 1)), ('3', (2, 2)), ('0', (3, 1)), ('A', (3, 2))]
   )
-  yx_of_dir = dict([('^', (0, 1)), ('A', (0, 2)), ('<', (1, 0)), ('v', (1, 1)), ('>', (1, 2))])
+  yx_of_dir = {'^': (0, 1), 'A': (0, 2), '<': (1, 0), 'v': (1, 1), '>': (1, 2)}
 
   # Length of the shortest final sequence to move from (y, x) to (y2, x2) on the digit keypad
   # given that the previous direction code (from the last directional keypad) was `last_dir_ch`.
@@ -4393,7 +4394,7 @@ def day23b(s, *, part2=False):  # Using networkx.find_cliques().
   # find_cliques = networkx.enumerate_all_cliques  # Slower because yields non-maximal cliques too.
   find_cliques = networkx.find_cliques
   largest_clique = max(find_cliques(graph), key=len)  # (Finds maximal cliques.)
-  return ','.join(sorted(largest_clique))
+  return ','.join(sorted(largest_clique))  # pyrefly: ignore
 
 
 check_eq(day23b(s1), 7)
@@ -4653,7 +4654,7 @@ def day24_part2(s, *, correct_to=1000, return_pairs=False):
   n_z = sum(1 for dst in expressions if dst[0] == 'z')
 
   def orient(expr):  # Heuristically assign a canonical order for two expression operands.
-    expr2 = expressions.get(expr.srcs[1], None)
+    expr2 = expressions.get(expr.srcs[1])
     if expr.srcs[1][0] == 'x' or (expr2 and (expr2.op == 'XOR' or expr2.srcs[0][0] in 'xy')):
       expr.srcs = expr.srcs[::-1]
 
@@ -4661,12 +4662,12 @@ def day24_part2(s, *, correct_to=1000, return_pairs=False):
     e = expressions[f'z{i:02}']
     if e.op == 'XOR' and all(n in expressions for n in e.srcs):
       e1, e2 = expressions[e.srcs[0]], expressions[e.srcs[1]]
-      if e1.op == 'XOR' and e1.srcs[0][0] == 'x':
+      if e1.op == 'XOR' and e1.srcs[0][0] == 'x':  # noqa: SIM102
         if e2.op == 'OR' and all(n in expressions for n in e2.srcs):
           e21, e22 = expressions[e2.srcs[0]], expressions[e2.srcs[1]]
           if e21.op == 'AND' and e21.srcs[0][0] == 'x':
             last_e = expressions[f'z{i - 1:02}']
-            if i <= 2 or e22.op == 'AND' and set(e22.srcs) == set(last_e.srcs):
+            if i <= 2 or (e22.op == 'AND' and set(e22.srcs) == set(last_e.srcs)):
               return True
     return False
 
@@ -4740,8 +4741,8 @@ def day24_part2_examine(s, *, correct_to=1000, truncated=False):
   hh.display_html(f'{len(expressions)=}, compared to {(2 + (n_z - 2) * 5 + 0)=}')
 
   def orient(expr):  # Heuristically assign a canonical order for two expression operands.
-    expr2 = expressions.get(expr.srcs[1], None)
-    if expr.srcs[1][0] == 'x' or expr2 and (expr2.op == 'XOR' or expr2.srcs[0][0] in 'xy'):
+    expr2 = expressions.get(expr.srcs[1])
+    if expr.srcs[1][0] == 'x' or (expr2 and (expr2.op == 'XOR' or expr2.srcs[0][0] in 'xy')):
       expr.srcs = expr.srcs[::-1]
 
   for expr in expressions.values():

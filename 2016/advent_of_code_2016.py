@@ -50,7 +50,6 @@
 
 # %%
 import collections
-from collections.abc import Callable, Iterable, Iterator
 import dataclasses
 import enum
 import functools
@@ -63,6 +62,7 @@ import pathlib
 import re
 import subprocess
 import sys
+from collections.abc import Callable, Iterable, Iterator
 from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -217,6 +217,7 @@ def day1_visualize(s, *, repeat=2):
   visited = set()
   first_intersection = True
   time = 0.0
+  yx = -1, -1  # Dummy initialization.
 
   for point, distance in zip(points, distances):
     yx = tuple(point - points_min + 1)
@@ -879,7 +880,7 @@ def day11a(s, *, part2=False):  # Simplest but slow; BFS with queue; set[str]; u
         item.islower() and item.upper() not in items for item in items
     )
 
-  seen = set([encode(*start_state)])
+  seen = {encode(*start_state)}
   queue = collections.deque([(start_state[0], start_state[1], 0)])  # Expand to help pytype.
 
   while queue:
@@ -1097,7 +1098,7 @@ def day11_compute(positions0: np.ndarray) -> int:
   seen = set()
 
   def is_solved(positions: list[int]) -> bool:
-    for position in positions:
+    for position in positions:  # noqa: SIM110
       if position != 3:
         return False
     return True
@@ -1440,18 +1441,18 @@ puzzle.verify(2, day13a_part2)
 def day13(s, *, part2=False, src_yx=(1, 1), dst_yx=(39, 31), visualize=False):  # Create video.
   seed = int(s)
   sentinel = -1, -1
+  images: list[np.ndarray] = []
 
   def is_wall(y: int, x: int) -> bool:
     value = x * x + 3 * x + 2 * x * y + y + y * y + seed
     return bin(value).count('1') % 2 != 0
 
+  def add_image(image: np.ndarray) -> None:
+    image = np.pad(image, ((1, 0), (1, 0), (0, 0))).repeat(5, axis=0).repeat(5, axis=1)
+    images.append(image)
+
+  image: np.ndarray = np.zeros((0, 0, 3), dtype=np.uint8)  # Dummy initialization.
   if visualize:
-
-    def add_image(image: np.ndarray) -> None:
-      image = np.pad(image, ((1, 0), (1, 0), (0, 0))).repeat(5, axis=0).repeat(5, axis=1)
-      images.append(image)
-
-    images: list[np.ndarray] = []
     shape = 50, 60
     grid_wall = np.array([is_wall(y, x) for y, x in np.ndindex(shape)]).reshape(shape)
     image = hh.to_image(grid_wall, 250, 0)
@@ -1789,7 +1790,8 @@ def day17(s, *, part2=False):
         return path
       hashed = md5((s + path).encode()).hexdigest()[:4]
       for ch, (dy, dx, step) in zip(hashed, door_map):
-        if 'b' <= ch <= 'f' and 0 <= (y2 := y + dy) <= 3 and 0 <= (x2 := x + dx) <= 3:
+        y2, x2 = y + dy, x + dx
+        if 'b' <= ch <= 'f' and 0 <= y2 <= 3 and 0 <= x2 <= 3:
           queue.append((y2, x2, path + step))
 
   max_length = 0
@@ -1801,7 +1803,8 @@ def day17(s, *, part2=False):
       continue
     hashed = md5((s + path).encode()).hexdigest()[:4]
     for ch, (dy, dx, step) in zip(hashed, door_map):
-      if 'b' <= ch <= 'f' and 0 <= (y2 := y + dy) <= 3 and 0 <= (x2 := x + dx) <= 3:
+      y2, x2 = y + dy, x + dx
+      if 'b' <= ch <= 'f' and 0 <= y2 <= 3 and 0 <= x2 <= 3:
         stack.append((y2, x2, path + step))
 
   return max_length
@@ -2630,7 +2633,7 @@ def day25a(s, debug=False):
       output = itertools.islice(compute_output(initial_a), 30)
       s_output = ''.join(str(value) for value in output)
       hh.display_html(f'{initial_a:3} {s_output}')
-    return
+    return None
 
   for initial_a in range(1, 2000):
     if equal_prefix(compute_output(initial_a), desired_output(), 30):

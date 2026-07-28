@@ -92,8 +92,8 @@ import math
 import pathlib
 import re
 import tempfile
-from typing import Any, Literal
 import warnings
+from typing import Any, Literal
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
@@ -637,7 +637,8 @@ def day5b(s, *, part2=False):  # First (non-simplified) recursive generator.
   (line,) = sections[0].splitlines()
   values = map(int, line.split(': ')[1].split())
   if part2:
-    intervals: Any = list(more_itertools.batched(values, 2))
+    intervals: list[tuple[int, int]]
+    intervals = list(more_itertools.batched(values, 2))  # type: ignore[arg-type]
   else:
     intervals = [(start, 1) for start in values]
 
@@ -679,7 +680,8 @@ def day5c(s, *, part2=False):  # Simplified recursive generator.
   (line,) = sections[0].splitlines()
   values = map(int, line.split(': ')[1].split())
   if part2:
-    intervals = [(start, start + n) for start, n in more_itertools.batched(values, 2)]  # type: ignore[misc]
+    intervals: list[tuple[int, int]]
+    intervals = [(start, start + n) for start, n in more_itertools.batched(values, 2)]
   else:
     intervals = [(start, start + 1) for start in values]
 
@@ -718,7 +720,8 @@ def day5(s, *, part2=False):  # Non-recursive implementation.
   (line,) = sections[0].splitlines()
   values = map(int, line.split(': ')[1].split())
   if part2:
-    intervals: Any = [(start, start + n) for start, n in more_itertools.batched(values, 2)]  # type: ignore[misc]
+    intervals: list[tuple[int, int]]
+    intervals = [(start, start + n) for start, n in more_itertools.batched(values, 2)]
   else:
     intervals = [(start, start + 1) for start in values]
 
@@ -1359,7 +1362,7 @@ L7JLJL-JLJLJL--JLJ.L
 
 # %%
 def day10a(s, *, part2=False, visualize=False):  # Initial implementation, and visualization.
-  grid = np.array([list(line) for line in s.splitlines()])
+  grid: Any = np.array([list(line) for line in s.splitlines()])
   (yx0,) = np.argwhere(grid == 'S')
   loop = [tuple(yx0)]
   starts = {(1, 0): 'LJ|', (-1, 0): 'F7|', (0, 1): '7J-', (0, -1): 'FL-'}
@@ -1676,8 +1679,8 @@ def day11e(s, *, part2=False):  # Adjust galaxy positions and sum all distances.
   width, height = len(lines[0]), len(lines)
   galaxies = [(y, x) for y in range(height) for x in range(width) if lines[y][x] == '#']
 
-  missing_y = set(range(height)) - set(y for y, x in galaxies)
-  missing_x = set(range(width)) - set(x for y, x in galaxies)
+  missing_y = set(range(height)) - {y for y, x in galaxies}
+  missing_x = set(range(width)) - {x for y, x in galaxies}
 
   def adjust(x, missing):
     return x + sum(expand - 1 for v in missing if v < x)
@@ -2247,11 +2250,10 @@ def day14a(s, *, part2=False, num=10**9):  # Compact but slow.
     period = -1
     index = 0
     while True:
-      if period < 0:
-        if (prev_index := configs.setdefault(grid.tobytes(), index)) != index:
-          period = index - prev_index
-          hh.display_html(f'At {index=}, found cycle with {period=}.')
-          index = num - (num - index) % period
+      if period < 0 and (prev_index := configs.setdefault(grid.tobytes(), index)) != index:
+        period = index - prev_index
+        hh.display_html(f'At {index=}, found cycle with {period=}.')
+        index = num - (num - index) % period
       if index == num:
         break
       for _ in range(4):
@@ -2314,10 +2316,9 @@ def day14_part2_visualize(s, num=10**9):
   while True:
     for _ in range(6 if index < 5 else 6 if index < 10 else 2 if index < 20 else 1):
       add_image(grid, index, period)
-    if period < 0:
-      if (prev_index := configs.setdefault(grid.tobytes(), index)) != index:
-        period = index - prev_index
-        index = num - (num - index) % period - period * 2
+    if period < 0 and (prev_index := configs.setdefault(grid.tobytes(), index)) != index:
+      period = index - prev_index
+      index = num - (num - index) % period - period * 2
     if index == num:
       break
     for rotation_index in range(4):
@@ -2439,11 +2440,10 @@ def day14(s, *, part2=False, num=10**9):
     period = -1
     index = 0
     while True:
-      if period < 0:
-        if (prev_index := configs.setdefault(grid.tobytes(), index)) != index:
-          period = index - prev_index
-          # hh.display_html(f'At {index=}, found cycle with {period=}.')  # 2 ms.
-          index = num - (num - index) % period
+      if period < 0 and (prev_index := configs.setdefault(grid.tobytes(), index)) != index:
+        period = index - prev_index
+        # hh.display_html(f'At {index=}, found cycle with {period=}.')  # 2 ms.
+        index = num - (num - index) % period
       if index == num:
         break
       for _ in range(4):
@@ -3056,7 +3056,7 @@ def day17c_compute(grid, part2, pad):
       i2 = i + offsets[dir]
       state2 = i2, dir, dn + 1
       distance2 = distance + grid_flat[i2]
-      if distance2 < distances.get(state2, 30_000):
+      if distance2 < distances.get(state2, 30_000):  # noqa: SIM102
         if distance2 < distances.get((i2, dir, dn2), 30_000):  # Optional, for optimization!
           distances[state2] = distance2
           heapq.heappush(priority_queue, (distance2, state2))
@@ -3441,7 +3441,8 @@ def day19a_part2(s):  # Implementation using a stack.
     rules[name] = s_rules.split(',')
 
   total = 0
-  initial_intervals = {category: (1, 4001) for category in 'xmas'}  # (start, stop).
+  initial_intervals: dict[str, tuple[int, int]]  # Not LiteralString.
+  initial_intervals = {category: (1, 4001) for category in 'xmas'}  # (start, stop).  # noqa: C420
   stack = [('in', initial_intervals)]
 
   while stack:
@@ -3509,7 +3510,9 @@ def day19_part2(s):  # Implementation using a recursive function.
         total += compute(label, intervals | {category: (max(start, num + 1), stop)})
         intervals[category] = start, min(stop, num + 1)
 
-  return compute('in', {category: (1, 4001) for category in 'xmas'})
+    raise RuntimeError('No solution found')
+
+  return compute('in', {category: (1, 4001) for category in 'xmas'})  # noqa: C420
 
 
 check_eq(day19_part2(s1), 167409079868000)
@@ -3655,7 +3658,7 @@ def day20a(s, *, part2=False, num_buttons=1000):  # Compact.
       inputs[output][name] = 0
 
   counts = collections.Counter[int]()
-  period = {name: 0 for name in inputs[next(iter(inputs['rx']))]} if part2 else {}
+  period = dict.fromkeys(inputs[next(iter(inputs['rx']))], 0) if part2 else {}
 
   for button_index in range(10**9 if part2 else num_buttons):
     counts[0] += 1
@@ -3987,8 +3990,7 @@ def day21_visualize(s, num_rings=2, no_flicker=True):
     for yx, count in np.ndenumerate(counts):
       if count:
         hh.overlay_text(image, np.array(yx) * 131 + 65, f'{count:4}', align='mc', fontsize=20)
-    for _ in range(60 if new_counts else 1):
-      images.append(image)
+    images += [image] * (60 if new_counts else 1)
     new_counts = False
 
   if no_flicker:
@@ -4176,7 +4178,7 @@ def day22b(s, *, part2=False, visualize=False):  # First scheme, with unnecessar
 
   if visualize:
     graph = networkx.DiGraph()
-    for index, brick in enumerate(bricks):
+    for index in range(len(bricks)):
       graph.add_node(index, node_color='#40A0E0')
       for index2 in rests_on[index]:
         graph.add_edge(index, index2)
@@ -4185,13 +4187,13 @@ def day22b(s, *, part2=False, visualize=False):  # First scheme, with unnecessar
     pos = hh.graph_layout(graph, prog='dot')
     fig, ax = plt.subplots(figsize=(5, 20), dpi=80)
     ax.set_aspect('equal')
-    node_color = [attr for _, attr in graph.nodes(data='node_color')]
+    node_color = list(networkx.get_node_attributes(graph, 'node_color').values())
     networkx.draw(graph, pos, node_color=node_color, node_size=15, width=0.5, arrowsize=4)
     fig.tight_layout(pad=0)
     image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
     plt.close(fig)
     media.show_image(image, border=True, title='day22a')
-    return
+    return None
 
   if not part2:
     for index, brick in enumerate(bricks):
@@ -4388,7 +4390,7 @@ def day22_visualize_3d(s):
     cubes.append((*brick[:2], height, *brick[3:5], height + brick[5] - brick[2]))
 
   colors = hh.generate_random_colors(50)
-  facecolors = np.random.default_rng(0).choice(colors, len(cubes))
+  facecolors = np.random.default_rng(1).choice(colors, len(cubes))
   surface = hh.mesh3d_from_cubes(cubes, facecolors)
 
   def fig_layout(a=0.1):  # Downscale dimensions to avoid clipping eye coordinates to max ~100.
@@ -5027,7 +5029,7 @@ def day24a_part2(s, debug=True):  # scipy.optimize.fsolve() fails.
   else:
     initial_guess = [1e6] * 3 + [1e6] * 3 + [1.0] * len(array)
 
-  x = scipy.optimize.fsolve(fun, initial_guess, xtol=1e-12)
+  x: Any = scipy.optimize.fsolve(fun, initial_guess, xtol=1e-12)
   if debug:
     print([float(c) for c in x[:6]])
   return sum(int(c + 0.5) for c in x[0:3])
@@ -5365,6 +5367,7 @@ def day24_part2(s):  # Fastest: solve system of 6 linear equations based on cros
   system = sympy.Matrix(matrix_data)
   pos, vel = sympy.symbols('pos(:3)'), sympy.symbols('vel(:3)')
   sol = sympy.solve_linear_system(system, *pos, *vel)
+  assert sol
   return sum(sol[sym] for sym in pos)
 
 
@@ -5517,7 +5520,7 @@ def day25(s, num_random_edges=100):
   # The graph in the puzzle input has a dumbbell connectivity structure.
   # Therefore, a heuristic algorithm is to examine the shortest paths between
   # many random pairs of nodes and determine the most common path edges.
-  rng = np.random.default_rng(0)
+  rng = np.random.default_rng(1)
   edge_counts = collections.Counter[tuple[str, str]]()
   nodes = np.array(list(graph))
 

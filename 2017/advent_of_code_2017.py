@@ -43,7 +43,6 @@
 
 # %%
 import collections
-from collections.abc import Iterator
 import dataclasses
 import functools
 import graphlib
@@ -52,12 +51,14 @@ import math
 import operator
 import pathlib
 import re
+from collections.abc import Iterator
 from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
 import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
 import more_itertools
 import numba
@@ -800,7 +801,7 @@ def day12(s, *, part2=False):
     num_in_group_of_0 = sum(union_find.same('0', node) for node in nodes)
     return num_in_group_of_0
 
-  num_groups = len(set(union_find.find(node) for node in nodes))
+  num_groups = len({union_find.find(node) for node in nodes})
   return num_groups
 
 
@@ -842,8 +843,8 @@ def day13(s):  # Supports Part 1 only.
     range_of_depth[depth] = range_
 
   max_depth = max(range_of_depth.keys())
-  scanner_pos = {depth: 0 for depth in range_of_depth}
-  scanner_inc = {depth: +1 for depth in range_of_depth}
+  scanner_pos = dict.fromkeys(range_of_depth, 0)
+  scanner_inc = dict.fromkeys(range_of_depth, +1)
 
   total_severity = 0
   for depth in range(max_depth + 1):
@@ -870,8 +871,8 @@ def day13a_part2(s):  # Brute-force simplistic approach.
     depth, range_ = int(s1), int(s2)
     range_of_depth[depth] = range_
   max_depth = max(range_of_depth.keys())
-  scanner_pos0 = {depth: 0 for depth in range_of_depth}
-  scanner_inc0 = {depth: +1 for depth in range_of_depth}
+  scanner_pos0 = dict.fromkeys(range_of_depth, 0)
+  scanner_inc0 = dict.fromkeys(range_of_depth, +1)
 
   for delay in itertools.count():
     scanner_pos = scanner_pos0.copy()
@@ -1018,7 +1019,7 @@ def day14a(s, *, part2=False):  # Slower version.
       if y2 < shape[0] and x2 < shape[1] and grid[y2, x2]:
         union_find.union((y, x), (y2, x2))
 
-  return len(set(union_find.find((y, x)) for y, x in np.argwhere(grid)))
+  return len({union_find.find((y, x)) for y, x in np.argwhere(grid)})
 
 
 check_eq(day14a('flqrgnkx'), 8108)
@@ -1089,7 +1090,7 @@ def day14(s, *, part2=False, visualize=False):  # Faster, without rotation or re
       if y2 < shape[0] and x2 < shape[1] and grid[y2, x2]:
         union_find.union((y, x), (y2, x2))
 
-  return len(set(union_find.find((y, x)) for (y, x), value in np.ndenumerate(grid) if value))
+  return len({union_find.find((y, x)) for (y, x), value in np.ndenumerate(grid) if value})
 
 
 check_eq(day14('flqrgnkx'), 8108)
@@ -1570,7 +1571,7 @@ def day20(s, *, part2=False):
     position = position + velocity * time + acceleration * (time * (time + 1) // 2)
     return np.abs(position).sum(axis=1).argmin()
 
-  for time in range(200):
+  for unused_time in range(200):
     velocity += acceleration
     position += velocity
     unused_unique, index, counts = np.unique(
@@ -2013,9 +2014,7 @@ s1 = """\
 
 # %%
 def day24a(s, *, start=0, part2=False):  # Slower, creating list of updated remaining components.
-  components: list[tuple[int, int]] = [
-      tuple(map(int, line.split('/'))) for line in s.splitlines()  # type: ignore[misc]
-  ]
+  components = [(int(a), int(b)) for line in s.splitlines() for a, b in (line.split('/'),)]
   check_eq(len(components), len(set(components)))  # In fact, they are all unique.
 
   def compatible_components(start: int, components: list[tuple[int, int]]):

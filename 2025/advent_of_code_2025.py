@@ -52,12 +52,12 @@
 # %%
 import bisect
 import collections
-from collections.abc import Callable
 import functools
 import itertools
 import math
 import pathlib
 import re
+from collections.abc import Callable
 from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
@@ -561,7 +561,7 @@ s1 = """\
 # %%
 def day6_part1(s):
   lines = s.splitlines()
-  array = np.array(list(line.split() for line in lines[:-1]), int)
+  array = np.array([line.split() for line in lines[:-1]], int)
   operations = lines[-1].split()
   total = 0
 
@@ -709,7 +709,7 @@ def day7_visualize(s, rep=3, fps=30):
         new_counter += Counter({x: count})
 
     counter = new_counter
-    for x, count in counter.items():
+    for x in counter:
       image[y, x] = 130, 130, 240
     images.append(image.copy())
 
@@ -1012,7 +1012,7 @@ def day9_visualize(s):
   fig, ax = plt.subplots(figsize=(7,) * 2, dpi=80)
   ax.set_aspect('equal')
   ax.plot(*closed.T, 'k-', linewidth=0.8)
-  for ((x1, y1), (x2, y2)), color in [[part1_pair, 'blue'], [part2_pair, 'green']]:
+  for ((x1, y1), (x2, y2)), color in [(part1_pair, 'blue'), (part2_pair, 'green')]:
     ax.add_patch(plt.Rectangle((x1, y1), x2 - x1, y2 - y1, color=color, alpha=0.3))
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)
   plt.close(fig)
@@ -1065,6 +1065,8 @@ def day10_part1(s):  # Using breadth-first search.
               visited.add(new_state)
               new_states.append(new_state)
         states = new_states
+
+      raise RuntimeError('No solution found')
 
     total += min_step_count_using_bfs()
 
@@ -1260,7 +1262,7 @@ def day10_part2(s):  # Using scipy.optimize.milp().
         options={'disp': False},
     )
     assert result.success
-    total += int(round(result.fun))
+    total += round(result.fun)
 
   return total
 

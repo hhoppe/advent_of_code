@@ -61,7 +61,6 @@
 
 # %%
 import collections
-from collections.abc import Callable
 import dataclasses
 import functools
 import hashlib
@@ -70,8 +69,9 @@ import itertools
 import math
 import pathlib
 import re
-from typing import Any, Union
 import warnings
+from collections.abc import Callable
+from typing import Any, Union
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
@@ -336,7 +336,7 @@ def day3(s, *, part2=False, visualize=False):  # Faster with numpy.
   if not part2:
     return np.count_nonzero(grid >= 2)
 
-  claim = -1
+  claim, l, t, w, h = -1, 0, 0, 0, 0
   for line in lines:
     claim, l, t, w, h = map(int, hh.re_groups(pattern, line))
     if np.all(grid[t : t + h, l : l + w] == 1):
@@ -409,6 +409,7 @@ def day4(s, *, part2=False):
   asleep = np.zeros((num_dates, 60))
   date_guard = np.empty(num_dates, int)
   row = -1
+  asleep_minute = None
   for line in lines:
     (minute,) = map(int, hh.re_groups(r' \d\d:(\d\d)', line))
     if 'Guard' in line:
@@ -418,6 +419,7 @@ def day4(s, *, part2=False):
     elif 'falls asleep' in line:
       asleep_minute = minute
     elif 'wakes up' in line:
+      assert asleep_minute is not None
       asleep[row][asleep_minute:minute] = 1
     else:
       raise ValueError(line)
@@ -691,6 +693,7 @@ def day7(s, *, part2=False, num_workers=5, cost_base=60):
     result = []
     while nodelist:
       node = get_next_node()
+      assert node
       result.append(node)
       finish_node(node)
     return ''.join(result)
@@ -708,10 +711,9 @@ def day7(s, *, part2=False, num_workers=5, cost_base=60):
     if not nodelist and not any(worker_node):
       break
     for worker in range(num_workers):
-      if not worker_node[worker]:
-        if node := get_next_node():
-          worker_node[worker] = node
-          worker_time[worker] = cost_base + 1 + ord(node) - ord('A')
+      if not worker_node[worker] and (node := get_next_node()):
+        worker_node[worker] = node
+        worker_time[worker] = cost_base + 1 + ord(node) - ord('A')
     time += 1
   return time
 
@@ -838,7 +840,7 @@ def day9b(s, *, part2=False):  # Slightly faster with quick inner loop.
   scores = [0] * num_players
   marble = 1
   while marble < last_marble - 23:
-    for marble in range(marble, marble + 22):
+    for marble in range(marble, marble + 22):  # noqa: B020  # We do modify the outer variable.
       marbles.rotate(-1)
       marbles.append(marble)
     marble += 1
@@ -847,7 +849,7 @@ def day9b(s, *, part2=False):  # Slightly faster with quick inner loop.
     marbles.rotate(-1)
     marble += 1
 
-  for marble in range(marble, last_marble + 1):
+  for marble in range(marble, last_marble + 1):  # noqa: B020  # We do modify the outer variable.
     if marble % 23 == 0:
       marbles.rotate(7)
       scores[marble % num_players] += marble + marbles.pop()
@@ -882,7 +884,7 @@ def day9_func(num_players: int, last_marble: int) -> int:
   marble = 2
 
   while True:
-    for marble in range(marble, marble + 21):  # e.g., [2, ..., 22]
+    for marble in range(marble, marble + 21):  # e.g., [2, ..., 22]  # noqa: B020
       marble1 = array[marble - 1]
       marble2 = array[marble1]
       array[marble1] = marble
@@ -984,11 +986,13 @@ def day10a(s, *, part2=False):  # Slow.
     velocities0.append([dy, dx])
   positions, velocities = np.array(positions0), np.array(velocities0)
 
-  for index in itertools.count():
+  index = 0
+  while True:
     shape = np.ptp(positions, axis=0) + 1
     if shape[0] == 8 or (shape[0] == 10 and shape[1] > 30):
       break
     positions += velocities
+    index += 1
 
   if part2:
     return index
@@ -1188,7 +1192,7 @@ def day12(s, *, part2=False, visualize=False):
   lines = s.splitlines()
   assert lines[0].startswith('initial state: ') and not lines[1]
   state = lines[0][15:]
-  rules = {''.join(key): '.' for key in itertools.product('.#', repeat=5)}
+  rules: dict[str, str] = {''.join(key): '.' for key in itertools.product('.#', repeat=5)}
   for line in lines[2:]:
     key, value = line.split(' => ')
     rules[key] = value
@@ -1197,12 +1201,12 @@ def day12(s, *, part2=False, visualize=False):
   def sum_pots(state, pad_len):
     return sum(i - pad_len for i, ch in enumerate(state) if ch == '#')
 
-  for index in range(10**8 if part2 else 20):
+  for _ in range(10**8 if part2 else 20):
     # Grown the domain by two extra '.' on both sides.
     state = '....' + state + '....'
     state = ''.join(rules[''.join(w)] for w in more_itertools.sliding_window(state, 5))
     states.append(state)
-    if part2 and len(states) >= 2:
+    if part2 and len(states) >= 2:  # noqa: SIM102
       if any(
           states[-2] == states[-1][2 + shift : 2 + shift + len(states[-2])] for shift in (-1, 0, 1)
       ):
@@ -1300,8 +1304,10 @@ def day13(s, *, part2=False, verbose=False, visualize=False):
 
   check_eq(text_from_grid(), s.rstrip('\n'))
 
+  image0: np.ndarray = np.zeros((0, 0, 3), np.uint8)
+  image = image0
   if visualize:
-    cmap = {' ': (250,) * 3, '+': (140, 140, 140)} | {ch: (180,) * 3 for ch in r'|-\/'}
+    cmap = {' ': (250,) * 3, '+': (140,) * 3} | {ch: (180,) * 3 for ch in r'|-\/'}  # noqa: C420
     image0 = np.array([cmap[e] for e in grid.flat], np.uint8).reshape(*grid.shape, 3)
 
   images = []
@@ -1498,7 +1504,7 @@ def day14b_part2_func(pattern):
   def matches():
     if num < len_pattern:
       return False
-    for i in range(len_pattern):
+    for i in range(len_pattern):  # noqa: SIM110
       if recipes[num - len_pattern + i] != pattern[i]:
         return False
     return True
@@ -1840,7 +1846,8 @@ def day15a_part1(s, verbose=False, elf_attack_power=3, fail_if_elf_dies=False):
     next_queue = [unit.yx]
     visited: set[tuple[int, int]] = set()
     nearests: set[tuple[int, int]] = set()
-    for nearest_distance in itertools.count():
+    nearest_distance = 0
+    while True:
       if nearests or not next_queue:
         break
       queue, next_queue = next_queue, []
@@ -1851,6 +1858,8 @@ def day15a_part1(s, verbose=False, elf_attack_power=3, fail_if_elf_dies=False):
             next_queue.append(yx2)
             if yx2 in inrange:
               nearests.add(yx2)
+      nearest_distance += 1
+
     if not nearests:
       return None  # No path to opponent.
     nearest = min(nearests)
@@ -1862,7 +1871,7 @@ def day15a_part1(s, verbose=False, elf_attack_power=3, fail_if_elf_dies=False):
       queue, next_queue = next_queue, []
       for yx in queue:
         for yx2 in empty_adjacent_yxs(yx):
-          if yx2 not in distances:
+          if yx2 not in distances:  # noqa: SIM102
             if distance + manhattan(yx2, unit.yx) <= nearest_distance:  # A* pruning.
               distances[yx2] = distance + 1
               next_queue.append(yx2)
@@ -1876,7 +1885,7 @@ def day15a_part1(s, verbose=False, elf_attack_power=3, fail_if_elf_dies=False):
     for unit in sorted(units, key=lambda unit: unit.yx):
       if unit not in units:  # If already deleted, skip it.
         continue
-      if len(set(u.ch for u in units)) == 1:
+      if len({u.ch for u in units}) == 1:
         incomplete_round = True  # Unit cannot attack, so end of combat.
         break
 
@@ -1937,7 +1946,8 @@ def day15_adjacent_towards_opponent(grid, unit_yx, inrange):
   next_queue = [unit_yx]
   visited: set[tuple[int, int]] = set()
   nearests: set[tuple[int, int]] = set()
-  for nearest_distance in range(10**8):
+  nearest_distance = 0
+  while True:
     if nearests or not next_queue:
       break
     queue, next_queue = next_queue, []
@@ -1949,6 +1959,8 @@ def day15_adjacent_towards_opponent(grid, unit_yx, inrange):
           next_queue.append(yx2)
           if yx2 in inrange:
             nearests.add(yx2)
+    nearest_distance += 1
+
   if not nearests:
     return None  # No path to opponent.
   nearest = min(nearests)
@@ -2008,7 +2020,8 @@ def day15_part1(s, visualize=False, elf_attack_power=3, fail_if_elf_dies=False):
 
   images = []
   incomplete_round = False
-  for round in itertools.count():
+  round = 0
+  while True:
     if visualize:
       image = hh.to_image(grid == '#', 250, 0)
       image[grid == 'E'] = 255, 0, 0
@@ -2022,7 +2035,7 @@ def day15_part1(s, visualize=False, elf_attack_power=3, fail_if_elf_dies=False):
     for unit in sorted(units, key=lambda unit: unit.yx):
       if unit not in units:  # If already deleted, skip it.
         continue
-      if len(set(u.ch for u in units)) == 1:
+      if len({u.ch for u in units}) == 1:
         incomplete_round = True  # Unit cannot attack, so end of combat.
         break
 
@@ -2054,6 +2067,8 @@ def day15_part1(s, visualize=False, elf_attack_power=3, fail_if_elf_dies=False):
           units.remove(opponent)
           if fail_if_elf_dies and opponent.ch == 'E':
             return None
+
+    round += 1
 
   warnings_context.__exit__(None, None, None)
   if visualize:
@@ -2515,6 +2530,7 @@ def day19(s, *, part2=False, verbose=False):
   machine = _Machine()
   machine.read_instructions(s)
   optimize = len(machine.instructions) > 10
+  register_f = register_a = -1  # Dummy initialization.
   if optimize:
     check_eq(machine.instructions[4].operation, 'eqrr')
     register_f = machine.instructions[4].operands[1]
@@ -2629,7 +2645,7 @@ def day20(s, *, part2=False, visualize=False):
       return doors_s, doors_e, {(y, x)}
     # isinstance(elem, list)
     # Return the three unions of the respective sets from all child nodes.
-    return (set.union(*tup) for tup in zip(*map(traverse, elem)))
+    return (set.union(*tup) for tup in zip(*map(traverse, elem), strict=True))
 
   doors_s, doors_e, _ = traverse(l)
 
@@ -3104,6 +3120,7 @@ def day22(s, *, part2=False, pad=60, visualize=False):
     image = hh.to_image(grid == 1, (150, 0, 0), (0, 150, 0))
     image[grid == 2] = 0, 0, 150
     image2 = image.copy()
+    assert path is not None
     for node in path:
       image2[node[1:]] += 105  # Let the path be brighter.
     # x_max = (image.sum(2) > 0).max(axis=0).argmin() + 5
@@ -3236,9 +3253,9 @@ def day23a(s, *, part2=False):
     polytopes2 = sorted(polytopes2, key=lambda p: np.abs(p).min())
     polytopes2 = list(reversed(polytopes2))
 
-    pieces: dict[tuple[int, ...], int] = {}  # polytope -> count_of_original_octahedra
+    pieces: dict[tuple[float, ...], int] = {}  # polytope -> count_of_original_octahedra
     for i, polytope in enumerate(polytopes2):
-      new_pieces: dict[tuple[int, ...], int] = {}
+      new_pieces: dict[tuple[float, ...], int] = {}
       for piece, count in pieces.items():
         piece2 = intersect(polytope, piece)
         if is_empty(piece2):
@@ -3256,6 +3273,7 @@ def day23a(s, *, part2=False):
       print('Warning: pruning too large to guarantee the optimal solution.')
 
     min_distance = math.inf
+    best_position = math.inf, math.inf, math.inf
     # for c in set(itertools.product([-1, 0, 1], repeat=3)) - {0, 0, 0}:
     # for c in hvalues:
     for c in [-np.sign(good_position)]:
