@@ -60,6 +60,8 @@
 #   numba numpy scipy
 
 # %%
+from __future__ import annotations
+
 import collections
 import dataclasses
 import functools
@@ -71,7 +73,7 @@ import pathlib
 import re
 import warnings
 from collections.abc import Callable
-from typing import Any, Union
+from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
@@ -129,7 +131,7 @@ class _Machine:
   num_registers: int = 6
   registers: list[int] = dataclasses.field(default_factory=list)
   ip_register: int | None = None
-  instructions: list['_Machine.Instruction'] = dataclasses.field(default_factory=list)
+  instructions: list[_Machine.Instruction] = dataclasses.field(default_factory=list)
   ip: int = 0
   operations: dict[str, Callable[..., None]] = dataclasses.field(default_factory=dict)
 
@@ -742,7 +744,7 @@ puzzle = advent.puzzle(day=8)
 def day8(s, *, part2=False):
   @dataclasses.dataclass
   class TreeNode:
-    children: Any  # list['TreeNode'] fails for pytype.
+    children: Any  # list[TreeNode] but fails within a function on pylint and pytype.
     metadatas: list[int]
 
   values = map(int, s.split())
@@ -3316,7 +3318,7 @@ def day23b(s, *, part2=False):
   # Divide-and-conquer using octree decomposition, inspired by
   # https://github.com/wimglenn/advent-of-code-wim/blob/master/aoc_wim/aoc2018/q23.py.
   pattern = r'^pos=<([\d-]+),([\d-]+),([\d-]+)>, r=(\d+)$'
-  data: Any = np.array([list(map(int, hh.re_groups(pattern, line))) for line in s.splitlines()])
+  data = np.array([list(map(int, hh.re_groups(pattern, line))) for line in s.splitlines()])
   xs, rs = data[:, :3], data[:, 3]
   i = rs.argmax()
   if not part2:
@@ -3367,7 +3369,7 @@ def day23(s, *, part2=False):
   # https://github.com/wimglenn/advent-of-code-wim/blob/master/aoc_wim/aoc2018/q23.py.
   # Improved to be robust (not assuming cubes with power-of-two dimensions).
   pattern = r'^pos=<([\d-]+),([\d-]+),([\d-]+)>, r=(\d+)$'
-  data: Any = np.array([list(map(int, hh.re_groups(pattern, line))) for line in s.splitlines()])
+  data = np.array([list(map(int, hh.re_groups(pattern, line))) for line in s.splitlines()])
   xs, rs = data[:, :-1], data[:, -1]
   if not part2:
     i = rs.argmax()
@@ -3424,7 +3426,7 @@ Infection:
 def day24(s, *, verbose=False, boost=0, immune_must_win=False):
   @dataclasses.dataclass
   class Group:
-    army: 'Army'
+    army: Army
     id: int
     units: int
     hit_points: int  # (per_unit)
@@ -3432,7 +3434,7 @@ def day24(s, *, verbose=False, boost=0, immune_must_win=False):
     attack_type: str
     initiative: int  # Higher initiative attacks first and wins ties.
     attributes: dict[str, set[str]]  # ['immune'] and ['weak']
-    target: Union['Group', None]
+    target: Any  # Group | None, but fails within a function on pylint and pytype.
     targeted: bool
 
     def __init__(self, army, id, line):

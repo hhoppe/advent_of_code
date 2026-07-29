@@ -397,7 +397,7 @@ if 0:
 # %%
 # Fast.
 @numba.njit
-def day5_compute(values: Any, part2: bool) -> int:
+def day5_compute(values, part2: bool) -> int:
   pos = 0
   num_steps = 0
   while 0 <= pos < len(values):

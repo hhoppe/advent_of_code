@@ -827,7 +827,7 @@ def day8a_part2(s):  # Brute-force; most compact.
         return lookup.get(''.join(sorted(segs.translate(translation))))
 
       if all(get_digit(input) for input in inputs):
-        total += int(''.join(hh.assert_not_none(get_digit(output)) for output in outputs))
+        total += int(''.join(hh.not_none(get_digit(output)) for output in outputs))
         break
     else:
       raise ValueError(f'Line "{line}" has no consistent mapping.')
@@ -855,7 +855,7 @@ def day8b_part2(s):  # Faster; cache a translation table for each permutation.
     for permutation in itertools.permutations('abcdefg'):
       get_digit = digit_mapper(permutation)
       if all(get_digit(input) for input in inputs):
-        total += int(''.join(hh.assert_not_none(get_digit(output)) for output in outputs))
+        total += int(''.join(hh.not_none(get_digit(output)) for output in outputs))
         break
     else:
       raise ValueError(f'Line "{line}" has no consistent mapping.')
@@ -2310,7 +2310,7 @@ def day17_simulations(x1, x2, y1, y2):
 
 
 def day17(s, *, part2=False, visualize=False):
-  x1, x2, y1, y2 = hh.assert_not_none(
+  x1, x2, y1, y2 = hh.not_none(
       parse.parse('target area: x={:d}..{:d}, y={:d}..{:d}', s.strip())
   ).fixed
   winners, highest = day17_simulations(x1, x2, y1, y2)
@@ -3736,7 +3736,7 @@ def day22a_part1(s):  # Initial specialized solution for part 1.
   shape = 101, 101, 101
   grid = np.full(shape, 0, int)
   for line in lines:
-    state, x1, x2, y1, y2, z1, z2 = hh.assert_not_none(
+    state, x1, x2, y1, y2, z1, z2 = hh.not_none(
         parse.parse('{} x={:d}..{:d},y={:d}..{:d},z={:d}..{:d}', line)
     )
     if not all(-50 <= c <= 50 for c in [x1, x2, y1, y2, z1, z2]):

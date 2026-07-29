@@ -2869,7 +2869,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
     def visualize(self, max_level):
       images = []
       src_lyx = (0, *self.yx_of_portal[0]['AA'])
-      path = [src_lyx] + hh.assert_not_none(self.shortest_path(max_level))
+      path = [src_lyx] + hh.not_none(self.shortest_path(max_level))
       image0 = hh.to_image(self.grid == '#', 255, 30)  # default is '.'
       image0[self.grid == ' '] = 235
       image0[('A' <= self.grid) & (self.grid <= 'Z')] = 40, 40, 255
@@ -2893,7 +2893,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
           image[lyx[1:]] = color
           if abs(lyx[1] - last_lyx[1]) + abs(lyx[2] - last_lyx[2]) > 1:
             count = 0  # Jump across portal without level change.
-            lyx2 = hh.assert_not_none(self.opposite_portal(last_lyx, max_level))
+            lyx2 = hh.not_none(self.opposite_portal(last_lyx, max_level))
             image[lyx2[1:]] = color
           if count % speed == 0:
             record_image(image, step, level)
@@ -2904,7 +2904,7 @@ def day20(s, *, part2=False, max_level=0, visualize=False, speed=2, repeat=3):
           image = image0.copy()
           count = 0
           color = (255, 40, 40) if self.is_inner_portal(last_lyx[1:]) else (0, 180, 60)
-          lyx2 = hh.assert_not_none(self.opposite_portal(last_lyx, max_level))
+          lyx2 = hh.not_none(self.opposite_portal(last_lyx, max_level))
           image[lyx2[1:]] = color
           yx2 = next(iter(self.portal_portal_path[lyx2[1:]].values()))[0]
           image[yx2] = color

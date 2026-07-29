@@ -828,7 +828,7 @@ def day8_visualize(s, *, part2=False, num_edges=1000):
   color_of_label = {label: colors[i] for i, label in enumerate(unique_labels)}
 
   fig = plt.figure(figsize=(6, 6), dpi=80)
-  ax: Any = fig.add_subplot(111, projection='3d')  # ax: mpl_toolkits.mplot3d.axes3d.Axes3D.
+  ax: Any = fig.add_subplot(111, projection='3d')
   ax.ticklabel_format(style='scientific', scilimits=(0, 0))
   ax.set(xlabel='x', ylabel='y', zlabel='z')
   ax.set_aspect('equal')

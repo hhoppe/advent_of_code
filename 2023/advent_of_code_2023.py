@@ -5284,7 +5284,7 @@ def day24_part2_visualize(s, nframes=120, fps=30):
   t_max = max(t_i)
 
   fig = plt.figure(figsize=(7, 7), dpi=80)
-  ax: Any = fig.add_subplot(111, projection='3d')  # ax: mpl_toolkits.mplot3d.axes3d.Axes3D.
+  ax: Any = fig.add_subplot(111, projection='3d')
   ax.set(xlabel='x', ylabel='y', zlabel='z', xlim=[0, 5e14], ylim=[0, 5e14], zlim=[0, 5e14])
 
   scatter_i = ax.scatter(*p_i.T, color='black', marker='o', s=3)

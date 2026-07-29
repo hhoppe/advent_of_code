@@ -4047,7 +4047,7 @@ s1 = """\
 # %%
 def day22a(s, *, part2=False):  # Concise.
   total = 0
-  scores: Any = collections.defaultdict(int)
+  scores = collections.defaultdict[Any, int](int)
   secrets = np.empty(2001, np.int64)
 
   for v in map(int, s.splitlines()):
@@ -4096,7 +4096,7 @@ def day22b(s, *, part2=False):  # Using only generators -- no lists or arrays.
   if not part2:
     return sum(more_itertools.last(generate_secrets(initial)) for initial in initials)
 
-  totals: Any = collections.defaultdict(int)
+  totals = collections.defaultdict[Any, int](int)
 
   for initial in initials:
     known_correct = set()

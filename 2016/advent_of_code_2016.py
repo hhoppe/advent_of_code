@@ -954,7 +954,7 @@ def day11b(s, *, part2=False, visualize=False):  # BFS; frozenset[int]; equivale
   def candidate_items(content: frozenset[int]) -> tuple[tuple[int, ...], ...]:
     return tuple(more_itertools.flatten(itertools.combinations(content, n) for n in [1, 2]))
 
-  def estimated_goodness(state: Any) -> int:
+  def estimated_goodness(state) -> int:
     unused_floor, contents = state
     return -(len(contents[0]) * 3 + len(contents[1]) * 2 + len(contents[2]) * 1)
 
@@ -962,13 +962,13 @@ def day11b(s, *, part2=False, visualize=False):  # BFS; frozenset[int]; equivale
   def encode1(content: frozenset[int]) -> tuple[int, int]:
     return sum(1 for index in content if index > 0), sum(1 for index in content if index < 0)
 
-  def encode(state: Any) -> Any:
+  def encode(state):
     """Account for the fact that only the counts of gens and chips on each floor matters."""
     floor, c = state
     return floor, encode1(c[0]), encode1(c[1]), encode1(c[2]), encode1(c[3])
 
   prune_size = 50  # Heuristic; may fail if too small!
-  seen: Any = {encode(start_state)}
+  seen = {encode(start_state)}
   prev: Any = {start_state: None}
   states = [start_state]
   distance = 0

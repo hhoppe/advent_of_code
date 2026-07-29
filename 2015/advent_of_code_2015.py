@@ -998,7 +998,7 @@ def day11a(s, *, part2=False):  # Brute-force.
 
   for _ in range(num_advances):
     state[-1] += 1  # Force an advance.
-    state = hh.assert_not_none(consider([], state))
+    state = hh.not_none(consider([], state))
 
   return ''.join(chr(ord('a') + value) for value in state)
 
@@ -1046,7 +1046,7 @@ def day11(s, *, part2=False):  # Fast early culling.
 
   for _ in range(num_advances):
     state[-1] += 1  # Force an advance.
-    state = hh.assert_not_none(consider([], state))
+    state = hh.not_none(consider([], state))
 
   return ''.join(chr(ord('a') + value) for value in state)
 
@@ -1073,7 +1073,7 @@ puzzle = advent.puzzle(day=12)
 
 # %%
 def day12a(s, *, part2=False):
-  def sum_numbers(expr: Any) -> int:
+  def sum_numbers(expr) -> int:
     match expr:
       case list():
         return sum(sum_numbers(e) for e in expr)
@@ -1111,7 +1111,7 @@ puzzle.verify(2, day12a_part2)
 
 # %%
 def day12(s, *, part2=False):  # Using "match" statement.
-  def sum_numbers(expr: Any) -> int:
+  def sum_numbers(expr) -> int:
     match expr:
       case list():
         return sum(sum_numbers(e) for e in expr)
@@ -1895,7 +1895,7 @@ def day19_test_pyparsing2(swap=False):  # Using Group and count_lists().
   sym_H <<= pp.Group(sym_H + sym_O) ^ pp.Group(sym_O + sym_H) ^ 'H'
   sym_O <<= pp.Group(sym_H + sym_H) ^ 'O'
 
-  def count_lists(expr: Any) -> int:
+  def count_lists(expr) -> int:
     return 1 + sum(count_lists(e) for e in expr if not isinstance(e, str))
 
   def show_result(string: str) -> None:
@@ -1929,7 +1929,7 @@ def day19_test_pyparsing3(s):
         parse[symbol] <<= expression[symbol]
       result = parse['e'].parse_string(string, parse_all=True)
 
-      def count_lists(expr: Any) -> int:
+      def count_lists(expr) -> int:
         return 1 + sum(count_lists(e) for e in expr if not isinstance(e, str))
 
       count = count_lists(result) - 1

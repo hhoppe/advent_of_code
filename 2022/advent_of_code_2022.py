@@ -1744,7 +1744,7 @@ def day12v(s, *, n=3):  # Visualize as GIF image.
 
   for part in range(2):
     sentinel = -1, -1
-    starts: Any = np.argwhere(grid == 0) if part else [start_yx]
+    starts = np.argwhere(grid == 0) if part else [start_yx]
     prev = {(y, x): sentinel for y, x in starts}  # noqa: C420
     queue = collections.deque(prev)
     image = media.to_rgb(grid / 25, vmax=1.3)
@@ -1783,7 +1783,7 @@ def day12w(s, use_tilt=True):  # Visualize using plotly 3D rendering.
 
   for part in range(2):
     sentinel = -1, -1
-    starts: Any = np.argwhere(grid == 0) if part else [start_yx]
+    starts = np.argwhere(grid == 0) if part else [start_yx]
     prev = {(y, x): sentinel for y, x in starts}  # noqa: C420
     queue = collections.deque(prev)
     while (yx := queue.popleft()) != end_yx:
