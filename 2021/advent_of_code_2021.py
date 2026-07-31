@@ -3797,7 +3797,6 @@ check_eq(day22b_part2(s3), 2758514936282235)
 # %%
 def day22c(s, *, part2=False):  # Using CSG of boxes.
   # Adapted simpler logic of https://github.com/shaeberling/euler/blob/master/kotlin/src/com/s13g/aoc/aoc2021/Day22.kt.
-  # pytype: disable=unsupported-operands,annotation-type-mismatch
   lines = s.splitlines()
   state_cuboids = []
   for line in lines:
@@ -3830,7 +3829,7 @@ def day22c(s, *, part2=False):  # Using CSG of boxes.
       if inside(subcell, a) and not inside(subcell, b):
         yield subcell
 
-  cells = set[tuple[int, ...]]()  # Disjoint union of "on" cubes.
+  cells = set[tuple[tuple[int, int], ...]]()  # Disjoint union of "on" cubes.
 
   # Subtract each cuboid from existing cells (potentially subdividing them).
   for state, cuboid in state_cuboids:
@@ -3846,7 +3845,6 @@ def day22c(s, *, part2=False):  # Using CSG of boxes.
     cells = (cells - cells_to_delete) | cells_to_add
 
   return sum((np.diff(np.array(cell, np.int64)).T[0] + 1).prod() for cell in cells)
-  # pytype: enable=unsupported-operands,annotation-type-mismatch
 
 
 check_eq(day22c(s1), 39)
@@ -3861,7 +3859,6 @@ puzzle.verify(2, day22c_part2)
 
 # %%
 def day22d(s, *, part2=False):  # Faster by reducing CSG fragment count.
-  # pytype: disable=unsupported-operands,annotation-type-mismatch,container-type-mismatch,bad-unpacking
   lines = s.splitlines()
   state_cuboids = []
   for line in lines:
@@ -3889,7 +3886,7 @@ def day22d(s, *, part2=False):  # Faster by reducing CSG fragment count.
 
   def subdivide_a_subtracting_b(a, b):  # Faster; smaller number of subcells.
     boxes = [a]
-    finalized: list[tuple[int, ...]] = []
+    finalized: list[tuple[tuple[int, int], ...]] = []
     # dims = np.argsort([c1 - c2 for c1, c2 in a])  # Split big dims first.
     dims = sorted(range(3), key=lambda dim: a[dim][0] - a[dim][1])
     for dim in dims:
@@ -3916,8 +3913,7 @@ def day22d(s, *, part2=False):  # Faster by reducing CSG fragment count.
       boxes = new_boxes
     return finalized
 
-  # Disjoint union of "on" cubes.
-  cells = set[tuple[tuple[int, int, int], tuple[int, int, int]]]()
+  cells = set[tuple[tuple[int, int], ...]]()  # Disjoint union of "on" cubes.
 
   # Subtract each cuboid from existing cells (potentially subdividing them).
   for state, cuboid in state_cuboids:
@@ -3933,7 +3929,6 @@ def day22d(s, *, part2=False):  # Faster by reducing CSG fragment count.
     cells = (cells - cells_to_delete) | cells_to_add
 
   return sum((np.diff(np.array(cell, np.int64)).T[0] + 1).prod() for cell in cells)
-  # pytype: enable=unsupported-operands,annotation-type-mismatch,container-type-mismatch,bad-unpacking
 
 
 check_eq(day22d(s1), 39)
@@ -4120,7 +4115,6 @@ _test_kdtree()
 
 # %%
 def day22e(s, *, part2=False):  # Using _Kdtree.
-  # pytype: disable=bad-unpacking,container-type-mismatch
   lines = s.splitlines()
   state_cuboids = []
   for line in lines:
@@ -4163,7 +4157,7 @@ def day22e(s, *, part2=False):  # Using _Kdtree.
 
   def subdivide_a_subtracting_b(a, b):  # Faster; smaller number of subcells.
     boxes = [a]
-    finalized: list[tuple[tuple[int, int, int], tuple[int, int, int]]] = []
+    finalized: list[tuple[tuple[int, int], ...]] = []
     # dims = np.argsort([c1 - c2 for c1, c2 in a])  # Split big dims first.
     dims = sorted(range(3), key=lambda dim: a[dim][0] - a[dim][1])
     for dim in dims:
@@ -4211,7 +4205,6 @@ def day22e(s, *, part2=False):  # Using _Kdtree.
 
   cells = [from_bbox(entry.bb0, entry.bb1) for entry in kdtree.entries if entry.bb0[0] >= 0.0]
   return (np.diff(np.array(cells, np.int64)) + 1)[..., 0].prod(axis=-1).sum()
-  # pytype: enable=bad-unpacking,container-type-mismatch
 
 
 check_eq(day22e(s1), 39)

@@ -91,6 +91,7 @@ from typing import Any
 
 import advent_of_code_hhoppe  # https://github.com/hhoppe/advent-of-code-hhoppe/blob/main/advent_of_code_hhoppe/__init__.py
 import hhoppe_tools as hh  # https://github.com/hhoppe/hhoppe-tools/blob/main/hhoppe_tools/__init__.py
+import matplotlib
 import matplotlib.patches
 import matplotlib.pyplot as plt
 import mediapy as media  # https://github.com/google/mediapy/blob/main/mediapy/__init__.py
@@ -3485,7 +3486,7 @@ def day20c(s, *, part2=False, min_savings=100, visualize=False, rep=4):
 
   if visualize:
     image = hh.to_image(grid == '#', 250, 0)
-    rgb_from_scalar = matplotlib.colormaps['cool']  # pytype: disable=module-attr
+    rgb_from_scalar = matplotlib.colormaps['cool']
     path_length = distance[ye, xe]
     for (y, x), d in np.ndenumerate(distance):
       if d >= 0:
@@ -4981,7 +4982,6 @@ if 0:  # Lint.
   hh.run('echo autopep8; autopep8 -j8 -d .')
   hh.run('echo mypy; mypy . || true')
   hh.run('echo pylint; pylint -j8 . || true')
-  hh.run('echo pytype; pytype -j auto -k .')
   hh.run(
       'echo flake8; flake8 --indent-size=2 --exclude .ipynb_checkpoints'
       ' --extend-ignore E129,E203,E302,E305,E501,E741'

@@ -1513,7 +1513,6 @@ if 0:  # Lint.
   hh.run('echo autopep8; autopep8 -j8 -d .')
   hh.run('echo mypy; mypy . || true')
   hh.run('echo pylint; pylint -j8 . || true')
-  hh.run('echo pytype; pytype -j auto -k .')
   hh.run(
       'echo flake8; flake8 --indent-size=2 --exclude .ipynb_checkpoints'
       ' --extend-ignore E129,E203,E302,E305,E501,E741'

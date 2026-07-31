@@ -744,7 +744,7 @@ puzzle = advent.puzzle(day=8)
 def day8(s, *, part2=False):
   @dataclasses.dataclass
   class TreeNode:
-    children: Any  # list[TreeNode] but fails within a function on pylint and pytype.
+    children: Any  # list[TreeNode], but fails within a function on pylint and pytype.
     metadatas: list[int]
 
   values = map(int, s.split())
