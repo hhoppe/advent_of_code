@@ -4885,7 +4885,7 @@ def day25a_part1(s):  # Concise.
   for item in s.split('\n\n'):
     lines = item.splitlines()
     kind = int(lines[0] == '#####')
-    part = tuple(sum(line[col] == '#' for line in lines) - 1 for col in range(5))
+    part: Any = tuple(sum(line[col] == '#' for line in lines) - 1 for col in range(5))
     parts[kind].append(part)
 
   return sum(
@@ -4906,7 +4906,7 @@ def day25_part1(s):  # Faster.
   for item in s.split('\n\n'):
     lines = item.splitlines()
     kind = int(lines[0] == '#####')
-    part = tuple(sum(line[col] == '#' for line in lines) - 1 for col in range(5))
+    part: Any = tuple(sum(line[col] == '#' for line in lines) - 1 for col in range(5))
     parts[kind].append(part)
 
   # We create a 2D table whose entry [col, j] contains the subset of parts[0] that have

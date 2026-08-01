@@ -2130,7 +2130,7 @@ rotate based on position of letter d
 def day21(s, *, initial=None, part2=False, debug=False):
   lines = s.splitlines()
   initial = initial or ('fbgdceah' if part2 else 'abcdefgh')
-  state = list(initial)
+  state: list[str] = list(initial)
   num = len(state)
   # Index of letter at index after "rotate based on position of letter"; used for inversion.
   rotate_on_letter = [(index + (1 + index + (index >= 4))) % num for index in range(num)]

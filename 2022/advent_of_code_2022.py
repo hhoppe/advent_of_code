@@ -4273,6 +4273,7 @@ def day21v(
   ax.set_aspect('equal')  # Preserve aspect ratio.
   labels = networkx.get_node_attributes(graph, 'label')
   node_color = [attr for _, attr in graph.nodes(data='color')]
+  # pyrefly: ignore[bad-argument-type]
   networkx.draw(graph, with_labels=True, labels=labels, node_color=node_color, pos=pos, ax=ax)
   fig.tight_layout(pad=0)
   image = hh.bounding_crop(hh.image_from_plt(fig), (255, 255, 255), margin=5)

@@ -1155,6 +1155,7 @@ def day8(s, *, part2=False):  # Special-case algorithm that assumes that all pha
       if node.endswith(end):
         return index
       node = routes[node][ch == 'R']
+    raise AssertionError
 
   if part2:
     return math.lcm(*(length(node, 'Z') for node in routes if node.endswith('A')))
@@ -4381,7 +4382,7 @@ def day22_visualize_3d(s):
   bricks = [(*b[:3], b[3] + 1, b[4] + 1, b[5] + 1) for b in bricks]
   bricks.sort(key=lambda brick: brick[2])  # In ascending minimum height.
   heights = np.full((10, 10), 0)
-  cubes = []
+  cubes: Any = []
 
   for brick in bricks:
     footprint = slice(*brick[0::3]), slice(*brick[1::3])
@@ -5297,7 +5298,7 @@ def day24_part2_visualize(s, nframes=120, fps=30):
   fig.tight_layout(pad=0)
   plt.close(fig)
 
-  def animate(n):
+  def animate(n) -> Any:
     frac = n / nframes * 1.5 - 0.25
     t = int(frac * t_max + 0.5)
     pos2 = pos + vel * t
@@ -5309,6 +5310,7 @@ def day24_part2_visualize(s, nframes=120, fps=30):
     pos1, pos2 = (pos, pos + vel * np.clip(t, 0, t_max)) if frac > 0 else (pos2, pos2)
     line.set_data([pos1[0], pos2[0]], [pos1[1], pos2[1]])
     line.set_3d_properties([pos1[2], pos2[2]])
+    # A return value is unnecessary with the default blit=False.
     # return scatter_i, scatter_pos, line
 
   # "blit=True" is no faster; "interval=1000 // fps" is unnecessary.

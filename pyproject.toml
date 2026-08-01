@@ -16,7 +16,7 @@ files = ["."]
 pyink-indentation = 2
 line-length = 100  # Default is 88.
 pyink-use-majority-quotes = true
-extend-exclude = "\\.ipynb"
+extend-exclude = "\\.ipynb$"
 
 [tool.pylint.main]
 # See pylint options using "pylint --generate-toml-config"
@@ -56,12 +56,11 @@ project-excludes = ["*.ipynb"]
 redundant-condition = false
 missing-import = false
 untyped-import = false
-bad-argument-type = false  # Because of untyped `day*()` functions.
 
 [tool.pytype]
 keep_going = true
 inputs = ["."]
-exclude = ['**/*_run.py']
+exclude = ["**/*_run.py"]
 
 [tool.ruff]
 extend-exclude = ["*.ipynb"]
