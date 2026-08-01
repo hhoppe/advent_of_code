@@ -744,7 +744,7 @@ puzzle = advent.puzzle(day=8)
 def day8(s, *, part2=False):
   @dataclasses.dataclass
   class TreeNode:
-    children: Any  # list[TreeNode], but fails within a function on pylint and pytype.
+    children: Any  # list[TreeNode], but fails within a function on pylint.
     metadatas: list[int]
 
   values = map(int, s.split())
@@ -3434,7 +3434,7 @@ def day24(s, *, verbose=False, boost=0, immune_must_win=False):
     attack_type: str
     initiative: int  # Higher initiative attacks first and wins ties.
     attributes: dict[str, set[str]]  # ['immune'] and ['weak']
-    target: Any  # Group | None, but fails within a function on pylint and pytype.
+    target: Any  # Group | None, but fails within a function on pylint.
     targeted: bool
 
     def __init__(self, army, id, line):

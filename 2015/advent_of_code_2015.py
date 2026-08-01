@@ -126,7 +126,7 @@ check_eq = hh.check_eq
 # # # %timeit _md5.md5(b'hello world')  # ~55 ns.
 def _get_md5() -> Any:
   try:
-    import _md5  # pytype: disable=import-error
+    import _md5
 
     return _md5.md5
 
