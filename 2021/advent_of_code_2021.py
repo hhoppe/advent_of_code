@@ -4204,7 +4204,7 @@ def day22e(s, *, part2=False):  # Using _Kdtree.
       kdtree.add(*to_bbox(cell), None)  # type: ignore[call-arg]
 
   cells = [from_bbox(entry.bb0, entry.bb1) for entry in kdtree.entries if entry.bb0[0] >= 0.0]
-  return (np.diff(np.array(cells, np.int64)) + 1)[..., 0].prod(axis=-1).sum()
+  return (np.diff(np.array(cells, np.int64)).astype(np.int64) + 1)[..., 0].prod(axis=-1).sum()
 
 
 check_eq(day22e(s1), 39)

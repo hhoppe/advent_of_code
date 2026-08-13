@@ -597,7 +597,7 @@ def day6(s, *, part2=False, max_sum=10_000, visualize=False):
   for line in s.splitlines():
     x, y = map(int, line.split(','))
     yxs.append((y, x))
-  shape = np.max(yxs, axis=0) + 1
+  shape = tuple(np.max(yxs, axis=0) + 1)
 
   def manhattan_from(yx):
     indices = np.indices(shape, np.int32)
@@ -3324,7 +3324,7 @@ def day23b(s, *, part2=False):
   if not part2:
     return (abs(xs - xs[i]).sum(axis=1) <= rs[i]).sum()
 
-  x0 = xs.min(axis=0)
+  x0: Any = xs.min(axis=0)
   priority_queue = [(0, np.ptp(xs, axis=0).max(), abs(x0).sum(), *x0)]
   while priority_queue:
     n_out_of_range, s, d, *x0 = heapq.heappop(priority_queue)
@@ -3375,8 +3375,8 @@ def day23(s, *, part2=False):
     i = rs.argmax()
     return (abs(xs - xs[i]).sum(axis=1) <= rs[i]).sum()
 
-  xl, xh = xs.min(axis=0), xs.max(axis=0)
-  pq = [(0, (xh - xl).max(), abs(xl).sum(), tuple(xl), tuple(xh))]
+  xl0, xh0 = xs.min(axis=0), xs.max(axis=0)
+  pq = [(0, (xh0 - xl0).max(), abs(xl0).sum(), tuple(xl0), tuple(xh0))]
   while pq:
     n_out, s, d, xl, xh = heapq.heappop(pq)
     if s == 0:
