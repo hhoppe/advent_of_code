@@ -1058,9 +1058,7 @@ s1 = """\
   #####
   ....#
   ...##
-""".replace(
-    ' ', ''
-)
+""".replace(' ', '')
 
 s2 = """\
   .#....#####...#..
@@ -1068,9 +1066,7 @@ s2 = """\
   ##...#...#.#####.
   ..#.....#...###..
   ..#.#.....#....##
-""".replace(
-    ' ', ''
-)
+""".replace(' ', '')
 
 s3 = """\
   .#..##.###...#######
@@ -1093,9 +1089,7 @@ s3 = """\
   .#.#.###########.###
   #.#.#.#####.####.###
   ###.##.####.##.#..##
-""".replace(
-    ' ', ''
-)
+""".replace(' ', '')
 
 
 # %%
@@ -2602,9 +2596,7 @@ FG..#########.....#  EOL
   ###########.#####  EOL
              Z       EOL
              Z       EOL
-""".replace(
-    'EOL', ''
-)
+""".replace('EOL', '')
 
 s2 = """\
                    A               EOL
@@ -2644,9 +2636,7 @@ YN......#               VT..#....QGEOL
   #########.###.###.#############  EOL
            B   J   C               EOL
            U   P   P               EOL
-""".replace(
-    'EOL', ''
-)
+""".replace('EOL', '')
 
 s3 = """\
              Z L X W       C                 EOL
@@ -2686,9 +2676,7 @@ RE....#.#                           #......RFEOL
   #############.#.#.###.###################  EOL
                A O F   N                     EOL
                A A D   M                     EOL
-""".replace(
-    'EOL', ''
-)
+""".replace('EOL', '')
 
 # %%
 if 0:
@@ -3006,55 +2994,45 @@ if 1:
 
   # Never jump: empty program
   check_eq(
-      day21_part1_test(
-          """\
-  """
-      ),
+      day21_part1_test("""\
+  """),
       None,
   )
 
   # Always jump: J = NOT J
   check_eq(
-      day21_part1_test(
-          """\
+      day21_part1_test("""\
     NOT J J
-  """
-      ),
+  """),
       None,
   )
 
   # Wait for the last moment to jump: J = (NOT A)
   check_eq(
-      day21_part1_test(
-          """\
+      day21_part1_test("""\
   NOT A J
-  """
-      ),
+  """),
       None,
   )
 
   # Jump if there is ground at D (+4): J = D
   check_eq(
-      day21_part1_test(
-          """\
+      day21_part1_test("""\
     NOT D T
     NOT T J
-  """
-      ),
+  """),
       None,
   )
 
   # Jump if there is ground at D unless both A and B are ground:
   # J = D AND NOT (A AND B)
   check_eq(
-      day21_part1_test(
-          """\
+      day21_part1_test("""\
     OR  A T
     AND B T
     NOT T J
     AND D J
-  """
-      ),
+  """),
       None,
   )
 
@@ -3073,15 +3051,13 @@ if 1:
   # Previous algorithm: Jump if there is ground at D and any of A,B,C are hole:
   # J = D AND NOT (A AND B AND C)
   check_eq(
-      day21_part2_test(
-          """\
+      day21_part2_test("""\
      OR  A T
      AND B T
      AND C T
      NOT T J
      AND D J
-  """
-      ),
+  """),
       None,
   )
 

@@ -2610,7 +2610,7 @@ def day23a(s, *, num_moves=100):  # Using list.
   l = list(map(int, s.strip()))
 
   for _ in range(num_moves):
-    (current, *extracted3) = l[:4]
+    current, *extracted3 = l[:4]
     destination = current - 1 if current > 1 else len(l)
     while destination in extracted3:
       destination = destination - 1 if destination > 1 else len(l)

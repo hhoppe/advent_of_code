@@ -1765,9 +1765,7 @@ s1 = """\
 ****.#...#... 4,1,1
 ****.######..#####. 1,6,5
 *###******** 3,2,1
-""".replace(
-    '*', '?'
-)
+""".replace('*', '?')
 
 
 # %%
@@ -2614,11 +2612,7 @@ s1 = r"""X
 .-.-/..|..X
 .|....-|.\X
 ..//.|....X
-""".replace(
-    'X', ''
-)[
-    1:
-]
+""".replace('X', '')[1:]
 
 
 # %%
@@ -4512,7 +4506,7 @@ def day23_graph_yx_numpy(grid, part2):
   nodes = {start_yx, target_yx}
   for yx, ch in np.ndenumerate(grid):
     if ch != '#' and len(neighbors(yx)) > 2:
-      nodes.add(yx)  # type:ignore[arg-type]
+      nodes.add(yx)  # type: ignore[arg-type]
 
   def get_paths(yx):
     paths = {}
