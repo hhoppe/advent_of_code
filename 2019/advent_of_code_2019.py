@@ -2022,7 +2022,7 @@ def day17_part1(s):
   check_eq(find_intersections(s1), 76)
 
   output = _Machine.make(s).run_fully()
-  puzzle_s = ''.join(map(chr, output))
+  puzzle_s = ''.join(map(chr, output)).strip('\n')
   return find_intersections(puzzle_s)
 
 
@@ -2106,7 +2106,7 @@ def day17_part2(s, *, visualize=False):
         ','.join(compute_commands(s2)), 'R,8,R,8,R,4,R,4,R,8,L,6,L,2,R,4,R,4,R,8,R,8,R,8,L,6,L,2'
     )
 
-    puzzle_s = ''.join(map(chr, _Machine.make(s).run_fully()))
+    puzzle_s = ''.join(map(chr, _Machine.make(s).run_fully())).strip('\n')
     commands = compute_commands(puzzle_s)
     s_routine = ','.join(commands) + ','
     s_functions: list[str] = []
@@ -2213,7 +2213,7 @@ s5 = """\
 ########################
 """
 
-s11 = """\
+s6 = """\
 #######
 #a.#Cd#
 ##...##
@@ -2223,7 +2223,7 @@ s11 = """\
 #######
 """
 
-s12 = """\
+s7 = """\
 ###############
 #d.ABC.#.....a#
 ######@#@######
@@ -2233,7 +2233,7 @@ s12 = """\
 ###############
 """
 
-s13 = """\
+s8 = """\
 #############
 #DcBa.#.GhKl#
 #.###@#@#I###
@@ -2243,7 +2243,7 @@ s13 = """\
 #############
 """
 
-s14 = """\
+s9 = """\
 #############
 #g#f.D#..h#l#
 #F###e#E###.#
@@ -2454,10 +2454,10 @@ check_eq(day18(s5), 81)
 puzzle.verify(1, day18)
 
 day18_part2 = functools.partial(day18, part2=True)
-check_eq(day18_part2(s11), 8)
-check_eq(day18_part2(s12), 24)
-check_eq(day18_part2(s13), 32)
-check_eq(day18_part2(s14), 72)
+check_eq(day18_part2(s6), 8)
+check_eq(day18_part2(s7), 24)
+check_eq(day18_part2(s8), 32)
+check_eq(day18_part2(s9), 72)
 puzzle.verify(2, day18_part2)
 
 # %%
@@ -2471,10 +2471,10 @@ _ = day18(s5, visualize=True, size=8, fps=10)
 _ = day18(puzzle.input, visualize=True, speed=3, tail=2)  # Slow; ~5 s.
 
 # %%
-_ = day18_part2(s11, visualize=True, size=8, fps=4)
-_ = day18_part2(s12, visualize=True, size=8, fps=4)
-_ = day18_part2(s13, visualize=True, size=8, fps=4)
-_ = day18_part2(s14, visualize=True, size=8, fps=4)
+_ = day18_part2(s6, visualize=True, size=8, fps=4)
+_ = day18_part2(s7, visualize=True, size=8, fps=4)
+_ = day18_part2(s8, visualize=True, size=8, fps=4)
+_ = day18_part2(s9, visualize=True, size=8, fps=4)
 
 # %%
 _ = day18_part2(puzzle.input, visualize=True, speed=2, tail=2)  # Slow; ~3.5 s.

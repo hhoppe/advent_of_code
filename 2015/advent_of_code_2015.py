@@ -1405,7 +1405,7 @@ puzzle.verify(2, day15_part2)
 puzzle = advent.puzzle(day=16)
 
 # %%
-day16_message = """\
+DAY16_MESSAGE = """\
 children: 3
 cats: 7
 samoyeds: 2
@@ -1421,7 +1421,7 @@ perfumes: 1
 
 # %%
 def day16(s, *, part2=False):
-  known = {name: int(t) for line in day16_message.splitlines() for name, t in [line.split(': ')]}
+  known = {name: int(t) for line in DAY16_MESSAGE.splitlines() for name, t in [line.split(': ')]}
   found = []
 
   def compatible(attribs: dict[str, int]) -> bool:
@@ -1859,22 +1859,22 @@ def day19_test_pyparsing1(swap=False):  # Using set_parse_action().
 
     pp.ParserElement.enable_left_recursion(force=True)
     # e => H; e => O; H => HO; H => OH; O => HH.
-    sym_H = pp.Forward()
-    sym_O = pp.Forward()
+    sym_h = pp.Forward()
+    sym_o = pp.Forward()
     if swap:
-      sym_e = sym_O.copy().set_parse_action(parse_rule('e<-O')) ^ sym_H.copy().set_parse_action(
+      sym_e = sym_o.copy().set_parse_action(parse_rule('e<-O')) ^ sym_h.copy().set_parse_action(
           parse_rule('e<-H')
       )
     else:
-      sym_e = sym_H.copy().set_parse_action(parse_rule('e<-H')) ^ sym_O.copy().set_parse_action(
+      sym_e = sym_h.copy().set_parse_action(parse_rule('e<-H')) ^ sym_o.copy().set_parse_action(
           parse_rule('e<-O')
       )
-    sym_H <<= (
-        (sym_H + sym_O).set_parse_action(parse_rule('H<-HO'))
-        ^ (sym_O + sym_H).set_parse_action(parse_rule('H<-OH'))
+    sym_h <<= (
+        (sym_h + sym_o).set_parse_action(parse_rule('H<-HO'))
+        ^ (sym_o + sym_h).set_parse_action(parse_rule('H<-OH'))
         ^ 'H'
     )
-    sym_O <<= (sym_H + sym_H).set_parse_action(parse_rule('O<-HH')) ^ 'O'
+    sym_o <<= (sym_h + sym_h).set_parse_action(parse_rule('O<-HH')) ^ 'O'
 
     hh.display_html(str(sym_e.parse_string('HOH')))  # Does not parse all unless swap=True.
     hh.display_html(str(sym_e.parse_string('HOHOHO', parse_all=True)))
@@ -1889,11 +1889,11 @@ def day19_test_pyparsing2(swap=False):  # Using Group and count_lists().
   pp = pyparsing
   # e => H; e => O; H => HO; H => OH; O => HH.
   pp.ParserElement.enable_left_recursion(force=True)
-  sym_H = pp.Forward()
-  sym_O = pp.Forward()
-  sym_e = pp.Group(sym_O ^ sym_H) if swap else pp.Group(sym_H ^ sym_O)
-  sym_H <<= pp.Group(sym_H + sym_O) ^ pp.Group(sym_O + sym_H) ^ 'H'
-  sym_O <<= pp.Group(sym_H + sym_H) ^ 'O'
+  sym_h = pp.Forward()
+  sym_o = pp.Forward()
+  sym_e = pp.Group(sym_o ^ sym_h) if swap else pp.Group(sym_h ^ sym_o)
+  sym_h <<= pp.Group(sym_h + sym_o) ^ pp.Group(sym_o + sym_h) ^ 'H'
+  sym_o <<= pp.Group(sym_h + sym_h) ^ 'O'
 
   def count_lists(expr) -> int:
     return 1 + sum(count_lists(e) for e in expr if not isinstance(e, str))

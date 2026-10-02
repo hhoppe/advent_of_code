@@ -1762,7 +1762,7 @@ s1 = """\
 #######
 """
 
-s10 = """\
+s2 = """\
 #######
 #G..#E#
 #E#E.E#
@@ -1772,7 +1772,7 @@ s10 = """\
 #######
 """
 
-s11 = """\
+s3 = """\
 #######
 #E..EG#
 #.#G.E#
@@ -1782,7 +1782,7 @@ s11 = """\
 #######
 """
 
-s12 = """\
+s4 = """\
 #######
 #E.G#.#
 #.#G..#
@@ -1792,7 +1792,7 @@ s12 = """\
 #######
 """
 
-s13 = """\
+s5 = """\
 #######
 #.E...#
 #.#..G#
@@ -1802,7 +1802,7 @@ s13 = """\
 #######
 """
 
-s14 = """\
+s6 = """\
 #########
 #G......#
 #.E.#...#
@@ -1931,11 +1931,11 @@ def day15a_part1(s, verbose=False, elf_attack_power=3, fail_if_elf_dies=False):
 
 
 check_eq(day15a_part1(s1), 27730)
-check_eq(day15a_part1(s10), 36334)
-check_eq(day15a_part1(s11), 39514)
-check_eq(day15a_part1(s12), 27755)
-check_eq(day15a_part1(s13), 28944)
-check_eq(day15a_part1(s14), 18740)
+check_eq(day15a_part1(s2), 36334)
+check_eq(day15a_part1(s3), 39514)
+check_eq(day15a_part1(s4), 27755)
+check_eq(day15a_part1(s5), 28944)
+check_eq(day15a_part1(s6), 18740)
 
 puzzle.verify(1, day15a_part1)
 
@@ -2085,11 +2085,11 @@ def day15_part1(s, visualize=False, elf_attack_power=3, fail_if_elf_dies=False):
 
 
 check_eq(day15_part1(s1), 27730)  # Slow for numba jit compilation!
-check_eq(day15_part1(s10), 36334)
-check_eq(day15_part1(s11), 39514)
-check_eq(day15_part1(s12), 27755)
-check_eq(day15_part1(s13), 28944)
-check_eq(day15_part1(s14), 18740)
+check_eq(day15_part1(s2), 36334)
+check_eq(day15_part1(s3), 39514)
+check_eq(day15_part1(s4), 27755)
+check_eq(day15_part1(s5), 28944)
+check_eq(day15_part1(s6), 18740)
 puzzle.verify(1, day15_part1)
 
 # %%
@@ -2106,10 +2106,10 @@ def day15a_part2(s):  # Brute-force search of increasing attack power.
 
 
 check_eq(day15a_part2(s1), 4988)
-check_eq(day15a_part2(s11), 31284)
-check_eq(day15a_part2(s12), 3478)
-check_eq(day15a_part2(s13), 6474)
-check_eq(day15a_part2(s14), 1140)
+check_eq(day15a_part2(s3), 31284)
+check_eq(day15a_part2(s4), 3478)
+check_eq(day15a_part2(s5), 6474)
+check_eq(day15a_part2(s6), 1140)
 
 # puzzle.verify(2, day15a_part2)  # Slow.
 
@@ -2146,10 +2146,10 @@ def day15_part2(s, *, visualize=False):  # Faster bisection search.
 
 
 check_eq(day15_part2(s1), 4988)
-check_eq(day15_part2(s11), 31284)
-check_eq(day15_part2(s12), 3478)
-check_eq(day15_part2(s13), 6474)
-check_eq(day15_part2(s14), 1140)
+check_eq(day15_part2(s3), 31284)
+check_eq(day15_part2(s4), 3478)
+check_eq(day15_part2(s5), 6474)
+check_eq(day15_part2(s6), 1140)
 
 puzzle.verify(2, day15_part2)  # (elf_attack_power = 19; num_rounds = 40)
 
