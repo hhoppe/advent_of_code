@@ -49,7 +49,7 @@ expected-line-ending-format = "LF"
 [tool.pyrefly]
 min-severity = "warn"
 replace-imports-with-any = ["numba.*"]
-project-excludes = ["*.ipynb"]
+project-includes = ["**/*.py"]
 
 [tool.pyrefly.errors]
 redundant-condition = false
