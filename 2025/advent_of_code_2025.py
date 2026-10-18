@@ -1189,7 +1189,9 @@ def day10c_part2(s):
 
       for num_pressed_buttons in range(num_buttons + 1):
         for buttons in itertools.combinations(range(num_buttons), num_pressed_buttons):
-          pattern = tuple(map(sum, zip((0,) * num_variables, *(coeffs[i] for i in buttons))))
+          pattern: tuple[int, ...] = tuple(
+              map(sum, zip((0,) * num_variables, *(coeffs[i] for i in buttons)))
+          )
           pattern_parity = tuple(i % 2 for i in pattern)
           if pattern not in pattern_costs[pattern_parity]:
             pattern_costs[pattern_parity][pattern] = num_pressed_buttons

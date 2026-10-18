@@ -55,6 +55,7 @@ project-includes = ["**/*.py"]
 redundant-condition = false
 missing-import = false
 untyped-import = false
+unreachable = false
 
 [tool.ruff]
 extend-exclude = ["*.ipynb"]
